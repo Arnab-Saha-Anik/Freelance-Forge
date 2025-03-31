@@ -1,8 +1,9 @@
 # Freelance-Forge
 
 Steps:
-1. cd backend
-2. make a .env file and put these
+1. npm install to install all the dependencies
+2. cd backend
+3. make a .env file and put these
    
 PORT=5000
 
