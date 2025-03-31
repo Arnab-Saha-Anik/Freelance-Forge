@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Login from './pages/Login'; // Import the Login component
 import Navbar from './components/Navbar';
 import Register from './pages/Register'; 
+import ClientDashboard from './pages/ClientDashboard';
 function App() {
   return (
     <>
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} /> {/* Add the login route */}
           <Route path="/register" element={<Register />} /> {/* Add the register route */}
+          <Route path="/client-dashboard" element={<ClientDashboard />} />
         </Routes>
 
       </Router>

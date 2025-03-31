@@ -1,9 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("client"); // Default role is "client"
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -11,6 +14,16 @@ const Register = () => {
     console.log("Name:", name);
     console.log("Email:", email);
     console.log("Password:", password);
+    console.log("Role:", role);
+
+    // Navigate to the Client Dashboard if the role is "client"
+    if (role === "client") {
+      navigate("/client-dashboard");
+    } else {
+      // Handle navigation for other roles (e.g., freelancer)
+      alert("Registration successful! You can now log in.");
+      navigate("/login");
+    }
   };
 
   return (
@@ -46,6 +59,18 @@ const Register = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="role">Role:</label>
+          <select
+            id="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            required
+          >
+            <option value="client">Client</option>
+            <option value="freelancer">Freelancer</option>
+          </select>
         </div>
         <button type="submit">Sign Up</button>
       </form>

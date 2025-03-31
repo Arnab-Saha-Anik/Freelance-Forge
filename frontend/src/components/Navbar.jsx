@@ -20,7 +20,7 @@ const Navbar = () => {
             borderRadius: '5px',
             transition: 'background-color 0.3s, color 0.3s',
             cursor: 'pointer',
-            color: '#007BFF', // Default text color
+            color: '#007BFF',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -37,7 +37,7 @@ const Navbar = () => {
           Login
         </Link>
         <Link
-          to="/about"
+          to="/register"
           style={{
             textDecoration: 'none',
             margin: '0 15px',
@@ -46,7 +46,7 @@ const Navbar = () => {
             borderRadius: '5px',
             transition: 'background-color 0.3s, color 0.3s',
             cursor: 'pointer',
-            color: '#007BFF', // Default text color
+            color: '#007BFF',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -60,8 +60,9 @@ const Navbar = () => {
             e.currentTarget.style.color = '#007BFF';
           }}
         >
-          About
+          Register
         </Link>
+        
       </ul>
     </nav>
   );
