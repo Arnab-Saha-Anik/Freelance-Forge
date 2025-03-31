@@ -1,16 +1,17 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 const HomePage = () => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'Freelance Forge'; // Set the browser tab title
+    document.title = 'Freelance Forge';
   }, []);
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
-      <h1>Welcome to the Freelance Forge</h1>
-      <p>Learn more, develop more!</p>
+    <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#593D3D', minHeight: '100vh' }}>
+      <h1 style={{ color: '#FFFFFF' }}>Welcome to the Freelance Forge</h1>
+      <p style={{ color: '#FFFFFF' }}>Learn more, develop more!</p>
       <div style={{ marginTop: '20px' }}>
         <button
           style={{
