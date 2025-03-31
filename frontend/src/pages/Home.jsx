@@ -37,7 +37,7 @@ const HomePage = () => {
             borderRadius: '5px',
             cursor: 'pointer',
           }}
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/login')} // Navigates to /login
         >
           Login
         </button>
