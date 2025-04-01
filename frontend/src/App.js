@@ -4,7 +4,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Navbar from './components/Navbar';
 import Register from './pages/Register';
-import ClientDashboard from './pages/ClientDashboard';
+import ClientDashboard from './components/Dashboard/ClientDashboard';
 import FreelancerDashboard from './components/Dashboard/FreelancerDashboard'; // Import FreelancerDashboard
 
 function App() {

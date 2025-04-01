@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 
+
 const ClientDashboard = () => {
+  
+
+  useEffect(() => {
+    document.title = 'Freelance Forge';
+  }, []);
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
