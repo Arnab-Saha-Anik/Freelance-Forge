@@ -17,12 +17,15 @@ const HomePage = () => {
           style={{
             padding: '10px 20px',
             margin: '10px',
-            backgroundColor: '#007BFF',
+            backgroundColor: '#0056B3',
             color: '#fff',
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
+            transition: 'background-color 0.3s',
           }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#007BFF')}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = '#0056B3')}
           onClick={() => navigate('/register')}
         >
           Register
@@ -31,13 +34,16 @@ const HomePage = () => {
           style={{
             padding: '10px 20px',
             margin: '10px',
-            backgroundColor: '#28A745',
+            backgroundColor: '#1E7E34',
             color: '#fff',
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
+            transition: 'background-color 0.3s',
           }}
-          onClick={() => navigate('/login')} // Navigates to /login
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#28A745')}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = '#1E7E34')}
+          onClick={() => navigate('/login')}
         >
           Login
         </button>
