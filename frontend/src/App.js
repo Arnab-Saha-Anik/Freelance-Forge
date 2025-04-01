@@ -1,10 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Login from './pages/Login'; // Import the Login component
+import Login from './pages/Login';
 import Navbar from './components/Navbar';
-import Register from './pages/Register'; 
+import Register from './pages/Register';
 import ClientDashboard from './pages/ClientDashboard';
+import FreelancerDashboard from './components/Dashboard/FreelancerDashboard'; // Import FreelancerDashboard
+
 function App() {
   return (
     <>
@@ -12,11 +14,11 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} /> {/* Add the login route */}
-          <Route path="/register" element={<Register />} /> {/* Add the register route */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/client-dashboard" element={<ClientDashboard />} />
+          <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} /> {/* Add FreelancerDashboard route */}
         </Routes>
-
       </Router>
     </>
   );

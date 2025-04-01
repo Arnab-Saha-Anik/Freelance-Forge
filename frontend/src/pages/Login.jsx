@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Add login logic here
     console.log('Email:', email, 'Password:', password);
+
+    // Example: Navigate to Freelancer Dashboard after login
+    if (email === 'freelancer@example.com') {
+      navigate('/freelancer-dashboard');
+    } else {
+      navigate('/client-dashboard');
+    }
   };
 
   return (
