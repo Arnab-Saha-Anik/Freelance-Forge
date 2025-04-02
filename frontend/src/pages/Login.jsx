@@ -24,34 +24,22 @@ const Login = () => {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(to bottom, #87CEEB, #9370DB, #FF69B4, #FFDAB9)', // Gradient background
-        position: 'relative',
-        overflow: 'hidden',
+        background: 'url("https://catalystforbusiness.com/wp-content/uploads/2019/01/data-entry-process.jpg")', // Replace with the correct path to your image
+        backgroundSize: 'cover', // Ensures the image covers the entire background
+        backgroundPosition: 'center', // Centers the image
+        backgroundRepeat: 'no-repeat', // Prevents the image from repeating
       }}
     >
-      {/* Blurred overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backdropFilter: 'blur(10px)', // Blur effect
-          zIndex: 1,
-        }}
-      ></div>
-
       {/* Login form container */}
       <div
         style={{
           width: '400px',
           padding: '30px',
-          backgroundColor: 'rgba(204, 162, 220, 0.8)', // Semi-transparent white
+          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
           borderRadius: '10px',
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 2, // Ensure it appears above the blur
+          backdropFilter: 'blur(10px)', // Blur effect for the container
+          zIndex: 2,
         }}
       >
         <h1 style={{ color: '#593D3D', textAlign: 'center' }}>Login</h1>
