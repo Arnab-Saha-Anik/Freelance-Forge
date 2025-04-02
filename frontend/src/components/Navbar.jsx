@@ -42,11 +42,11 @@ const Navbar = () => {
                 position: 'absolute',
                 top: '100%',
                 right: 0,
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#000000',
                 color: '#000000',
                 border: '1px solid #ddd',
                 borderRadius: '5px',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 4px 8px rgb(0, 0, 0)',
                 zIndex: 1000,
               }}
             >

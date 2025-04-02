@@ -39,14 +39,14 @@ const Register = () => {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: '#593D3D',
-      }}
+        background: 'linear-gradient(to bottom, #D16BA5, #C777B9, #BA83CA, #AA8FD8, #9A9AE1, #8AA7E5, #79B3E1, #69BFDD)', // Gradient background
+  }}
     >
       <div
         style={{
           width: '400px',
           padding: '30px',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'rgba(164, 203, 228, 0.8)',
           borderRadius: '10px',
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
         }}

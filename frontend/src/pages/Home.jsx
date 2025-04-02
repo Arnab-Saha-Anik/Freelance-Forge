@@ -9,23 +9,23 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#593D3D', minHeight: '100vh' }}>
-      <h1 style={{ color: '#FFFFFF' }}>Welcome to the Freelance Forge</h1>
-      <p style={{ color: '#FFFFFF' }}>Learn more, develop more!</p>
+    <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(to bottom, #A1045A, #FF007F, #FF6A6A)', minHeight: '100vh' }}>
+      <h1 style={{ color: '#000000' }}>Welcome to the Freelance Forge</h1>
+      <p style={{ color: '#000000' }}>Learn more, develop more!</p>
       <div style={{ marginTop: '20px' }}>
         <button
           style={{
             padding: '10px 20px',
             margin: '10px',
-            backgroundColor: '#0056B3',
-            color: '#fff',
+            backgroundColor: '#FFA500',
+            color: '#000',
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
             transition: 'background-color 0.3s',
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#007BFF')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '#0056B3')}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFA500')}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = '##FFA500')}
           onClick={() => navigate('/register')}
         >
           Register
@@ -34,15 +34,15 @@ const HomePage = () => {
           style={{
             padding: '10px 20px',
             margin: '10px',
-            backgroundColor: '#1E7E34',
-            color: '#fff',
+            backgroundColor: '#FFA500',
+            color: '#000',
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
             transition: 'background-color 0.3s',
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#28A745')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '#1E7E34')}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFA500')}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = '#FFA500')}
           onClick={() => navigate('/login')}
         >
           Login

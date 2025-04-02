@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from "react";
 
-
 const ClientDashboard = () => {
-  
-
-  useEffect(() => {
-    document.title = 'Freelance Forge';
-  }, []);
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    // Fetch posted projects from the backend (replace with your API endpoint)
+    // Fetch posted projects from the backend
     const fetchProjects = async () => {
       try {
-        const response = await fetch("/api/projects"); // Example API endpoint
+        const response = await fetch("/api/projects"); // Fetch data from the backend
         const data = await response.json();
         setProjects(data);
       } catch (error) {
@@ -46,6 +40,8 @@ const ClientDashboard = () => {
               <p><strong>Description:</strong> {project.description}</p>
               <p><strong>Bids Received:</strong> {project.bids.length}</p>
               <p><strong>Progress:</strong> {project.progress}%</p>
+              <p><strong>Budget:</strong> ${project.budget}</p>
+              <p><strong>Deadline:</strong> {new Date(project.deadline).toLocaleDateString()}</p>
             </div>
           ))}
         </div>
