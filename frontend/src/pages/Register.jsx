@@ -5,75 +5,176 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("client"); // Default role is "client"
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("default");
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add sign-up logic here
+    if (role === "default") {
+      alert("Please select a valid role (Client or Freelancer) to proceed.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match. Please try again.");
+      return;
+    }
     console.log("Name:", name);
     console.log("Email:", email);
     console.log("Password:", password);
     console.log("Role:", role);
 
-    // Navigate to the Client Dashboard if the role is "client"
     if (role === "client") {
       navigate("/client-dashboard");
     } else {
-      // Handle navigation for other roles (e.g., freelancer)
       alert("Registration successful! You can now log in.");
       navigate("/login");
     }
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h1>Sign Up</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Name:</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="role">Role:</label>
-          <select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            required
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#593D3D',
+      }}
+    >
+      <div
+        style={{
+          width: '400px',
+          padding: '30px',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '10px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+        }}
+      >
+        <h1 style={{ color: '#593D3D', textAlign: 'center' }}>Sign Up</h1>
+        <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+            <label htmlFor="name" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Name:</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={{
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+            <label htmlFor="email" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Email:</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+            <label htmlFor="password" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Password:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+            <label htmlFor="confirmPassword" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Confirm Password:</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              style={{
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
+            <label htmlFor="role" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Role:</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              required
+              style={{
+                padding: '10px',
+                borderRadius: '5px',
+                border: '1px solid #ccc',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
+              <option value="default">Select Role</option>
+              <option value="client">Client</option>
+              <option value="freelancer">Freelancer</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            style={{
+              padding: '10px 20px',
+              margin: '10px 0',
+              backgroundColor: '#1E7E34',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = '#28A745')}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = '#1E7E34')}
           >
-            <option value="client">Client</option>
-            <option value="freelancer">Freelancer</option>
-          </select>
-        </div>
-        <button type="submit">Sign Up</button>
-      </form>
+            Sign Up
+          </button>
+        </form>
+        <p style={{ color: '#593D3D', marginTop: '20px', textAlign: 'center' }}>
+          Already signed up?{' '}
+          <span
+            style={{
+              color: '#007BFF',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/login')}
+          >
+            Login
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
