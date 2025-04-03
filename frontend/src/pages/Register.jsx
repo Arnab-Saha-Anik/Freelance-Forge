@@ -192,8 +192,8 @@ const Register = () => {
               }}
             >
               <option value="default">Select Role</option>
-              <option value="client">Client</option>
-              <option value="freelancer">Freelancer</option>
+              <option value="Client">Client</option>
+              <option value="Freelancer">Freelancer</option>
             </select>
           </div>
           <button
