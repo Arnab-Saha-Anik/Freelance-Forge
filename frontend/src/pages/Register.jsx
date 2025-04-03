@@ -39,20 +39,16 @@ const Register = () => {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundImage: 'url("https://torogipro.com/wp-content/uploads/2022/08/windows-tools-1024x819.jpg")', // Replace with the correct path to your image
-        backgroundSize: 'cover', // Ensures the image covers the entire background
-        backgroundPosition: 'center', // Centers the image
-        backgroundRepeat: 'no-repeat', // Prevents the image from repeating
-      }}
+        background: 'linear-gradient(to bottom, #D16BA5, #C777B9, #BA83CA, #AA8FD8, #9A9AE1, #8AA7E5, #79B3E1, #69BFDD)', // Gradient background
+  }}
     >
       <div
         style={{
           width: '400px',
           padding: '30px',
-          backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white
+          backgroundColor: 'rgba(164, 203, 228, 0.8)',
           borderRadius: '10px',
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(10px)', // Blur effect for the container
         }}
       >
         <h1 style={{ color: '#593D3D', textAlign: 'center' }}>Sign Up</h1>
