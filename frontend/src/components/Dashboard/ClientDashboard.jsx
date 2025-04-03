@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 const ClientDashboard = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(""); // State for search input
 
   useEffect(() => {
     // Fetch projects from the backend
@@ -21,6 +22,17 @@ const ClientDashboard = () => {
     fetchProjects();
   }, []);
 
+  // Filter projects based on the search term
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelect = (projectId) => {
+    alert(`Project with ID ${projectId} selected!`);
+  };
+
   return (
     <div
       style={{
@@ -33,13 +45,27 @@ const ClientDashboard = () => {
         backgroundRepeat: "no-repeat", // Prevents the image from repeating
       }}
     >
-      <h1 style={{ color: "#000000" }}>Client Dashboard</h1>
-      <h2 style={{ color: "#000000" }}>Available Projects</h2>
+      <h1 style={{ color: "rgba(230, 244, 205, 0.9)",}}>Client Dashboard</h1>
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Search projects..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "10px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            width: "300px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
       {loading ? (
-        <p style={{ color: "#000000" }}>Loading projects...</p>
-      ) : projects.length > 0 ? (
+        <p style={{ color: "#ffffff" }}>Loading projects...</p>
+      ) : filteredProjects.length > 0 ? (
         <div>
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <div
               key={project.id}
               style={{
@@ -49,7 +75,7 @@ const ClientDashboard = () => {
                 margin: "10px auto",
                 maxWidth: "600px",
                 textAlign: "left",
-                backgroundColor: "rgba(251, 254, 196, 0.9)", // Semi-transparent white background for contrast
+                backgroundColor: "rgba(230, 244, 205, 0.9)", // Semi-transparent white background for contrast
                 boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Adds a shadow for better visibility
               }}
             >
@@ -77,11 +103,27 @@ const ClientDashboard = () => {
                 <strong>Deadline:</strong>{" "}
                 {new Date(project.deadline).toLocaleDateString()}
               </p>
+              <button
+                onClick={() => handleSelect(project.id)}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#FFA500",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s",
+                }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#FFA500")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "#FFA500")}
+              >
+                Select
+              </button>
             </div>
           ))}
         </div>
       ) : (
-        <p style={{ color: "#ffffff" }}>No projects posted yet.</p>
+        <p style={{ color: "#ffffff" }}>No projects match your search.</p>
       )}
     </div>
   );
