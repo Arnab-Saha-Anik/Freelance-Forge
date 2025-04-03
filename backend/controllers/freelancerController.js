@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Freelancer = require("../models/freelancerModel");
+const User = require("../models/userModel");
 const { verifyToken } = require("../middleware/authMiddleware"); // Import verifyToken middleware
 
 // @route   GET /freelancers/:userId
@@ -64,18 +65,34 @@ router.put("/:userId", verifyToken, async (req, res) => {
 // @route   DELETE /freelancers/:userId
 // @desc    Delete freelancer profile
 // @access  Private
-router.delete("/:userId", verifyToken, async (req, res) => {
-  try {
-    const freelancer = await Freelancer.findOneAndDelete({ userId: req.params.userId });
+router.delete("/delete", verifyToken, async (req, res) => {
+  const { email, password } = req.body;
 
-    if (!freelancer) {
-      return res.status(404).json({ error: "Freelancer profile not found" });
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.json({ message: "Freelancer profile deleted successfully" });
+    // Verify the password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    // Delete the freelancer profile
+    await Freelancer.findOneAndDelete({ userId: user._id });
+
+    // Delete the user account
+    await User.findByIdAndDelete(user._id);
+
+    res.json({ message: "Account and freelancer profile deleted successfully" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 module.exports = router;

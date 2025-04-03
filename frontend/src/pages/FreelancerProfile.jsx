@@ -3,18 +3,22 @@ import { useNavigate } from "react-router-dom";
 
 const FreelancerProfile = () => {
   const [profile, setProfile] = useState({
+    name: "",
     skills: "",
     portfolio: "",
     experience: "",
   });
-  const [updateData, setUpdateData] = useState({
-    name: "",
+  const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+  const [deleteData, setDeleteData] = useState({
+    email: "",
+    password: "",
+  });
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
   const [message, setMessage] = useState("");
-  const [updateMessage, setUpdateMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,7 +36,8 @@ const FreelancerProfile = () => {
         if (response.ok) {
           const data = await response.json();
           setProfile({
-            skills: data.skills.join(", "),
+            name: data.name || "",
+            skills: data.skills ? data.skills.join(", ") : "",
             portfolio: data.portfolio || "",
             experience: data.experience || "",
           });
@@ -49,8 +54,12 @@ const FreelancerProfile = () => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleUpdateChange = (e) => {
-    setUpdateData({ ...updateData, [e.target.name]: e.target.value });
+  const handlePasswordChange = (e) => {
+    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  };
+
+  const handleDeleteChange = (e) => {
+    setDeleteData({ ...deleteData, [e.target.name]: e.target.value });
   };
 
   const handleProfileSubmit = async (e) => {
@@ -66,6 +75,7 @@ const FreelancerProfile = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          name: profile.name,
           skills: profile.skills.split(",").map((skill) => skill.trim()),
           portfolio: profile.portfolio,
           experience: profile.experience,
@@ -83,62 +93,74 @@ const FreelancerProfile = () => {
     }
   };
 
-  const handleUpdateSubmit = async (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch("http://localhost:5000/users/update", {
+      const response = await fetch("http://localhost:5000/users/update-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(updateData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setUpdateMessage("Profile updated successfully!");
-      } else {
-        setUpdateMessage(data.error || "Failed to update profile.");
-      }
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      setUpdateMessage("An error occurred.");
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const userId = JSON.parse(atob(token.split(".")[1])).id;
-
-      const response = await fetch(`http://localhost:5000/freelancers/${userId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        body: JSON.stringify(passwordData),
       });
 
       if (response.ok) {
-        setMessage("Profile deleted successfully!");
-        navigate("/freelancer-dashboard");
+        setMessage("Password updated successfully!");
       } else {
-        setMessage("Failed to delete profile.");
+        setMessage("Failed to update password.");
       }
     } catch (err) {
-      console.error("Error deleting profile:", err);
+      console.error("Error updating password:", err);
       setMessage("An error occurred.");
     }
   };
 
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch("http://localhost:5000/users/delete", {
+        method: "DELETE", // Use DELETE method
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include token for authentication
+        },
+        body: JSON.stringify(deleteData), // Send email and password
+      });
+  
+      if (response.ok) {
+        alert("Account deleted successfully!");
+        navigate("/register"); // Redirect to the registration page
+      } else {
+        const data = await response.json();
+        setMessage(data.error || "Failed to delete account.");
+      }
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      setMessage("An error occurred.");
+    }
+  };
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
       <h1>Freelancer Profile</h1>
       {message && <p>{message}</p>}
       <form onSubmit={handleProfileSubmit}>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Name:</label>
+          <input
+            type="text"
+            name="name"
+            value={profile.name}
+            onChange={handleProfileChange}
+            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your name"
+            required
+          />
+        </div>
         <div style={{ marginBottom: "10px" }}>
           <label>Skills (comma-separated):</label>
           <input
@@ -147,6 +169,7 @@ const FreelancerProfile = () => {
             value={profile.skills}
             onChange={handleProfileChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your skills"
           />
         </div>
         <div style={{ marginBottom: "10px" }}>
@@ -157,6 +180,7 @@ const FreelancerProfile = () => {
             value={profile.portfolio}
             onChange={handleProfileChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your portfolio URL"
           />
         </div>
         <div style={{ marginBottom: "10px" }}>
@@ -166,40 +190,23 @@ const FreelancerProfile = () => {
             value={profile.experience}
             onChange={handleProfileChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Describe your experience"
           />
         </div>
-        <button type="submit" style={{ padding: "10px 15px", marginRight: "10px" }}>
+        <button type="submit" style={{ padding: "10px 15px" }}>
           Update Profile
-        </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          style={{ padding: "10px 15px", backgroundColor: "red", color: "white" }}
-        >
-          Delete Profile
         </button>
       </form>
 
-      <h2 style={{ marginTop: "40px" }}>Update Account</h2>
-      {updateMessage && <p>{updateMessage}</p>}
-      <form onSubmit={handleUpdateSubmit}>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={updateData.name}
-            onChange={handleUpdateChange}
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
-        </div>
+      <h2 style={{ marginTop: "40px" }}>Update Password</h2>
+      <form onSubmit={handlePasswordSubmit}>
         <div style={{ marginBottom: "10px" }}>
           <label>Current Password:</label>
           <input
             type="password"
             name="currentPassword"
-            value={updateData.currentPassword}
-            onChange={handleUpdateChange}
+            value={passwordData.currentPassword}
+            onChange={handlePasswordChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             required
           />
@@ -209,9 +216,10 @@ const FreelancerProfile = () => {
           <input
             type="password"
             name="newPassword"
-            value={updateData.newPassword}
-            onChange={handleUpdateChange}
+            value={passwordData.newPassword}
+            onChange={handlePasswordChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            required
           />
         </div>
         <div style={{ marginBottom: "10px" }}>
@@ -219,15 +227,59 @@ const FreelancerProfile = () => {
           <input
             type="password"
             name="confirmPassword"
-            value={updateData.confirmPassword}
-            onChange={handleUpdateChange}
+            value={passwordData.confirmPassword}
+            onChange={handlePasswordChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            required
           />
         </div>
         <button type="submit" style={{ padding: "10px 15px" }}>
-          Update Account
+          Update Password
         </button>
       </form>
+
+      <h2 style={{ marginTop: "40px" }}>Delete Account</h2>
+      <button
+        onClick={() => setShowDeleteForm(!showDeleteForm)}
+        style={{
+          padding: "10px 15px",
+          backgroundColor: "red",
+          color: "white",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        Delete Account ▼
+      </button>
+      {showDeleteForm && (
+        <form onSubmit={handleDeleteAccount} style={{ marginTop: "20px" }}>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Email:</label>
+            <input
+              type="email"
+              name="email"
+              value={deleteData.email}
+              onChange={handleDeleteChange}
+              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: "10px" }}>
+            <label>Password:</label>
+            <input
+              type="password"
+              name="password"
+              value={deleteData.password}
+              onChange={handleDeleteChange}
+              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+              required
+            />
+          </div>
+          <button type="submit" style={{ padding: "10px 15px", backgroundColor: "red", color: "white" }}>
+            Confirm Delete
+          </button>
+        </form>
+      )}
     </div>
   );
 };

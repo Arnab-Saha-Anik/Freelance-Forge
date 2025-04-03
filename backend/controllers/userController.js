@@ -119,6 +119,38 @@ router.put("/update", verifyToken, async (req, res) => {
   }
 });
 
+// @route   DELETE /users/delete
+// @desc    Delete user account and corresponding freelancer profile
+// @access  Private
+router.delete("/delete", verifyToken, async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify the password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    // Delete the freelancer profile associated with the user
+    await Freelancer.findOneAndDelete({ userId: user._id });
+
+    // Delete the user account
+    await User.findByIdAndDelete(user._id);
+
+    res.json({ message: "Account and freelancer profile deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting account:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 module.exports = router;
 
