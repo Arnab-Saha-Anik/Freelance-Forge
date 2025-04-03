@@ -9,9 +9,19 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(to bottom, #A1045A, #FF007F, #FF6A6A)', minHeight: '100vh' }}>
-      <h1 style={{ color: '#000000' }}>Welcome to the Freelance Forge</h1>
-      <p style={{ color: '#000000' }}>Learn more, develop more!</p>
+    <div
+      style={{
+        textAlign: 'center',
+        padding: '20px',
+        backgroundImage: 'url("https://img.freepik.com/premium-vector/working-top-view-male-employee-is-thinking-finance-accounting-find-balance-sheet-establishment-company-flat-style-cartoon-illustration-vector_610956-846.jpg?w=740")' ,// Replace with the correct path to your image
+        backgroundSize: 'cover', // Ensures the image covers the entire background
+        backgroundPosition: 'center', // Centers the image
+        backgroundRepeat: 'no-repeat', // Prevents the image from repeating
+        minHeight: '100vh',
+      }}
+    >
+      <h1 style={{ color: '#ffffff' }}>Welcome to the Freelance Forge</h1>
+      <p style={{ color: '#ffffff' }}>Learn more, develop more!</p>
       <div style={{ marginTop: '20px' }}>
         <button
           style={{
@@ -24,8 +34,8 @@ const HomePage = () => {
             cursor: 'pointer',
             transition: 'background-color 0.3s',
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFA500')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '##FFA500')}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFB347')}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = '#FFA500')}
           onClick={() => navigate('/register')}
         >
           Register
@@ -41,7 +51,7 @@ const HomePage = () => {
             cursor: 'pointer',
             transition: 'background-color 0.3s',
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFA500')}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = '#FFB347')}
           onMouseLeave={(e) => (e.target.style.backgroundColor = '#FFA500')}
           onClick={() => navigate('/login')}
         >
