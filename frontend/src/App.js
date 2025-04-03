@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import ClientDashboard from "./components/Dashboard/ClientDashboard";
 import FreelancerDashboard from "./components/Dashboard/FreelancerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import FreelancerProfile from "./pages/FreelancerProfile";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute allowedRole="freelancer" />}>
             <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
+            <Route path="/freelancer-dashboard/profile" element={<FreelancerProfile />} />
           </Route>
         </Routes>
       </Router>

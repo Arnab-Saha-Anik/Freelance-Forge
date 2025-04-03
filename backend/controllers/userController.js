@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const { verifyToken } = require("../middleware/authMiddleware");
 
 router.post("/register", async (req, res) => {
   try {
@@ -72,6 +73,51 @@ router.post('/login', async (req, res) => {
       res.status(500).json({ error: err.message });
   }
 }); 
+
+// @route   PUT /users/update
+// @desc    Update user profile (name, password)
+// @access  Private
+router.put("/update", verifyToken, async (req, res) => {
+  const { name, currentPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify the current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
+    // Check if new password and confirm password match
+    if (newPassword && newPassword !== confirmPassword) {
+      return res.status(400).json({ error: "New password and confirm password do not match" });
+    }
+
+    // Update the user's name
+    if (name) {
+      user.name = name;
+    }
+
+    // Update the user's password if provided
+    if (newPassword) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    // Save the updated user
+    await user.save();
+
+    res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
 module.exports = router;

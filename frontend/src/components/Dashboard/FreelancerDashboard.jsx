@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const FreelancerDashboard = () => {
   const [projects, setProjects] = useState([]); // State to store projects
+  const [profile, setProfile] = useState(null); // State to store freelancer profile
   const [loading, setLoading] = useState(true); // State to manage loading
   const [error, setError] = useState(null); // State to manage errors
   const navigate = useNavigate(); // For navigation
@@ -10,7 +11,28 @@ const FreelancerDashboard = () => {
   useEffect(() => {
     document.title = "Freelance Forge";
 
-    // Fetch projects from the backend
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from JWT
+
+        const response = await fetch(`http://localhost:5000/freelancers/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include token in the request
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch freelancer profile");
+        }
+
+        const data = await response.json();
+        setProfile(data); // Set the freelancer profile
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
     const fetchProjects = async () => {
       try {
         const response = await fetch("http://localhost:5000/projects", {
@@ -23,13 +45,14 @@ const FreelancerDashboard = () => {
         }
         const data = await response.json();
         setProjects(data); // Set the fetched projects
-        setLoading(false);
       } catch (err) {
         setError(err.message);
+      } finally {
         setLoading(false);
       }
     };
 
+    fetchProfile();
     fetchProjects();
   }, []);
 
@@ -72,11 +95,40 @@ const FreelancerDashboard = () => {
           Logout
         </button>
       </div>
-      <p style={{ textAlign: "center", fontSize: "18px", marginBottom: "30px" }}>
-        Welcome to your dashboard! Here you can view and bid on available projects.
-      </p>
-
-      {/* Available Projects Section */}
+      {profile && (
+        <div
+          style={{
+            marginBottom: "30px",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          <h2>Profile Information</h2>
+          <p>
+            <strong>Skills:</strong> {profile.skills.join(", ")}
+          </p>
+          <p>
+            <strong>Portfolio:</strong>{" "}
+            <a href={profile.portfolio} target="_blank" rel="noopener noreferrer">
+              {profile.portfolio}
+            </a>
+          </p>
+          <p>
+            <strong>Experience:</strong> {profile.experience}
+          </p>
+          <p>
+            <strong>Earnings:</strong> ${profile.earnings}
+          </p>
+          <p>
+            <strong>Reviews:</strong> {profile.reviews}/5
+          </p>
+          <p>
+            <strong>Projects Completed:</strong> {profile.projectsCompleted}
+          </p>
+        </div>
+      )}
       <div
         style={{
           marginTop: "40px",
