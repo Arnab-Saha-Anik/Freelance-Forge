@@ -4,7 +4,7 @@ const cors = require("cors"); // Import cors middleware
 const connectDB = require("./config/database"); // Import the database connection
 const userController = require("./controllers/userController"); // Import user routes
 const freelancerController = require("./controllers/freelancerController"); // Import freelancer routes
-
+const projectController = require("./controllers/projectController"); // Import project routes
 dotenv.config();
 // Connect to MongoDB
 connectDB();
@@ -21,7 +21,8 @@ app.use(express.urlencoded({ extended: true })); // Parse FormData
 // Routes
 app.use("/users", userController); // Use the user routes
 app.use("/freelancers", freelancerController); // Use the freelancer routes
-
+app.post("/projects", projectController.createProject); // Add a new project
+app.get("/projects", projectController.getAllProjects); // Get all projects
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
