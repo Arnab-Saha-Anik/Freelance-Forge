@@ -42,31 +42,36 @@ router.post("/register", async (req, res) => {
 
 
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-    }
-    try {
-        // Find user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ error: 'Invalid email or password' });
-        }
+  const { email, password, role } = req.body; // Include role from the frontend
+  if (!email || !password || !role) {
+      return res.status(400).json({ error: 'Email, password, and role are required' });
+  }
+  try {
+      // Find user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.status(400).json({ error: 'Invalid email or password' });
+      }
 
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ error: 'Invalid email or password' });
-        }
+      // Compare passwords
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+          return res.status(400).json({ error: 'Invalid email or password' });
+      }
 
-        // Generate JWT token
-        const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      // Check if the role matches
+      if (user.role.toLowerCase() !== role.toLowerCase()) {
+          return res.status(403).json({ error: 'Selected role does not match your account role' });
+      }
 
-        res.status(200).json({ message: 'Login successful', token });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+      // Generate JWT token
+      const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      res.status(200).json({ message: 'Login successful', token, role: user.role });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+}); 
 
 
 module.exports = router;
