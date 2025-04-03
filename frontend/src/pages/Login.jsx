@@ -20,12 +20,11 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { email, password, userType } = formData;
+    const { email, password, role } = formData;
   
-    if (userType === "default") {
+    if (role === "default") {
       setErrorMessage("Please select a user type.");
       return;
     }
@@ -40,24 +39,33 @@ const Login = () => {
       const response = await axios.post("http://localhost:5000/users/login", {
         email,
         password,
+        role,
       });
-
-      setSuccessMessage('Login successful!');
-      setErrorMessage('');
-      localStorage.setItem('token', response.data.token); // Store the token
   
-      if (userType === 'Client') {
-        navigate('/client-dashboard'); // Redirect to RiderPage
-      } else {
-        navigate('freelancer-dashboard'); // Redirect to DriverPage
+      const backendRole = response.data.role; // Get the role from the backend response
+  
+      if (backendRole.toLowerCase() !== role.toLowerCase()) {
+        setErrorMessage("Selected role does not match your account role.");
+        return;
       }
   
+      setSuccessMessage("Login successful!");
+      setErrorMessage("");
+      localStorage.setItem("token", response.data.token); // Store the token
+  
+      // Redirect based on role
+      if (backendRole.toLowerCase() === "freelancer") {
+        navigate("/freelancer-dashboard");
+      } else if (backendRole.toLowerCase() === "client") {
+        navigate("/client-dashboard");
+      }
     } catch (err) {
       console.log(err.response); // Log the error for debugging
       setErrorMessage(err.response?.data?.error || "An error occurred.");
       setSuccessMessage("");
     }
   };
+   
   return (
     <div
       style={{

@@ -8,7 +8,7 @@ const ClientDashboard = () => {
     // Fetch projects from the backend
     const fetchProjects = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/projects"); // Replace with your backend API endpoint
+        const response = await fetch("http://localhost:5000/projects"); // Replace with your backend API endpoint
         const data = await response.json();
         setProjects(data);
         setLoading(false);
