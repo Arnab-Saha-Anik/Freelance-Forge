@@ -1,139 +1,194 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Register = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("default");
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "default",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (role === "default") {
-      alert("Please select a valid role (Client or Freelancer) to proceed.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      alert("Passwords do not match. Please try again.");
-      return;
-    }
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Role:", role);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-    if (role === "client") {
-      navigate("/client-dashboard");
-    } else {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const { fullName, email, password, confirmPassword, role } = formData;
+
+    // Validate required fields
+    if (!fullName || !email || !password || !confirmPassword) {
+      setErrorMessage("Please fill out all fields.");
+      return;
+    }
+
+    // Validate role selection
+    if (role === "default") {
+      setErrorMessage("Please select a valid role (Client or Freelancer).");
+      return;
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match. Please try again.");
+      return;
+    }
+
+    try {
+      // Send registration data to the backend
+      const response = await axios.post("http://localhost:5000/users/register", {
+        name: fullName,
+        email,
+        password,
+        role,
+      });
+
+      setSuccessMessage(response.data.message);
+      setErrorMessage("");
       alert("Registration successful! You can now log in.");
-      navigate("/login");
+      navigate("/login"); // Redirect to login page
+    } catch (err) {
+      console.error(err.response); // Log the error for debugging
+      setErrorMessage(err.response?.data?.message || "An error occurred.");
+      setSuccessMessage("");
     }
   };
 
   return (
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom, #D16BA5, #C777B9, #BA83CA, #AA8FD8, #9A9AE1, #8AA7E5, #79B3E1, #69BFDD)', // Gradient background
-  }}
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        background: "linear-gradient(to bottom, #D16BA5, #C777B9, #BA83CA, #AA8FD8, #9A9AE1)",
+      }}
     >
       <div
         style={{
-          width: '400px',
-          padding: '30px',
-          backgroundColor: 'rgba(164, 203, 228, 0.8)',
-          borderRadius: '10px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+          width: "400px",
+          padding: "30px",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          borderRadius: "10px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
         }}
       >
-        <h1 style={{ color: '#593D3D', textAlign: 'center' }}>Sign Up</h1>
-        <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
-            <label htmlFor="name" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Name:</label>
+        <h1 style={{ color: "#593D3D", textAlign: "center" }}>Sign Up</h1>
+        <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+          {errorMessage && (
+            <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>
+              {errorMessage}
+            </p>
+          )}
+          {successMessage && (
+            <p style={{ color: "green", textAlign: "center", marginBottom: "15px" }}>
+              {successMessage}
+            </p>
+          )}
+          <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>
+            <label htmlFor="fullName" style={{ color: "#593D3D", display: "block", marginBottom: "5px" }}>
+              Full Name:
+            </label>
             <input
               type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="fullName"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
               required
               style={{
-                padding: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '100%',
-                boxSizing: 'border-box',
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
-            <label htmlFor="email" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Email:</label>
+          <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>
+            <label htmlFor="email" style={{ color: "#593D3D", display: "block", marginBottom: "5px" }}>
+              Email:
+            </label>
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
               required
               style={{
-                padding: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '100%',
-                boxSizing: 'border-box',
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
-            <label htmlFor="password" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Password:</label>
+          <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>
+            <label htmlFor="password" style={{ color: "#593D3D", display: "block", marginBottom: "5px" }}>
+              Password:
+            </label>
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               required
               style={{
-                padding: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '100%',
-                boxSizing: 'border-box',
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
-            <label htmlFor="confirmPassword" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Confirm Password:</label>
+          <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>
+            <label htmlFor="confirmPassword" style={{ color: "#593D3D", display: "block", marginBottom: "5px" }}>
+              Confirm Password:
+            </label>
             <input
               type="password"
               id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
               required
               style={{
-                padding: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '100%',
-                boxSizing: 'border-box',
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             />
           </div>
-          <div className="form-group" style={{ marginBottom: '15px', textAlign: 'left' }}>
-            <label htmlFor="role" style={{ color: '#593D3D', display: 'block', marginBottom: '5px' }}>Role:</label>
+          <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>
+            <label htmlFor="role" style={{ color: "#593D3D", display: "block", marginBottom: "5px" }}>
+              Role:
+            </label>
             <select
               id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
               required
               style={{
-                padding: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '100%',
-                boxSizing: 'border-box',
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             >
               <option value="default">Select Role</option>
@@ -144,32 +199,32 @@ const Register = () => {
           <button
             type="submit"
             style={{
-              padding: '10px 20px',
-              margin: '10px 0',
-              backgroundColor: '#1E7E34',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s',
-              width: '100%',
-              boxSizing: 'border-box',
+              padding: "10px 20px",
+              margin: "10px 0",
+              backgroundColor: "#1E7E34",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              transition: "background-color 0.3s",
+              width: "100%",
+              boxSizing: "border-box",
             }}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = '#28A745')}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = '#1E7E34')}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = "#28A745")}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = "#1E7E34")}
           >
             Sign Up
           </button>
         </form>
-        <p style={{ color: '#593D3D', marginTop: '20px', textAlign: 'center' }}>
-          Already signed up?{' '}
+        <p style={{ color: "#593D3D", marginTop: "20px", textAlign: "center" }}>
+          Already signed up?{" "}
           <span
             style={{
-              color: '#007BFF',
-              textDecoration: 'underline',
-              cursor: 'pointer',
+              color: "#007BFF",
+              textDecoration: "underline",
+              cursor: "pointer",
             }}
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
           >
             Login
           </span>

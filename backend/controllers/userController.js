@@ -1,11 +1,9 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
-
+const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
 
-// Register User
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -42,59 +40,34 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login User
-router.post("/login", async (req, res) => {
-  try {
+
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-
-    // Check if the user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
+    try {
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid email or password' });
+        }
 
-    // Check the password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+        // Compare passwords
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: 'Invalid email or password' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.status(200).json({ message: 'Login successful', token });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    // Generate JWT
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-  } catch (error) {
-    console.error("Error in loginUser:", error);
-    res.status(500).json({ message: "Server error" });
-  }
 });
 
-// Authentication Middleware
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization;
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: "Invalid token" });
-  }
-};
-
-// Get User (Protected)
-router.get("/me", authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
 
 module.exports = router;
 
