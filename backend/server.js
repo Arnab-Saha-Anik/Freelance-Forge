@@ -23,6 +23,9 @@ app.use("/users", userController); // Use the user routes
 app.use("/freelancers", freelancerController); // Use the freelancer routes
 app.post("/projects", projectController.createProject); // Add a new project
 app.get("/projects", projectController.getAllProjects); // Get all projects
+app.delete("/projects/:id", projectController.deleteProject);
+
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

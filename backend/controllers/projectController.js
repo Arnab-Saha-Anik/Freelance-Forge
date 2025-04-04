@@ -48,8 +48,16 @@ const createProject = async (req, res) => {
 // Get all projects
 const getAllProjects = async (req, res) => {
   try {
+    const { clientId } = req.query; // Get clientId from query params
     const projects = await Project.find();
-    res.status(200).json(projects);
+
+    // Add a flag to differentiate projects created by the logged-in client
+    const updatedProjects = projects.map((project) => ({
+      ...project._doc,
+      isOwner: project.client === clientId, // Check if the project belongs to the logged-in client
+    }));
+
+    res.status(200).json(updatedProjects);
   } catch (error) {
     res.status(500).json({ message: "Error fetching projects", error });
   }

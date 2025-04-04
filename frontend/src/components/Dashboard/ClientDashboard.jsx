@@ -12,13 +12,17 @@ const ClientDashboard = () => {
     deadline: "",
   });
   const [selectedProject, setSelectedProject] = useState(null); // State to track the selected project
+  const loggedInClientId = "64a1234567890abcdef12345"; // Replace with the logged-in client's ID
 
+  // Fetch projects from the database
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch("http://localhost:5000/projects");
+        const response = await fetch(
+          `http://localhost:5000/projects?clientId=${loggedInClientId}`
+        );
         const data = await response.json();
-        setProjects(Array.isArray(data) ? data : []); // Ensure `data` is an array
+        setProjects(Array.isArray(data) ? data : []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -29,7 +33,7 @@ const ClientDashboard = () => {
     fetchProjects();
   }, []);
 
-  // Handle form submission
+  // Handle form submission to add a new project
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -44,7 +48,13 @@ const ClientDashboard = () => {
       if (response.ok) {
         const createdProject = await response.json();
         setProjects([...projects, createdProject]); // Add the new project to the list
-        setNewProject({ title: "", description: "", client: "64a1234567890abcdef12345", budget: "", deadline: "" }); // Reset form
+        setNewProject({
+          title: "",
+          description: "",
+          client: loggedInClientId,
+          budget: "",
+          deadline: "",
+        }); // Reset form
       } else {
         console.error("Error creating project");
       }
@@ -53,11 +63,21 @@ const ClientDashboard = () => {
     }
   };
 
-  // Handle project selection
-  const handleSelect = (id) => {
-    const project = projects.find((project) => project._id === id);
-    setSelectedProject(project); // Set the selected project
-    console.log("Selected project:", project); // Log the selected project
+  // Handle project deletion
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setProjects(projects.filter((project) => project._id !== id)); // Remove the deleted project from the list
+      } else {
+        console.error("Error deleting project");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
   };
 
   // Filter projects based on the search term
@@ -131,7 +151,7 @@ const ClientDashboard = () => {
                 border: "1px solid #ddd",
                 padding: "10px",
                 margin: "10px",
-                backgroundColor: selectedProject?._id === project._id ? "#FFD1DC" : "pink", // Light pink background for selected project // Light yellow background for selected project
+                backgroundColor: project.isOwner ? "#D1FFD1" : "#FFD1DC", // Green for logged-in client's projects, pink for others
               }}
             >
               <h3>{project.title}</h3>
@@ -140,8 +160,23 @@ const ClientDashboard = () => {
               <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
               <p>Progress: {project.progress}</p>
               <p>Bids Received: {project.bids.length}</p>
+              {project.isOwner && (
+                <button
+                  onClick={() => handleDelete(project._id)}
+                  style={{
+                    backgroundColor: "red",
+                    color: "white",
+                    border: "none",
+                    padding: "5px 10px",
+                    cursor: "pointer",
+                    marginRight: "10px",
+                  }}
+                >
+                  Delete
+                </button>
+              )}
               <button
-                onClick={() => handleSelect(project._id)}
+                onClick={() => setSelectedProject(project)}
                 style={{
                   backgroundColor: "blue",
                   color: "white",
@@ -163,11 +198,21 @@ const ClientDashboard = () => {
       {selectedProject && (
         <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ddd" }}>
           <h2>Selected Project</h2>
-          <p><strong>Title:</strong> {selectedProject.title}</p>
-          <p><strong>Description:</strong> {selectedProject.description}</p>
-          <p><strong>Budget:</strong> ${selectedProject.budget}</p>
-          <p><strong>Deadline:</strong> {new Date(selectedProject.deadline).toLocaleDateString()}</p>
-          <p><strong>Progress:</strong> {selectedProject.progress}</p>
+          <p>
+            <strong>Title:</strong> {selectedProject.title}
+          </p>
+          <p>
+            <strong>Description:</strong> {selectedProject.description}
+          </p>
+          <p>
+            <strong>Budget:</strong> ${selectedProject.budget}
+          </p>
+          <p>
+            <strong>Deadline:</strong> {new Date(selectedProject.deadline).toLocaleDateString()}
+          </p>
+          <p>
+            <strong>Progress:</strong> {selectedProject.progress}
+          </p>
         </div>
       )}
     </div>
