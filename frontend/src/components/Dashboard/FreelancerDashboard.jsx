@@ -139,7 +139,15 @@ const FreelancerDashboard = () => {
           onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
         >
-          Click Here to Learn <span style={{ fontSize: "1.2rem" }}>↓</span>
+          {showLearningMaterials ? (
+            <>
+              Close Learning Materials <span style={{ fontSize: "1.2rem" }}>↑</span>
+            </>
+          ) : (
+            <>
+              Click Here to Learn <span style={{ fontSize: "1.2rem" }}>↓</span>
+            </>
+          )}
         </button>
         {showLearningMaterials && (
           <ul
@@ -298,7 +306,7 @@ const FreelancerDashboard = () => {
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
                   onClick={() => handleBidClick(project)}
                 >
-                  Bid <span style={{ fontSize: "1.2rem" }}>→</span>
+                  Bid
                 </button>
               </li>
             ))}
