@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Freelancer = require("../models/freelancerModel");
+const FreelancerInformation = require("../models/freelancerInformationModel");
 const User = require("../models/userModel");
 const { verifyToken } = require("../middleware/authMiddleware"); // Import verifyToken middleware
 
@@ -9,11 +9,11 @@ const { verifyToken } = require("../middleware/authMiddleware"); // Import verif
 // @access  Private
 router.get("/:userId", verifyToken, async (req, res) => {
   try {
-    const freelancer = await Freelancer.findOne({ userId: req.params.userId });
-    if (!freelancer) {
+    const freelancerInformation = await FreelancerInformation.findOne({ userId: req.params.userId });
+    if (!freelancerInformation) {
       return res.status(404).json({ error: "Freelancer profile not found" });
     }
-    res.json(freelancer);
+    res.json(freelancerInformation);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -26,14 +26,14 @@ router.post("/", verifyToken, async (req, res) => {
   const { userId, skills, portfolio, experience } = req.body;
 
   try {
-    const freelancer = new Freelancer({
+    const freelancerInformation = new FreelancerInformation({
       userId,
       skills,
       portfolio,
       experience,
     });
-    await freelancer.save();
-    res.status(201).json(freelancer);
+    await freelancerInformation.save();
+    res.status(201).json(freelancerInformation);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -46,17 +46,17 @@ router.put("/:userId", verifyToken, async (req, res) => {
   const { skills, portfolio, experience } = req.body;
 
   try {
-    const freelancer = await Freelancer.findOneAndUpdate(
+    const freelancerInformation = await FreelancerInformation.findOneAndUpdate(
       { userId: req.params.userId },
       { skills, portfolio, experience },
       { new: true }
     );
 
-    if (!freelancer) {
+    if (!freelancerInformation) {
       return res.status(404).json({ error: "Freelancer profile not found" });
     }
 
-    res.json(freelancer);
+    res.json(freelancerInformation);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -82,7 +82,7 @@ router.delete("/delete", verifyToken, async (req, res) => {
     }
 
     // Delete the freelancer profile
-    await Freelancer.findOneAndDelete({ userId: user._id });
+    await FreelancerInformation.findOneAndDelete({ userId: user._id });
 
     // Delete the user account
     await User.findByIdAndDelete(user._id);
