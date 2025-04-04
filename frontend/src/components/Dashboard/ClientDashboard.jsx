@@ -7,14 +7,13 @@ const ClientDashboard = () => {
   const [newProject, setNewProject] = useState({
     title: "",
     description: "",
-    client: "64a1234567890abcdef12345", // Replace with the logged-in client's ID
     budget: "",
     deadline: "",
   });
-  const [selectedProject, setSelectedProject] = useState(null); // State to track the selected project
-  const loggedInClientId = "64a1234567890abcdef12345"; // Replace with the logged-in client's ID
 
-  // Fetch projects from the database
+  // Get the logged-in client's ID (e.g., from localStorage or global state)
+  const loggedInClientId = localStorage.getItem("clientId"); // Replace with your auth logic
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -31,9 +30,8 @@ const ClientDashboard = () => {
     };
 
     fetchProjects();
-  }, []);
+  }, [loggedInClientId]);
 
-  // Handle form submission to add a new project
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -41,20 +39,20 @@ const ClientDashboard = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-client-id": loggedInClientId, // Pass the logged-in client's ID
         },
         body: JSON.stringify(newProject),
       });
 
       if (response.ok) {
         const createdProject = await response.json();
-        setProjects([...projects, createdProject]); // Add the new project to the list
+        setProjects([...projects, createdProject]);
         setNewProject({
           title: "",
           description: "",
-          client: loggedInClientId,
           budget: "",
           deadline: "",
-        }); // Reset form
+        });
       } else {
         console.error("Error creating project");
       }
@@ -63,24 +61,27 @@ const ClientDashboard = () => {
     }
   };
 
-  // Handle project deletion
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`http://localhost:5000/projects/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-client-id": loggedInClientId, // Pass the logged-in client's ID
+        },
       });
-
+  
       if (response.ok) {
-        setProjects(projects.filter((project) => project._id !== id)); // Remove the deleted project from the list
+        setProjects(projects.filter((project) => project._id !== id));
       } else {
-        console.error("Error deleting project");
+        const errorData = await response.json();
+        console.error("Error deleting project:", errorData.message);
       }
     } catch (error) {
       console.error("Error deleting project:", error);
     }
   };
 
-  // Filter projects based on the search term
   const filteredProjects = projects.filter(
     (project) =>
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,7 +92,6 @@ const ClientDashboard = () => {
     <div style={{ padding: "20px", textAlign: "center" }}>
       <h1>Client Dashboard</h1>
 
-      {/* Form to create a new project */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
         <input
           type="text"
@@ -130,7 +130,6 @@ const ClientDashboard = () => {
         </button>
       </form>
 
-      {/* Search bar */}
       <input
         type="text"
         placeholder="Search projects..."
@@ -139,7 +138,6 @@ const ClientDashboard = () => {
         style={{ padding: "10px", marginBottom: "20px" }}
       />
 
-      {/* Display projects */}
       {loading ? (
         <p>Loading projects...</p>
       ) : filteredProjects.length > 0 ? (
@@ -151,7 +149,7 @@ const ClientDashboard = () => {
                 border: "1px solid #ddd",
                 padding: "10px",
                 margin: "10px",
-                backgroundColor: project.isOwner ? "#D1FFD1" : "#FFD1DC", // Green for logged-in client's projects, pink for others
+                backgroundColor: project.isOwner ? "#D1FFD1" : "#FFD1DC",
               }}
             >
               <h3>{project.title}</h3>
@@ -175,45 +173,11 @@ const ClientDashboard = () => {
                   Delete
                 </button>
               )}
-              <button
-                onClick={() => setSelectedProject(project)}
-                style={{
-                  backgroundColor: "blue",
-                  color: "white",
-                  border: "none",
-                  padding: "5px 10px",
-                  cursor: "pointer",
-                }}
-              >
-                Select
-              </button>
             </div>
           ))}
         </div>
       ) : (
         <p>No projects found.</p>
-      )}
-
-      {/* Display selected project details */}
-      {selectedProject && (
-        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ddd" }}>
-          <h2>Selected Project</h2>
-          <p>
-            <strong>Title:</strong> {selectedProject.title}
-          </p>
-          <p>
-            <strong>Description:</strong> {selectedProject.description}
-          </p>
-          <p>
-            <strong>Budget:</strong> ${selectedProject.budget}
-          </p>
-          <p>
-            <strong>Deadline:</strong> {new Date(selectedProject.deadline).toLocaleDateString()}
-          </p>
-          <p>
-            <strong>Progress:</strong> {selectedProject.progress}
-          </p>
-        </div>
       )}
     </div>
   );
