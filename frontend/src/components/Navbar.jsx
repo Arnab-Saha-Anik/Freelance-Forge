@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const location = useLocation(); // Get the current route
+  const navigate = useNavigate(); // For navigation after logout
+  const isClientDashboard = location.pathname === "/client-dashboard"; // Check if the current route is the client dashboard
   const isFreelancerDashboard = location.pathname === "/freelancer-dashboard"; // Check if the current route is the freelancer dashboard
 
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to toggle dropdown
@@ -49,6 +51,12 @@ const Navbar = () => {
     }
   }, [isFreelancerDashboard]);
 
+  const handleLogout = () => {
+    // Clear any stored tokens or session data
+    localStorage.removeItem("token");
+    navigate("/"); // Redirect to the homepage
+  };
+
   return (
     <nav
       style={{
@@ -73,6 +81,23 @@ const Navbar = () => {
           Freelance Forge
         </Link>
       </div>
+
+      {/* Logout Button for Client Dashboard */}
+      {isClientDashboard && (
+        <button
+          onClick={handleLogout}
+          style={{
+            backgroundColor: "red",
+            color: "white",
+            border: "none",
+            padding: "10px 15px",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Logout
+        </button>
+      )}
 
       {/* Dropdown Menu (only on Freelancer Dashboard) */}
       {isFreelancerDashboard && (

@@ -131,7 +131,7 @@ const ClientDashboard = () => {
                 border: "1px solid #ddd",
                 padding: "10px",
                 margin: "10px",
-                backgroundColor: selectedProject?._id === project._id ? "#f0f8ff" : "white", // Highlight selected project
+                backgroundColor: selectedProject?._id === project._id ? "#FFD1DC" : "pink", // Light pink background for selected project // Light yellow background for selected project
               }}
             >
               <h3>{project.title}</h3>
