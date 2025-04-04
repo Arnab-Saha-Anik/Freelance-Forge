@@ -1,62 +1,153 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [featuredProjects, setFeaturedProjects] = useState([]);
+  const [showProjects, setShowProjects] = useState(false); // State to toggle dropdown
 
   useEffect(() => {
-    document.title = 'Freelance Forge';
+    document.title = "Freelance Forge";
+
+    // Fetch featured projects from the backend
+    const fetchFeaturedProjects = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/projects/featured");
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedProjects(data);
+        } else {
+          console.error("Failed to fetch featured projects");
+        }
+      } catch (error) {
+        console.error("Error fetching featured projects:", error);
+      }
+    };
+
+    fetchFeaturedProjects();
   }, []);
 
   return (
     <div
       style={{
-        textAlign: 'center',
-        padding: '20px',
-        backgroundImage: 'url("https://img.freepik.com/free-vector/call-center-agent-concept_23-2147939653.jpg?t=st=1743675998~exp=1743679598~hmac=eb1814a83ed06fd9232524a84dc64e8859824c2fe47ee7dffe7adf2d77b7b59a&w=826")',
-        backgroundSize: 'cover', // Ensures the image covers the entire background
-        backgroundPosition: 'center', // Centers the image
-        backgroundRepeat: 'no-repeat', // Prevents the image from repeating
-        minHeight: '100vh',
+        display: "flex", // Use flexbox
+        flexDirection: "column", // Stack items vertically
+        justifyContent: "center", // Center items vertically
+        alignItems: "center", // Center items horizontally
+        textAlign: "center",
+        padding: "20px",
+        backgroundImage:
+          'url("https://img.freepik.com/free-vector/call-center-agent-concept_23-2147939653.jpg?t=st=1743675998~exp=1743679598~hmac=eb1814a83ed06fd9232524a84dc64e8859824c2fe47ee7dffe7adf2d77b7b59a&w=826")',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        minHeight: "100vh", // Full viewport height
       }}
     >
-      <h1 style={{ color: '#000000' }}>Welcome to the Freelance Forge</h1>
-      <p style={{ color: '#000000' }}>Learn more, develop more!</p>
-      <div style={{ marginTop: '20px' }}>
+      <h1 style={{ color: "#000000", fontSize: "3rem", fontWeight: "bold" }}>
+        Welcome to the Freelance Forge
+      </h1>
+      <p style={{ color: "#000000", fontSize: "1.5rem", marginTop: "10px" }}>
+        Learn more, develop more!
+      </p>
+      <div style={{ marginTop: "30px" }}>
         <button
           style={{
-            padding: '10px 20px',
-            margin: '10px',
-            backgroundColor: '#ADFF2F',
-            color: '#000',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s',
+            padding: "15px 30px",
+            margin: "15px",
+            backgroundColor: "#ADFF2F",
+            color: "#000",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "1.2rem",
+            fontWeight: "bold",
+            transition: "background-color 0.3s",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#ADFF2F')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '#ADFF2F')}
-          onClick={() => navigate('/register')}
+          onClick={() => navigate("/register")}
         >
           Register
         </button>
         <button
           style={{
-            padding: '10px 20px',
-            margin: '10px',
-            backgroundColor: '#ADFF2F',
-            color: '#000',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s',
+            padding: "15px 30px",
+            margin: "15px",
+            backgroundColor: "#ADFF2F",
+            color: "#000",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "1.2rem",
+            fontWeight: "bold",
+            transition: "background-color 0.3s",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = '#ADFF2F')}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = '#ADFF2F')}
-          onClick={() => navigate('/login')}
+          onClick={() => navigate("/login")}
         >
           Login
         </button>
+      </div>
+
+      <div style={{ marginTop: "50px" }}>
+        <button
+          style={{
+            padding: "15px 30px",
+            backgroundColor: "#007BFF",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "1.2rem",
+            fontWeight: "bold",
+            transition: "background-color 0.3s",
+          }}
+          onClick={() => setShowProjects(!showProjects)} // Toggle dropdown
+        >
+          {showProjects ? "Hide Featured Projects" : "See Our Featured Projects Here"}
+        </button>
+
+        {showProjects && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "20px",
+              marginTop: "30px",
+            }}
+          >
+            {featuredProjects.length > 0 ? (
+              featuredProjects.map((project) => (
+                <div
+                  key={project._id}
+                  style={{
+                    width: "350px",
+                    padding: "20px",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: "10px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                    textAlign: "center", // Center text inside project cards
+                    margin: "0 auto", // Center the project cards
+                  }}
+                >
+                  <h3 style={{ color: "#000000", fontSize: "1.5rem", fontWeight: "bold" }}>
+                    {project.title}
+                  </h3>
+                  <p style={{ color: "#555555", fontSize: "1.2rem" }}>{project.description}</p>
+                  <p style={{ color: "#000000", fontWeight: "bold", fontSize: "1.2rem" }}>
+                    Budget: ${project.budget}
+                  </p>
+                  <p style={{ color: "#000000", fontSize: "1.2rem" }}>
+                    Deadline: {new Date(project.deadline).toLocaleDateString()}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#000000", fontSize: "1.5rem" }}>
+                No featured projects available.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

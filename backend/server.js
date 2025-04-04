@@ -24,6 +24,8 @@ app.use("/freelancers", freelancerController); // Use the freelancer routes
 app.post("/projects", projectController.createProject); // Add a new project
 app.get("/projects", projectController.getAllProjects); // Get all projects
 app.delete("/projects/:id", projectController.deleteProject);
+// Add a route to fetch featured projects
+app.get("/projects/featured", projectController.getFeaturedProjects);
 
 
 // Start the server

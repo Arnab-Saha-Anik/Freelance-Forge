@@ -165,8 +165,8 @@ const Login = () => {
               }}
             >
               <option value="default">Select Role</option>
-              <option value="freelancer">Freelancer</option>
               <option value="client">Client</option>
+              <option value="freelancer">Freelancer</option>
             </select>
           </div>
           <button

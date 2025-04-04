@@ -81,8 +81,22 @@ const getAllProjects = async (req, res) => {
   }
 };
 
+// Get featured projects
+const getFeaturedProjects = async (req, res) => {
+  try {
+    // Fetch the latest 5 projects (or any number you prefer)
+    const featuredProjects = await Project.find().sort({ createdAt: -1 }).limit(6);
+
+    res.status(200).json(featuredProjects);
+  } catch (error) {
+    console.error("Error fetching featured projects:", error);
+    res.status(500).json({ message: "Error fetching featured projects", error });
+  }
+};
+
 module.exports = {
   createProject,
   getAllProjects,
   deleteProject,
+  getFeaturedProjects, // Export the new function
 };
