@@ -9,14 +9,17 @@ const freelancerInformationSchema = new mongoose.Schema({
   skills: {
     type: [String], // Array of skills
     required: true,
+    default: [],
   },
   portfolio: {
     type: String, // URL to the portfolio
     required: false,
+    default: "",
   },
   experience: {
     type: String, // Description of experience
     required: true,
+    default: "",
   },
   earnings: {
     type: Number, // Total earnings

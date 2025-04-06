@@ -1,71 +1,105 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const FreelancerProfile = () => {
-  const [profile, setProfile] = useState({
-    name: "",
-    skills: "",
-    portfolio: "",
-    experience: "",
+  const location = useLocation(); // Get the state passed from the dashboard
+  const navigate = useNavigate(); // For navigation
+
+  // Use token from state or fallback to localStorage
+  const token = location.state?.token || localStorage.getItem("token");
+
+  const [freelancerInfo, setFreelancerInfo] = useState({
+    skills: "Not given",
+    portfolio: "Not given",
+    experience: "Not given",
   });
-  const [passwordData, setPasswordData] = useState({
+
+  const [userInfo, setUserInfo] = useState({
+    name: "Not given",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [deleteData, setDeleteData] = useState({
+
+  const [deleteAccountInfo, setDeleteAccountInfo] = useState({
     email: "",
-    password: "",
+    currentPassword: "",
   });
-  const [showDeleteForm, setShowDeleteForm] = useState(false);
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+
+  const [originalUserInfo, setOriginalUserInfo] = useState({});
+  const [originalFreelancerInfo, setOriginalFreelancerInfo] = useState({});
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const userId = JSON.parse(atob(token.split(".")[1])).id;
+    if (!token) {
+      navigate("/login"); // Redirect to login if no token is found
+      return;
+    }
 
-        const response = await fetch(`http://localhost:5000/freelancers/${userId}`, {
+    const fetchFreelancerInfo = async () => {
+      try {
+        const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from token
+
+        // Fetch freelancer information
+        const freelancerResponse = await fetch(`http://localhost:5000/freelancers/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setProfile({
-            name: data.name || "",
-            skills: data.skills ? data.skills.join(", ") : "",
-            portfolio: data.portfolio || "",
-            experience: data.experience || "",
+        if (freelancerResponse.ok) {
+          const data = await freelancerResponse.json();
+          setFreelancerInfo({
+            skills: data.skills.length > 0 ? data.skills.join(", ") : "Not given",
+            portfolio: data.portfolio || "Not given",
+            experience: data.experience || "Not given",
+          });
+          setOriginalFreelancerInfo({
+            skills: data.skills.length > 0 ? data.skills.join(", ") : "Not given",
+            portfolio: data.portfolio || "Not given",
+            experience: data.experience || "Not given",
+          });
+        }
+
+        // Fetch user information
+        const userResponse = await fetch(`http://localhost:5000/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          setUserInfo((prev) => ({
+            ...prev,
+            name: userData.name || "Not given",
+          }));
+          setOriginalUserInfo({
+            name: userData.name || "Not given",
           });
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching profile data:", err);
       }
     };
 
-    fetchProfile();
-  }, []);
+    fetchFreelancerInfo();
+  }, [token, navigate]);
 
-  const handleProfileChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+  const handleFreelancerInfoChange = (e) => {
+    setFreelancerInfo({ ...freelancerInfo, [e.target.name]: e.target.value });
   };
 
-  const handlePasswordChange = (e) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  const handleUserInfoChange = (e) => {
+    setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
   };
 
-  const handleDeleteChange = (e) => {
-    setDeleteData({ ...deleteData, [e.target.name]: e.target.value });
+  const handleDeleteAccountChange = (e) => {
+    setDeleteAccountInfo({ ...deleteAccountInfo, [e.target.name]: e.target.value });
   };
 
-  const handleProfileSubmit = async (e) => {
+  const handleFreelancerInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
       const userId = JSON.parse(atob(token.split(".")[1])).id;
 
       const response = await fetch(`http://localhost:5000/freelancers/${userId}`, {
@@ -75,99 +109,111 @@ const FreelancerProfile = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: profile.name,
-          skills: profile.skills.split(",").map((skill) => skill.trim()),
-          portfolio: profile.portfolio,
-          experience: profile.experience,
+          skills: freelancerInfo.skills.split(",").map((skill) => skill.trim()),
+          portfolio: freelancerInfo.portfolio,
+          experience: freelancerInfo.experience,
         }),
       });
 
       if (response.ok) {
-        setMessage("Profile updated successfully!");
+        alert("Freelancer information updated successfully!");
+        setOriginalFreelancerInfo(freelancerInfo); // Update original values
       } else {
-        setMessage("Failed to update profile.");
+        alert("Failed to update freelancer information.");
       }
     } catch (err) {
-      console.error("Error updating profile:", err);
-      setMessage("An error occurred.");
+      console.error("Error updating freelancer information:", err);
+      alert("An error occurred.");
     }
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const handleUserInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch("http://localhost:5000/users/update-password", {
+      const response = await fetch(`http://localhost:5000/users/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(passwordData),
+        body: JSON.stringify({
+          name: userInfo.name,
+          currentPassword: userInfo.currentPassword,
+          newPassword: userInfo.newPassword,
+          confirmPassword: userInfo.confirmPassword,
+        }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setMessage("Password updated successfully!");
+        alert("User information updated successfully!");
+        setOriginalUserInfo({ name: userInfo.name }); // Update original values
+        setUserInfo((prev) => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
       } else {
-        setMessage("Failed to update password.");
+        alert(data.error || "Failed to update user information.");
       }
     } catch (err) {
-      console.error("Error updating password:", err);
-      setMessage("An error occurred.");
+      console.error("Error updating user information:", err);
+      alert("An error occurred.");
     }
   };
 
-  const handleDeleteAccount = async (e) => {
+  const handleAccountDelete = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-  
-      const response = await fetch("http://localhost:5000/users/delete", {
-        method: "DELETE", // Use DELETE method
+      const response = await fetch(`http://localhost:5000/users/delete`, {
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include token for authentication
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(deleteData), // Send email and password
+        body: JSON.stringify({
+          email: deleteAccountInfo.email,
+          password: deleteAccountInfo.currentPassword,
+        }),
       });
-  
+
       if (response.ok) {
         alert("Account deleted successfully!");
-        navigate("/register"); // Redirect to the registration page
+        localStorage.removeItem("token"); // Remove the token from localStorage
+        navigate("/login"); // Redirect to the login page
       } else {
         const data = await response.json();
-        setMessage(data.error || "Failed to delete account.");
+        alert(data.error || "Failed to delete account.");
       }
     } catch (err) {
       console.error("Error deleting account:", err);
-      setMessage("An error occurred.");
+      alert("An error occurred.");
     }
   };
+
+  const isFreelancerInfoChanged = JSON.stringify(freelancerInfo) !== JSON.stringify(originalFreelancerInfo);
+  const isUserInfoChanged =
+    userInfo.name !== originalUserInfo.name || userInfo.newPassword.trim() !== "";
+
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>Freelancer Profile</h1>
-      {message && <p>{message}</p>}
-      <form onSubmit={handleProfileSubmit}>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={profile.name}
-            onChange={handleProfileChange}
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            placeholder="Enter your name"
-            required
-          />
-        </div>
+      <h1>Welcome, {userInfo.name}</h1>
+      <p style={{ fontSize: "18px", marginBottom: "20px" }}>
+        {userInfo.name}, you can update and delete your profile here.
+      </p>
+
+      {/* Freelancer Information Form */}
+      <h2>Update Freelancer Information</h2>
+      <form onSubmit={handleFreelancerInfoSubmit}>
         <div style={{ marginBottom: "10px" }}>
           <label>Skills (comma-separated):</label>
           <input
             type="text"
             name="skills"
-            value={profile.skills}
-            onChange={handleProfileChange}
+            value={freelancerInfo.skills}
+            onChange={handleFreelancerInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             placeholder="Enter your skills"
           />
@@ -177,8 +223,8 @@ const FreelancerProfile = () => {
           <input
             type="text"
             name="portfolio"
-            value={profile.portfolio}
-            onChange={handleProfileChange}
+            value={freelancerInfo.portfolio}
+            onChange={handleFreelancerInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             placeholder="Enter your portfolio URL"
           />
@@ -187,27 +233,40 @@ const FreelancerProfile = () => {
           <label>Experience:</label>
           <textarea
             name="experience"
-            value={profile.experience}
-            onChange={handleProfileChange}
+            value={freelancerInfo.experience}
+            onChange={handleFreelancerInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             placeholder="Describe your experience"
           />
         </div>
-        <button type="submit" style={{ padding: "10px 15px" }}>
-          Update Profile
+        <button type="submit" style={{ padding: "10px 15px" }} disabled={!isFreelancerInfoChanged}>
+          Update Freelancer Information
         </button>
       </form>
 
-      <h2 style={{ marginTop: "40px" }}>Update Password</h2>
-      <form onSubmit={handlePasswordSubmit}>
+      {/* User Information Form */}
+      <h2 style={{ marginTop: "30px" }}>Update User Information</h2>
+      <form onSubmit={handleUserInfoSubmit}>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Name:</label>
+          <input
+            type="text"
+            name="name"
+            value={userInfo.name}
+            onChange={handleUserInfoChange}
+            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your name"
+          />
+        </div>
         <div style={{ marginBottom: "10px" }}>
           <label>Current Password:</label>
           <input
             type="password"
             name="currentPassword"
-            value={passwordData.currentPassword}
-            onChange={handlePasswordChange}
+            value={userInfo.currentPassword}
+            onChange={handleUserInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your current password"
             required
           />
         </div>
@@ -216,10 +275,10 @@ const FreelancerProfile = () => {
           <input
             type="password"
             name="newPassword"
-            value={passwordData.newPassword}
-            onChange={handlePasswordChange}
+            value={userInfo.newPassword}
+            onChange={handleUserInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            required
+            placeholder="Enter your new password"
           />
         </div>
         <div style={{ marginBottom: "10px" }}>
@@ -227,59 +286,58 @@ const FreelancerProfile = () => {
           <input
             type="password"
             name="confirmPassword"
-            value={passwordData.confirmPassword}
-            onChange={handlePasswordChange}
+            value={userInfo.confirmPassword}
+            onChange={handleUserInfoChange}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            required
+            placeholder="Confirm your new password"
           />
         </div>
-        <button type="submit" style={{ padding: "10px 15px" }}>
-          Update Password
+        <button type="submit" style={{ padding: "10px 15px" }} disabled={!isUserInfoChanged}>
+          Update User Information
         </button>
       </form>
 
-      <h2 style={{ marginTop: "40px" }}>Delete Account</h2>
-      <button
-        onClick={() => setShowDeleteForm(!showDeleteForm)}
-        style={{
-          padding: "10px 15px",
-          backgroundColor: "red",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Delete Account ▼
-      </button>
-      {showDeleteForm && (
-        <form onSubmit={handleDeleteAccount} style={{ marginTop: "20px" }}>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              value={deleteData.email}
-              onChange={handleDeleteChange}
-              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-              required
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Password:</label>
-            <input
-              type="password"
-              name="password"
-              value={deleteData.password}
-              onChange={handleDeleteChange}
-              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-              required
-            />
-          </div>
-          <button type="submit" style={{ padding: "10px 15px", backgroundColor: "red", color: "white" }}>
-            Confirm Delete
-          </button>
-        </form>
-      )}
+      {/* Delete Account Form */}
+      <h2 style={{ marginTop: "30px", color: "red" }}>Delete Account</h2>
+      <form onSubmit={handleAccountDelete}>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={deleteAccountInfo.email}
+            onChange={handleDeleteAccountChange}
+            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div style={{ marginBottom: "10px" }}>
+          <label>Current Password:</label>
+          <input
+            type="password"
+            name="currentPassword"
+            value={deleteAccountInfo.currentPassword}
+            onChange={handleDeleteAccountChange}
+            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+            placeholder="Enter your current password"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          style={{
+            padding: "10px 15px",
+            backgroundColor: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Delete Account
+        </button>
+      </form>
     </div>
   );
 };

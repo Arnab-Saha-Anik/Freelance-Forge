@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    userType: 'default', // Default to 'select'
+    email: "",
+    password: "",
+    userType: "default", // Default to 'select'
   });
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,20 +20,21 @@ const Login = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password, role } = formData;
-  
+
     if (role === "default") {
       setErrorMessage("Please select a user type.");
       return;
     }
-  
+
     if (!email || !password) {
       setErrorMessage("Please fill out all fields.");
       return;
     }
-  
+
     try {
       // Send login data to the backend
       const response = await axios.post("http://localhost:5000/users/login", {
@@ -41,21 +42,21 @@ const Login = () => {
         password,
         role,
       });
-  
+
       const backendRole = response.data.role; // Get the role from the backend response
-  
+
       if (backendRole.toLowerCase() !== role.toLowerCase()) {
         setErrorMessage("Selected role does not match your account role.");
         return;
       }
-  
+
       setSuccessMessage("Login successful!");
       setErrorMessage("");
-      localStorage.setItem("token", response.data.token); // Store the token
-  
+      localStorage.setItem("token", response.data.token); // Store the token in localStorage
+
       // Redirect based on role
       if (backendRole.toLowerCase() === "freelancer") {
-        navigate("/freelancer-dashboard");
+        navigate("/freelancer-dashboard", { state: { token: response.data.token } });
       } else if (backendRole.toLowerCase() === "client") {
         navigate("/client-dashboard");
       }
@@ -65,7 +66,7 @@ const Login = () => {
       setSuccessMessage("");
     }
   };
-   
+
   return (
     <div
       style={{
@@ -80,7 +81,6 @@ const Login = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Login form container */}
       <div
         style={{
           width: "400px",
@@ -93,16 +93,11 @@ const Login = () => {
       >
         <h1 style={{ color: "#593D3D", textAlign: "center" }}>Login</h1>
 
-        {/* Display error or success messages */}
         {errorMessage && (
-          <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>
-            {errorMessage}
-          </p>
+          <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>{errorMessage}</p>
         )}
         {successMessage && (
-          <p style={{ color: "green", textAlign: "center", marginBottom: "15px" }}>
-            {successMessage}
-          </p>
+          <p style={{ color: "green", textAlign: "center", marginBottom: "15px" }}>{successMessage}</p>
         )}
 
         <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>

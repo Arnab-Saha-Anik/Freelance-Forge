@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
+const freelancerInformationModel = require('../models/freelancerInformationModel');
 
 router.post("/register", async (req, res) => {
   try {
@@ -77,6 +78,9 @@ router.post('/login', async (req, res) => {
 // @route   PUT /users/update
 // @desc    Update user profile (name, password)
 // @access  Private
+// @route   PUT /users/update
+// @desc    Update user profile (name, password)
+// @access  Private
 router.put("/update", verifyToken, async (req, res) => {
   const { name, currentPassword, newPassword, confirmPassword } = req.body;
 
@@ -87,32 +91,44 @@ router.put("/update", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Verify the current password
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: "Current password is incorrect" });
+    // Check if no changes are made
+    if (!name && !currentPassword && !newPassword && !confirmPassword) {
+      return res.status(400).json({ error: "No changes detected" });
     }
 
-    // Check if new password and confirm password match
-    if (newPassword && newPassword !== confirmPassword) {
-      return res.status(400).json({ error: "New password and confirm password do not match" });
+    // Verify the current password if provided
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Check if the new password is the same as the current password
+      if (newPassword && (await bcrypt.compare(newPassword, user.password))) {
+        return res.status(400).json({ error: "New password cannot be the same as the current password" });
+      }
+
+      // Check if new password and confirm password match
+      if (newPassword && newPassword !== confirmPassword) {
+        return res.status(400).json({ error: "New password and confirm password do not match" });
+      }
+
+      // Update the user's password if provided
+      if (newPassword) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+      }
     }
 
-    // Update the user's name
-    if (name) {
+    // Update the user's name if provided
+    if (name && name !== user.name) {
       user.name = name;
-    }
-
-    // Update the user's password if provided
-    if (newPassword) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(newPassword, salt);
     }
 
     // Save the updated user
     await user.save();
 
-    res.json({ message: "Profile updated successfully" });
+    res.json({ message: "Profile updated successfully", name: user.name });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -139,7 +155,7 @@ router.delete("/delete", verifyToken, async (req, res) => {
     }
 
     // Delete the freelancer profile associated with the user
-    await Freelancer.findOneAndDelete({ userId: user._id });
+    await freelancerInformationModel.findOneAndDelete({ userId: user._id });
 
     // Delete the user account
     await User.findByIdAndDelete(user._id);
@@ -147,6 +163,29 @@ router.delete("/delete", verifyToken, async (req, res) => {
     res.json({ message: "Account and freelancer profile deleted successfully" });
   } catch (err) {
     console.error("Error deleting account:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// GET /users/me - Fetch logged-in user's data
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    // Fetch the user data using the ID from the token
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (err) {
+    console.error("Error fetching user data:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
