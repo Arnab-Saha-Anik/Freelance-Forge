@@ -1,46 +1,14 @@
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  client: {
-    type: mongoose.Schema.Types.ObjectId, // Reference to the User model
-    ref: "User", // Name of the referenced model
-    required: true,
-  },
-  budget: {
-    type: Number,
-    required: true,
-  },
-  deadline: {
-    type: Date,
-    required: true,
-  },
-  progress: {
-    type: String,
-    enum: ["Not Started", "In Progress", "Completed"],
-    default: "Not Started",
-  },
-  bids: [
-    {
-      bidderName: String,
-      amount: Number,
-      date: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  budget: { type: Number, required: true },
+  deadline: { type: Date, required: true },
+  client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Foreign key to User
 });
+
+// Add a compound unique index for client and title
+projectSchema.index({ client: 1, title: 1 }, { unique: true });
 
 module.exports = mongoose.model("Project", projectSchema);

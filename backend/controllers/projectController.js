@@ -1,28 +1,38 @@
 const express = require("express");
 const Project = require("../models/projectModel");
+const User = require("../models/userModel"); // Correct the import path for the User model
+const { verifyToken } = require("../middleware/authMiddleware");
 const router = express.Router();
 
-// @route   POST /projects
+// @route   POST /projects/create
 // @desc    Create a new project
-// @access  Public
-router.post("/", async (req, res) => {
-  try {
-    const { title, description, budget, deadline } = req.body;
+// @access  Private
+router.post("/create", verifyToken, async (req, res) => {
+  const { title, description, budget, deadline, client } = req.body;
 
-    const newProject = new Project({
+  if (!client) {
+    return res.status(400).json({ error: "Client ID is required" });
+  }
+
+  try {
+    const project = new Project({
       title,
       description,
       budget,
       deadline,
-      progress: "Not Started",
-      bids: [],
+      client,
     });
 
-    await newProject.save();
-    res.status(201).json(newProject);
+    await project.save();
+    res.status(201).json(project);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: `A project with the title "${title}" already exists for this client.`,
+      });
+    }
     console.error("Error creating project:", error);
-    res.status(500).json({ message: "Error creating project", error });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -99,6 +109,75 @@ router.get("/featured", async (req, res) => {
   } catch (error) {
     console.error("Error fetching featured projects:", error);
     res.status(500).json({ message: "Error fetching featured projects", error });
+  }
+});
+
+router.get("/client/projects", async (req, res) => {
+  try {
+    const { clientId } = req.query; // Get clientId from query params
+    const query = clientId ? { client: clientId } : {}; // Filter by clientId if provided
+    const projects = await Project.find(query);
+    res.status(200).json(projects);
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Error fetching projects", error });
+  }
+});
+
+// @route   PUT /client/update
+// @desc    Update client profile (name, password)
+// @access  Private
+router.put("/client/update", verifyToken, async (req, res) => {
+  const { name, currentPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    // Find the user by ID from the token
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if no changes are made
+    if (!name && !currentPassword && !newPassword && !confirmPassword) {
+      return res.status(400).json({ error: "No changes detected" });
+    }
+
+    // Verify the current password if provided
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Check if the new password is the same as the current password
+      if (newPassword && (await bcrypt.compare(newPassword, user.password))) {
+        return res.status(400).json({ error: "New password cannot be the same as the current password" });
+      }
+
+      // Check if new password and confirm password match
+      if (newPassword && newPassword !== confirmPassword) {
+        return res.status(400).json({ error: "New password and confirm password do not match" });
+      }
+
+      // Update the user's password if provided
+      if (newPassword) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+      }
+    }
+
+    // Update the user's name if provided
+    if (name && name !== user.name) {
+      user.name = name;
+    }
+
+    // Save the updated user
+    await user.save();
+
+    res.json({ message: "Profile updated successfully", name: user.name });
+  } catch (err) {
+    console.error("Error in /client/update:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
 const freelancerInformation = require('../models/freelancerInformationModel');
+const Project = require('../models/projectModel'); // Import the Project model
 
 router.post("/register", async (req, res) => {
   try {
@@ -132,6 +133,58 @@ router.put("/update", verifyToken, async (req, res) => {
   }
 });
 
+// @route   PUT /users/client/update
+// @desc    Update client profile (name, password)
+// @access  Private
+router.put("/client/update", verifyToken, async (req, res) => {
+  const { name, currentPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    // Find the user by ID from the token
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if no changes are made
+    if (!name && !currentPassword && !newPassword && !confirmPassword) {
+      return res.status(400).json({ error: "No changes detected" });
+    }
+
+    // Verify the current password if provided
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Check if new password and confirm password match
+      if (newPassword && newPassword !== confirmPassword) {
+        return res.status(400).json({ error: "New password and confirm password do not match" });
+      }
+
+      // Update the user's password if provided
+      if (newPassword) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+      }
+    }
+
+    // Update the user's name if provided
+    if (name && name !== user.name) {
+      user.name = name;
+    }
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: "Profile updated successfully", name: user.name });
+  } catch (err) {
+    console.error("Error in /client/update:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // @route   DELETE /users/delete
 // @desc    Delete user account and corresponding freelancer profile
 // @access  Private
@@ -158,6 +211,43 @@ router.delete("/delete", verifyToken, async (req, res) => {
     await User.findByIdAndDelete(user._id);
 
     res.json({ message: "Account and freelancer profile deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting account:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// @route   DELETE /client/delete
+// @desc    Delete client account and associated projects
+// @access  Private
+router.delete("/client/delete", verifyToken, async (req, res) => {
+  const { email, currentPassword } = req.body;
+
+  try {
+    // Find the user by ID from the token
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the provided email matches the user's email
+    if (user.email !== email) {
+      return res.status(400).json({ error: "The email you provided is not associated with your account." });
+    }
+
+    // Verify the password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    // Delete all projects associated with the client
+    await Project.deleteMany({ client: user._id });
+
+    // Delete the user account
+    await User.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "Account and associated projects deleted successfully" });
   } catch (err) {
     console.error("Error deleting account:", err);
     res.status(500).json({ error: "Server error" });
@@ -265,6 +355,20 @@ router.get("/check/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Error checking user existence:", err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// @route   GET /freelancers
+// @desc    Fetch all freelancers
+// @access  Public
+router.get("/allfreelancers", async (req, res) => {
+  try {
+    console.log("Fetching freelancers..."); // Log when the route is hit
+    const freelancers = await User.find({ role: "Freelancer" }, { name: 1, email: 1 }); // Only return name and email
+    res.status(200).json(freelancers);
+  } catch (error) {
+    console.error("Error fetching freelancers:", error);
+    res.status(500).json({ message: "Error fetching freelancers", error });
   }
 });
 
