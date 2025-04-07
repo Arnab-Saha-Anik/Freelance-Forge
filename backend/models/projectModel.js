@@ -10,7 +10,8 @@ const projectSchema = new mongoose.Schema({
     required: true,
   },
   client: {
-    type: String, // Replace with ObjectId if referencing a client model
+    type: mongoose.Schema.Types.ObjectId, // Reference to the User model
+    ref: "User", // Name of the referenced model
     required: true,
   },
   budget: {

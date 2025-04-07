@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { handleGlobalLogout } from "../../utils/logout";
 
 const FreelancerDashboard = () => {
   const [showBidModal, setShowBidModal] = useState(false); // State to toggle bid modal
@@ -23,6 +24,7 @@ const FreelancerDashboard = () => {
 
   // Use token from state or fallback to localStorage
   const token = location.state?.token || localStorage.getItem("token");
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; // Decode userId from token
 
   useEffect(() => {
     document.title = "Freelancer Dashboard";
@@ -141,6 +143,48 @@ const FreelancerDashboard = () => {
 
     fetchProfileExistence();
   }, [token]);
+
+  // Memoize the `checkUserExists` function
+  const checkUserExists = useCallback(async () => {
+    try {
+      console.log("Checking if user exists..."); // Debugging log
+      const response = await fetch(`http://localhost:5000/users/check/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Response status:", response.status); // Debugging log
+      if (!response.ok) {
+        console.log("User does not exist. Triggering logout."); // Debugging log
+        window.alert("An admin has deleted your account. You will now be logged out.");
+        setTimeout(() => {
+          handleGlobalLogout(navigate); // Log out after the alert is dismissed
+        }, 0);
+      } else {
+        console.log("User exists. No action needed."); // Debugging log
+      }
+    } catch (err) {
+      console.error("Error checking user existence:", err);
+      window.alert("An admin has deleted your account. You will now be logged out.");
+      setTimeout(() => {
+        handleGlobalLogout(navigate); // Log out after the alert is dismissed
+      }, 0);
+    }
+  }, [userId, token, navigate]);
+
+  useEffect(() => {
+    console.log("useEffect triggered"); // Debugging log
+
+    if (!token) {
+      navigate("/login"); // Redirect to login if no token is found
+      return;
+    }
+
+    const interval = setInterval(checkUserExists, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [token, navigate, checkUserExists]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the token from localStorage

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
-const freelancerInformationModel = require('../models/freelancerInformationModel');
+const freelancerInformation = require('../models/freelancerInformationModel');
 
 router.post("/register", async (req, res) => {
   try {
@@ -75,9 +75,6 @@ router.post('/login', async (req, res) => {
   }
 }); 
 
-// @route   PUT /users/update
-// @desc    Update user profile (name, password)
-// @access  Private
 // @route   PUT /users/update
 // @desc    Update user profile (name, password)
 // @access  Private
@@ -155,7 +152,7 @@ router.delete("/delete", verifyToken, async (req, res) => {
     }
 
     // Delete the freelancer profile associated with the user
-    await freelancerInformationModel.findOneAndDelete({ userId: user._id });
+    await freelancerInformation.findOneAndDelete({ userId: user._id });
 
     // Delete the user account
     await User.findByIdAndDelete(user._id);
@@ -167,6 +164,33 @@ router.delete("/delete", verifyToken, async (req, res) => {
   }
 });
 
+// @route   DELETE /users/admin/:id
+// @desc    Admin deletes a user account
+// @access  Admin
+router.delete("/admin/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate the ID
+    if (!id || id.length !== 24) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Find and delete the user by ID
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete the associated freelancer profile, if it exists
+    await freelancerInformation.findOneAndDelete({ userId: id });
+
+    res.status(200).json({ message: "User and associated freelancer profile deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ message: "Error deleting user", error: err.message });
+  }
+});
 
 // GET /users/me - Fetch logged-in user's data
 router.get("/me", verifyToken, async (req, res) => {
@@ -209,6 +233,38 @@ router.post("/validate", async (req, res) => {
   } catch (err) {
     console.error("Error validating user:", err);
     res.status(500).json({ error: "Server error." });
+  }
+});
+
+// @route   GET /users
+// @desc    Fetch all users
+// @access  Public
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find({}, { password: 0 }); // Exclude the password field
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Error fetching users", error: err.message });
+  }
+});
+
+// @route   GET /users/check/:id
+// @desc    Check if a user exists
+// @access  Private
+router.get("/check/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ exists: false });
+    }
+
+    res.status(200).json({ exists: true });
+  } catch (err) {
+    console.error("Error checking user existence:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

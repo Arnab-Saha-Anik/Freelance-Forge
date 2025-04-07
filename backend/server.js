@@ -5,27 +5,25 @@ const connectDB = require("./config/database"); // Import the database connectio
 const userController = require("./controllers/userController"); // Import user routes
 const freelancerInformationController = require("./controllers/freelancerInformationController"); // Import freelancer routes
 const projectController = require("./controllers/projectController"); // Import project routes
+
 dotenv.config();
+
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+
 // Enable CORS
-app.use(cors());
-app.use(express.json()); // For JSON requests
-app.use(express.urlencoded({ extended: true })); // Parse FormData
+app.use(cors()); // Add this line to enable CORS for all routes
 
-
-// Sample project data
+// Middleware for parsing JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/users", userController); // Use the user routes
+app.use("/projects", projectController);
 app.use("/freelancers", freelancerInformationController); // Use the freelancer routes
-app.post("/projects", projectController.createProject); // Add a new project
-app.get("/projects", projectController.getAllProjects); // Get all projects
-app.delete("/projects/:id", projectController.deleteProject);
-// Add a route to fetch featured projects
-app.get("/projects/featured", projectController.getFeaturedProjects);
 
 
 // Start the server
