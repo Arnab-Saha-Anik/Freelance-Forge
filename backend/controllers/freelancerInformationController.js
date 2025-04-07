@@ -19,6 +19,22 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
+// @route   GET /freelancers/check/:userId
+// @desc    Check if freelancer profile exists
+// @access  Private
+router.get("/check/:userId", verifyToken, async (req, res) => {
+  try {
+    const freelancerInformation = await FreelancerInformation.findOne({ userId: req.params.userId });
+    if (freelancerInformation) {
+      return res.json({ exists: true });
+    }
+    res.json({ exists: false });
+  } catch (err) {
+    console.error("Error checking freelancer profile existence:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // @route   POST /freelancers
 // @desc    Create freelancer profile
 // @access  Private
@@ -26,16 +42,31 @@ router.post("/", verifyToken, async (req, res) => {
   const { userId, skills, portfolio, experience } = req.body;
 
   try {
+    console.log("Request Body:", req.body); // Log the request body for debugging
+
+    // Check if a profile already exists for the user
+    const existingProfile = await FreelancerInformation.findOne({ userId });
+    if (existingProfile) {
+      return res.status(400).json({ error: "Freelancer profile already exists" });
+    }
+
+    // Create a new freelancer profile with default values for earnings, reviews, and projectsCompleted
     const freelancerInformation = new FreelancerInformation({
       userId,
       skills,
       portfolio,
       experience,
+      earnings: 0, // Default value
+      reviews: 0, // Default value
+      projectsCompleted: 0, // Default value
     });
+
     await freelancerInformation.save();
+    console.log("Freelancer profile created successfully:", freelancerInformation); // Log success
     res.status(201).json(freelancerInformation);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Error creating freelancer profile:", err); // Log the error
+    res.status(500).json({ error: err.message || "Server error" });
   }
 });
 

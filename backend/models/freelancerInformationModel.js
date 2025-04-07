@@ -13,13 +13,11 @@ const freelancerInformationSchema = new mongoose.Schema({
   },
   portfolio: {
     type: String, // URL to the portfolio
-    required: false,
-    default: "",
+    required: true,
   },
   experience: {
     type: String, // Description of experience
     required: true,
-    default: "",
   },
   earnings: {
     type: Number, // Total earnings

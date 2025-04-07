@@ -190,6 +190,27 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
+// Validate user credentials
+router.post("/validate", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    res.status(200).json({ message: "Credentials are valid." });
+  } catch (err) {
+    console.error("Error validating user:", err);
+    res.status(500).json({ error: "Server error." });
+  }
+});
 
 module.exports = router;
 

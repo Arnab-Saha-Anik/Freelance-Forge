@@ -9,13 +9,13 @@ const FreelancerProfile = () => {
   const token = location.state?.token || localStorage.getItem("token");
 
   const [freelancerInfo, setFreelancerInfo] = useState({
-    skills: "Not given",
-    portfolio: "Not given",
-    experience: "Not given",
+    skills: "",
+    portfolio: "",
+    experience: "",
   });
 
   const [userInfo, setUserInfo] = useState({
-    name: "Not given",
+    name: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -28,6 +28,9 @@ const FreelancerProfile = () => {
 
   const [originalUserInfo, setOriginalUserInfo] = useState({});
   const [originalFreelancerInfo, setOriginalFreelancerInfo] = useState({});
+  const [profileExists, setProfileExists] = useState(false); // Track if the profile exists
+  const [loadingProfile, setLoadingProfile] = useState(true); // New state for profile loading
+  const [loggedInUserEmail, setLoggedInUserEmail] = useState(""); // State to store the logged-in user's email
 
   useEffect(() => {
     if (!token) {
@@ -35,38 +38,54 @@ const FreelancerProfile = () => {
       return;
     }
 
-    const fetchFreelancerInfo = async () => {
+    const fetchProfileData = async () => {
+      setLoadingProfile(true); // Start loading
       try {
         const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from token
 
-        // Fetch freelancer information
-        const freelancerResponse = await fetch(`http://localhost:5000/freelancers/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // Fetch profile existence and freelancer/user information in parallel
+        const [profileExistenceResponse, freelancerResponse, userResponse] = await Promise.all([
+          fetch(`http://localhost:5000/freelancers/check/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`http://localhost:5000/freelancers/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`http://localhost:5000/users/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
 
+        // Handle profile existence response
+        if (profileExistenceResponse.ok) {
+          const profileExistenceData = await profileExistenceResponse.json();
+          setProfileExists(profileExistenceData.exists);
+        } else {
+          setProfileExists(false); // Profile does not exist
+        }
+
+        // Handle freelancer information response
         if (freelancerResponse.ok) {
-          const data = await freelancerResponse.json();
+          const freelancerData = await freelancerResponse.json();
           setFreelancerInfo({
-            skills: data.skills.length > 0 ? data.skills.join(", ") : "Not given",
-            portfolio: data.portfolio || "Not given",
-            experience: data.experience || "Not given",
+            skills: freelancerData.skills.length > 0 ? freelancerData.skills.join(", ") : "",
+            portfolio: freelancerData.portfolio || "",
+            experience: freelancerData.experience || "",
           });
           setOriginalFreelancerInfo({
-            skills: data.skills.length > 0 ? data.skills.join(", ") : "Not given",
-            portfolio: data.portfolio || "Not given",
-            experience: data.experience || "Not given",
+            skills: freelancerData.skills.length > 0 ? freelancerData.skills.join(", ") : "",
+            portfolio: freelancerData.portfolio || "",
+            experience: freelancerData.experience || "",
           });
         }
 
-        // Fetch user information
-        const userResponse = await fetch(`http://localhost:5000/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        // Handle user information response
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserInfo((prev) => ({
@@ -76,13 +95,17 @@ const FreelancerProfile = () => {
           setOriginalUserInfo({
             name: userData.name || "Not given",
           });
+          setLoggedInUserEmail(userData.email); // Store the logged-in user's email
         }
       } catch (err) {
         console.error("Error fetching profile data:", err);
+        setProfileExists(false); // Assume profile does not exist on error
+      } finally {
+        setLoadingProfile(false); // End loading after all data is fetched
       }
     };
 
-    fetchFreelancerInfo();
+    fetchProfileData();
   }, [token, navigate]);
 
   const handleFreelancerInfoChange = (e) => {
@@ -99,6 +122,13 @@ const FreelancerProfile = () => {
 
   const handleFreelancerInfoSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation: Ensure all fields are filled
+    if (!freelancerInfo.skills.trim() || !freelancerInfo.portfolio.trim() || !freelancerInfo.experience.trim()) {
+      alert("All fields are required to update the profile.");
+      return;
+    }
+
     try {
       const userId = JSON.parse(atob(token.split(".")[1])).id;
 
@@ -124,6 +154,54 @@ const FreelancerProfile = () => {
     } catch (err) {
       console.error("Error updating freelancer information:", err);
       alert("An error occurred.");
+    }
+  };
+
+  const handleCreateFreelancerProfile = async (e) => {
+    e.preventDefault();
+
+    // Validation: Ensure all fields are filled
+    if (!freelancerInfo.skills.trim() || !freelancerInfo.portfolio.trim() || !freelancerInfo.experience.trim()) {
+      alert("All fields are required to create a profile.");
+      return;
+    }
+
+    try {
+      const userId = JSON.parse(atob(token.split(".")[1])).id;
+
+      console.log("Request Data:", {
+        userId,
+        skills: freelancerInfo.skills.split(",").map((skill) => skill.trim()),
+        portfolio: freelancerInfo.portfolio,
+        experience: freelancerInfo.experience,
+      }); // Log the request data for debugging
+
+      const response = await fetch(`http://localhost:5000/freelancers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          skills: freelancerInfo.skills.split(",").map((skill) => skill.trim()),
+          portfolio: freelancerInfo.portfolio,
+          experience: freelancerInfo.experience,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Freelancer profile created successfully!");
+        setProfileExists(true); // Set profile existence to true
+        setOriginalFreelancerInfo(freelancerInfo); // Update original values
+      } else {
+        const errorData = await response.json();
+        console.error("Error Response:", errorData); // Log the error response
+        alert(errorData.error || "Failed to create freelancer profile.");
+      }
+    } catch (err) {
+      console.error("Error creating freelancer profile:", err);
+      alert("An error occurred while creating the profile.");
     }
   };
 
@@ -166,6 +244,49 @@ const FreelancerProfile = () => {
 
   const handleAccountDelete = async (e) => {
     e.preventDefault();
+
+    // Check if the email matches the logged-in user's email
+    if (deleteAccountInfo.email !== loggedInUserEmail) {
+      alert("The email provided does not match the logged-in user's email.");
+      return;
+    }
+
+    // Validate email and password
+    try {
+      const validateResponse = await fetch(`http://localhost:5000/users/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          email: deleteAccountInfo.email,
+          password: deleteAccountInfo.currentPassword,
+        }),
+      });
+
+      if (!validateResponse.ok) {
+        const errorData = await validateResponse.json();
+        alert(errorData.error || "Invalid email or password.");
+        return;
+      }
+    } catch (err) {
+      console.error("Error validating credentials:", err);
+      alert("An error occurred while validating your credentials.");
+      return;
+    }
+
+    // Show confirmation alert
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? All the information will be lost if you delete your account."
+    );
+
+    if (!confirmDelete) {
+      // If the user cancels, stop the deletion process
+      return;
+    }
+
+    // Proceed with account deletion
     try {
       const response = await fetch(`http://localhost:5000/users/delete`, {
         method: "DELETE",
@@ -199,50 +320,119 @@ const FreelancerProfile = () => {
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>Welcome, {userInfo.name}</h1>
-      <p style={{ fontSize: "18px", marginBottom: "20px" }}>
-        {userInfo.name}, you can update and delete your profile here.
-      </p>
+      {loadingProfile ? (
+        <p style={{ textAlign: "center", fontSize: "18px", color: "#FFD700" }}>
+          Loading profile information...
+        </p>
+      ) : (
+        <>
+          <h1>Welcome, {userInfo.name}</h1>
+          <p style={{ fontSize: "18px", marginBottom: "20px" }}>
+            {userInfo.name}, you can update and delete your profile here.
+          </p>
 
-      {/* Freelancer Information Form */}
-      <h2>Update Freelancer Information</h2>
-      <form onSubmit={handleFreelancerInfoSubmit}>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Skills (comma-separated):</label>
-          <input
-            type="text"
-            name="skills"
-            value={freelancerInfo.skills}
-            onChange={handleFreelancerInfoChange}
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            placeholder="Enter your skills"
-          />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Portfolio URL:</label>
-          <input
-            type="text"
-            name="portfolio"
-            value={freelancerInfo.portfolio}
-            onChange={handleFreelancerInfoChange}
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            placeholder="Enter your portfolio URL"
-          />
-        </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>Experience:</label>
-          <textarea
-            name="experience"
-            value={freelancerInfo.experience}
-            onChange={handleFreelancerInfoChange}
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            placeholder="Describe your experience"
-          />
-        </div>
-        <button type="submit" style={{ padding: "10px 15px" }} disabled={!isFreelancerInfoChanged}>
-          Update Freelancer Information
-        </button>
-      </form>
+          {/* Freelancer Information Form */}
+          {profileExists ? (
+            <>
+              <h2>Update Freelancer Profile</h2>
+              <form onSubmit={handleFreelancerInfoSubmit}>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Skills (comma-separated): <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="skills"
+                    value={freelancerInfo.skills}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Enter your skills"
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Portfolio URL: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="portfolio"
+                    value={freelancerInfo.portfolio}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Enter your portfolio URL"
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Experience: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <textarea
+                    name="experience"
+                    value={freelancerInfo.experience}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Describe your experience"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  style={{ padding: "10px 15px" }}
+                  disabled={!isFreelancerInfoChanged} // Disable the button if no changes are made
+                >
+                  Update Freelancer Information
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2>Create Freelancer Profile</h2>
+              <form onSubmit={handleCreateFreelancerProfile}>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Skills (comma-separated): <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="skills"
+                    value={freelancerInfo.skills}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Enter your skills"
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Portfolio URL: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="portfolio"
+                    value={freelancerInfo.portfolio}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Enter your portfolio URL"
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    Experience: <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <textarea
+                    name="experience"
+                    value={freelancerInfo.experience}
+                    onChange={handleFreelancerInfoChange}
+                    style={{ width: "100%", padding: "8px", marginTop: "5px" }}
+                    placeholder="Describe your experience"
+                  />
+                </div>
+                <button type="submit" style={{ padding: "10px 15px" }}>
+                  Create Freelancer Profile
+                </button>
+              </form>
+            </>
+          )}
+        </>
+      )}
 
       {/* User Information Form */}
       <h2 style={{ marginTop: "30px" }}>Update User Information</h2>

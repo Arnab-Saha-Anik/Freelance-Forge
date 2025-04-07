@@ -16,6 +16,8 @@ const FreelancerDashboard = () => {
   }); // State to store freelancer-specific data
   const [userName, setUserName] = useState("Loading..."); // State to store the user's name
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to toggle dropdown
+  const [profileExists, setProfileExists] = useState(false); // Track if the profile exists
+  const [loadingProfile, setLoadingProfile] = useState(true); // New state for profile loading
   const navigate = useNavigate(); // For navigation
   const location = useLocation(); // To access state passed via navigation
 
@@ -110,6 +112,36 @@ const FreelancerDashboard = () => {
     fetchFreelancerData();
   }, [navigate, token]);
 
+  useEffect(() => {
+    const fetchProfileExistence = async () => {
+      setLoadingProfile(true); // Start loading
+      try {
+        const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from token
+
+        // Check if the freelancer profile exists
+        const response = await fetch(`http://localhost:5000/freelancers/check/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setProfileExists(data.exists); // Set profile existence
+        } else {
+          setProfileExists(false); // Profile does not exist
+        }
+      } catch (err) {
+        console.error("Error checking profile existence:", err);
+        setProfileExists(false); // Assume profile does not exist on error
+      } finally {
+        setLoadingProfile(false); // End loading
+      }
+    };
+
+    fetchProfileExistence();
+  }, [token]);
+
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the token from localStorage
     navigate("/login"); // Redirect to the login page
@@ -165,6 +197,15 @@ const FreelancerDashboard = () => {
       {/* Display the user's name */}
       
       <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Welcome, {userName}</h1>
+      {loadingProfile ? (
+        <p style={{ textAlign: "center", fontSize: "18px", color: "#FFD700" }}>
+          Checking profile existence...
+        </p>
+      ) : !profileExists ? (
+        <p style={{ textAlign: "center", color: "red", fontSize: "18px" }}>
+          Please create your profile by clicking <strong>Profile Settings</strong> under <strong>My Account</strong> to work on projects.
+        </p>
+      ) : null}
 
       {/* Dropdown Menu */}
       <div
@@ -212,14 +253,16 @@ const FreelancerDashboard = () => {
           >
             <ul style={{ listStyleType: "none", margin: 0, padding: 0 }}>
               <li style={{ marginBottom: "10px" }}>
-                <span style={{ color: "#FFD700", fontWeight: "bold" }}>Earnings:</span> ${freelancerData.earnings}
+                <span style={{ color: "#FFD700", fontWeight: "bold" }}>Earnings:</span> $
+                {profileExists ? freelancerData.earnings : 0}
               </li>
               <li style={{ marginBottom: "10px" }}>
-                <span style={{ color: "#FFD700", fontWeight: "bold" }}>Reviews:</span> {freelancerData.reviews}/5
+                <span style={{ color: "#FFD700", fontWeight: "bold" }}>Reviews:</span>{" "}
+                {profileExists ? freelancerData.reviews : 0}/5
               </li>
               <li style={{ marginBottom: "10px" }}>
                 <span style={{ color: "#FFD700", fontWeight: "bold" }}>Projects Completed:</span>{" "}
-                {freelancerData.projectsCompleted}
+                {profileExists ? freelancerData.projectsCompleted : 0}
               </li>
               <li style={{ marginTop: "20px", borderTop: "1px solid #FFD700", paddingTop: "10px" }}>
                 <button
