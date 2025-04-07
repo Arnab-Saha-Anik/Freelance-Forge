@@ -138,6 +138,7 @@ const FreelancerProfile = () => {
         }
       } catch (err) {
         console.error("Error checking user existence:", err);
+        window.alert("An admin has deleted your account. You will now be logged out.");
         setTimeout(() => {
           handleGlobalLogout(navigate); // Log out after the alert is dismissed
         }, 0);
