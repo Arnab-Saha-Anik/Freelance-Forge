@@ -363,7 +363,6 @@ router.get("/check/:id", verifyToken, async (req, res) => {
 // @access  Public
 router.get("/allfreelancers", async (req, res) => {
   try {
-    console.log("Fetching freelancers..."); // Log when the route is hit
     const freelancers = await User.find({ role: "Freelancer" }, { name: 1, email: 1 }); // Only return name and email
     res.status(200).json(freelancers);
   } catch (error) {

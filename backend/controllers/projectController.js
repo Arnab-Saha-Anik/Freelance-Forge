@@ -181,4 +181,37 @@ router.put("/client/update", verifyToken, async (req, res) => {
   }
 });
 
+// @route   DELETE /client/delete/:id
+// @desc    Delete a project by the client who created it
+// @access  Private
+router.delete("/client/delete/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate the project ID
+    if (!id || id.length !== 24) {
+      return res.status(400).json({ error: "Invalid project ID" });
+    }
+
+    // Find the project by ID
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Check if the logged-in user is the owner of the project
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to delete this project" });
+    }
+
+    // Delete the project
+    await Project.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting project:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

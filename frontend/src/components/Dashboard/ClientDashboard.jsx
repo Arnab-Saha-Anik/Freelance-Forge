@@ -106,7 +106,6 @@ const ClientDashboard = () => {
   const fetchFreelancers = useCallback(async () => {
     setLoadingFreelancers(true);
     try {
-      console.log("Fetching freelancers..."); // Log when the function is called
       const response = await fetch(`http://localhost:5000/users/allfreelancers`); // Public route, no token required
       const data = await response.json();
       console.log("Freelancers fetched:", data); // Log the fetched data
@@ -289,6 +288,36 @@ const ClientDashboard = () => {
     } catch (error) {
       console.error("Error deleting account:", error);
       alert("An error occurred while deleting the account.");
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this project? This action cannot be undone."
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/projects/client/delete/${projectId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+      });
+
+      if (response.ok) {
+        alert("Project deleted successfully.");
+        setProjects(projects.filter((project) => project._id !== projectId)); // Update the UI
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to delete project.");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      alert("An error occurred while deleting the project.");
     }
   };
 
@@ -578,6 +607,18 @@ const ClientDashboard = () => {
                   <p>{project.description}</p>
                   <p>Budget: ${project.budget}</p>
                   <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
+                  <button
+                    onClick={() => handleDeleteProject(project._id)}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "#f44336",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Delete Project
+                  </button>
                 </div>
               ))
             ) : (
