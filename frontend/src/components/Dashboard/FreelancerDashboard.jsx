@@ -166,7 +166,7 @@ const FreelancerDashboard = () => {
       }
     } catch (err) {
       console.error("Error checking user existence:", err);
-      window.alert("An admin has deleted your account. You will now be logged out.");
+      
       setTimeout(() => {
         handleGlobalLogout(navigate); // Log out after the alert is dismissed
       }, 0);
@@ -181,7 +181,7 @@ const FreelancerDashboard = () => {
       return;
     }
 
-    const interval = setInterval(checkUserExists, 5000); // Check every 5 seconds
+    const interval = setInterval(checkUserExists, 1000);
 
     return () => clearInterval(interval); // Cleanup on component unmount
   }, [token, navigate, checkUserExists]);

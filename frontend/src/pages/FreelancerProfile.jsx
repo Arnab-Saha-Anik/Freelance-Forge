@@ -138,14 +138,13 @@ const FreelancerProfile = () => {
         }
       } catch (err) {
         console.error("Error checking user existence:", err);
-        window.alert("An admin has deleted your account. You will now be logged out.");
         setTimeout(() => {
           handleGlobalLogout(navigate); // Log out after the alert is dismissed
         }, 0);
       }
     };
 
-    const interval = setInterval(checkUserExists, 5000); // Check every 5 seconds
+    const interval = setInterval(checkUserExists, 1000); // Check every 5 seconds
 
     return () => clearInterval(interval); // Cleanup on component unmount
   }, [token, navigate]);
