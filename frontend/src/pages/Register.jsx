@@ -51,7 +51,7 @@ const Register = () => {
       }
 
       // Redirect to OTP verification page immediately
-      alert("An OTP has been sent to your email. Please verify to complete registration.");
+      alert("An OTP has been sent to your email (check spam if you don't find). Please verify to complete registration.");
       navigate("/verify-otp", { state: { email } });
 
       // Send registration data to the backend in the background
