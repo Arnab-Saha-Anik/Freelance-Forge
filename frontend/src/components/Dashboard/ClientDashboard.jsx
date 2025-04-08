@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ClientDashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -16,7 +17,7 @@ const ClientDashboard = () => {
     name: "",
   });
   const [originalAccountInfo, setOriginalAccountInfo] = useState({});
-  const [username, setUsername] = useState(""); // State to store the username
+  const [username, setUsername] = useState("Loading..."); // State to store the username
   const [showProjects, setShowProjects] = useState(false);
   const [showPostProject, setShowPostProject] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -30,29 +31,56 @@ const ClientDashboard = () => {
   });
 
   const token = localStorage.getItem("token"); // Token for authentication
-  const loggedInClientId = JSON.parse(atob(token.split(".")[1])).id; // Decode client ID from token
+  const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; // Decode client ID from token
+  const navigate = useNavigate();
 
   // Decode the token to extract the username and set initial name
   useEffect(() => {
     if (token) {
-      try {
-        const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode the token payload
-        setUsername(decodedToken.name || "User"); // Set the username from the token
-        setAccountInfo((prev) => ({
-          ...prev,
-          name: decodedToken.name || "", // Set the initial name from the token
-        }));
-      } catch (error) {
-        console.error("Error decoding token:", error);
-      }
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      setUsername(decodedToken.name || "Client");
     }
   }, [token]);
+
+  // Function to check if the user exists
+  const checkUserExists = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/users/check/${loggedInClientId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        // If the user does not exist, show a popup and log out
+        alert("An admin has deleted your account. You will now be logged out.");
+        localStorage.removeItem("token"); // Remove the token
+        navigate("/login"); // Redirect to the login page
+      }
+    } catch (err) {
+      console.error("Error checking user existence:", err);
+      alert("An admin has deleted your account. You will now be logged out.");
+      localStorage.removeItem("token"); // Remove the token
+      navigate("/login"); // Redirect to the login page
+    }
+  }, [loggedInClientId, token, navigate]);
+
+  // Periodically check user existence
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const interval = setInterval(checkUserExists, 1000); // Check every second
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [checkUserExists, token, navigate]);
 
   // Fetch account information from the backend
   useEffect(() => {
     const fetchAccountInfo = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/users/me`, {
+        const response = await fetch("http://localhost:5000/users/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -60,18 +88,14 @@ const ClientDashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Fetched account info:", data); // Debugging log
-
-          // Update accountInfo and originalAccountInfo with the backend response
           setAccountInfo((prev) => ({
             ...prev,
-            name: data.name || prev.name, // Use the backend name if available
-          }));
-          setOriginalAccountInfo({
             name: data.name || "",
-          });
+          }));
+          setOriginalAccountInfo({ name: data.name || "" });
+          setUsername(data.name || "Client");
         } else {
-          console.error("Failed to fetch account info:", response.statusText);
+          console.error("Failed to fetch account info.");
         }
       } catch (error) {
         console.error("Error fetching account info:", error);
@@ -85,22 +109,24 @@ const ClientDashboard = () => {
   const fetchProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
-      const response = await fetch(
-        `http://localhost:5000/projects?clientId=${loggedInClientId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      setProjects(Array.isArray(data) ? data : []);
+      const response = await fetch("http://localhost:5000/projects/client/projects", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data); // Update the state with the fetched projects
+      } else {
+        console.error("Failed to fetch projects");
+      }
     } catch (error) {
       console.error("Error fetching projects:", error);
     } finally {
       setLoadingProjects(false);
     }
-  }, [loggedInClientId, token]);
+  }, [token]);
 
   // Memoize fetchFreelancers to avoid re-creation on every render
   const fetchFreelancers = useCallback(async () => {
@@ -200,16 +226,6 @@ const ClientDashboard = () => {
       return;
     }
 
-    // Validation: Check if updated information is the same as current information
-    if (
-      accountInfo.name === originalAccountInfo.name &&
-      accountInfo.newPassword === accountInfo.currentPassword
-    ) {
-      setPopupMessage("The updated information is the same as the current information.");
-      setPopupType("error");
-      return;
-    }
-
     try {
       const response = await fetch(`http://localhost:5000/users/client/update`, {
         method: "PUT",
@@ -236,6 +252,18 @@ const ClientDashboard = () => {
           newPassword: "",
           confirmNewPassword: "",
         }));
+
+        // Fetch updated user information and update the username
+        const userResponse = await fetch(`http://localhost:5000/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (userResponse.ok) {
+          const updatedUser = await userResponse.json();
+          setUsername(updatedUser.name); // Update the username state
+        }
       } else {
         const data = await response.json();
         setPopupMessage(data.error || "Failed to update account.");

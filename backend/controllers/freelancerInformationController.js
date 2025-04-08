@@ -42,7 +42,6 @@ router.post("/", verifyToken, async (req, res) => {
   const { userId, skills, portfolio, experience } = req.body;
 
   try {
-    console.log("Request Body:", req.body); // Log the request body for debugging
 
     // Check if a profile already exists for the user
     const existingProfile = await FreelancerInformation.findOne({ userId });
@@ -62,7 +61,6 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     await freelancerInformation.save();
-    console.log("Freelancer profile created successfully:", freelancerInformation); // Log success
     res.status(201).json(freelancerInformation);
   } catch (err) {
     console.error("Error creating freelancer profile:", err); // Log the error

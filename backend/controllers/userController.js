@@ -158,6 +158,11 @@ router.put("/client/update", verifyToken, async (req, res) => {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
 
+      // Check if the new password is the same as the current password
+      if (newPassword && (await bcrypt.compare(newPassword, user.password))) {
+        return res.status(400).json({ error: "New password cannot be the same as the current password" });
+      }
+
       // Check if new password and confirm password match
       if (newPassword && newPassword !== confirmPassword) {
         return res.status(400).json({ error: "New password and confirm password do not match" });

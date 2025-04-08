@@ -112,14 +112,19 @@ router.get("/featured", async (req, res) => {
   }
 });
 
-router.get("/client/projects", async (req, res) => {
+// @route   GET /projects/client/projects
+// @desc    Fetch projects for the logged-in client
+// @access  Private
+router.get("/client/projects", verifyToken, async (req, res) => {
   try {
-    const { clientId } = req.query; // Get clientId from query params
-    const query = clientId ? { client: clientId } : {}; // Filter by clientId if provided
-    const projects = await Project.find(query);
+    const clientId = req.user.id; // Extract client ID from the token
+
+    // Fetch projects where the client matches the logged-in user's ID
+    const projects = await Project.find({ client: clientId });
+
     res.status(200).json(projects);
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    console.error("Error fetching client projects:", error);
     res.status(500).json({ message: "Error fetching projects", error });
   }
 });
