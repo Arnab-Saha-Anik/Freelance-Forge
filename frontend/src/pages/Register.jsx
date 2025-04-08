@@ -11,7 +11,6 @@ const Register = () => {
     role: "default",
   });
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -43,22 +42,28 @@ const Register = () => {
     }
 
     try {
-      // Send registration data to the backend
-      const response = await axios.post("http://localhost:5000/users/register", {
+      // Check if the email already exists
+      const emailCheckResponse = await axios.post("http://localhost:5000/users/check-email", { email });
+
+      if (emailCheckResponse.data.exists) {
+        setErrorMessage("This email is already registered. Please use a different email.");
+        return;
+      }
+
+      // Redirect to OTP verification page immediately
+      alert("An OTP has been sent to your email. Please verify to complete registration.");
+      navigate("/verify-otp", { state: { email } });
+
+      // Send registration data to the backend in the background
+      await axios.post("http://localhost:5000/users/register", {
         name: fullName,
         email,
         password,
         role,
       });
-
-      setSuccessMessage(response.data.message);
-      setErrorMessage("");
-      alert("Registration successful! You can now log in.");
-      navigate("/login"); // Redirect to login page
     } catch (err) {
       console.error(err.response); // Log the error for debugging
       setErrorMessage(err.response?.data?.message || "An error occurred.");
-      setSuccessMessage("");
     }
   };
 
@@ -86,11 +91,6 @@ const Register = () => {
           {errorMessage && (
             <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>
               {errorMessage}
-            </p>
-          )}
-          {successMessage && (
-            <p style={{ color: "green", textAlign: "center", marginBottom: "15px" }}>
-              {successMessage}
             </p>
           )}
           <div className="form-group" style={{ marginBottom: "15px", textAlign: "left" }}>

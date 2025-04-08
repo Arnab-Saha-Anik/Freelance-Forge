@@ -128,20 +128,13 @@ const FreelancerProfile = () => {
           },
         });
 
-        console.log("Response status:", response.status); // Debugging log
         if (!response.ok) {
-          console.log("User does not exist. Triggering logout."); // Debugging log
-          window.alert("An admin has deleted your account. You will now be logged out.");
-          setTimeout(() => {
-            handleGlobalLogout(navigate); // Log out after the alert is dismissed
-          }, 0);
+          const data = await response.json();
+          handleGlobalLogout(navigate); // Log out after the alert is dismissed
         }
       } catch (err) {
         console.error("Error checking user existence:", err);
-        window.alert("An admin has deleted your account. You will now be logged out.");
-        setTimeout(() => {
-          handleGlobalLogout(navigate); // Log out after the alert is dismissed
-        }, 0);
+        handleGlobalLogout(navigate); // Log out after the alert is dismissed
       }
     };
 
@@ -343,7 +336,7 @@ const FreelancerProfile = () => {
       });
 
       if (response.ok) {
-        alert("Account deleted successfully!");
+        alert("Account deleted successfully. Taking you to the login page!");
         localStorage.removeItem("token"); // Remove the token from localStorage
         navigate("/login"); // Redirect to the login page
       } else {

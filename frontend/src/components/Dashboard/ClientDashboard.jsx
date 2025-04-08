@@ -53,7 +53,6 @@ const ClientDashboard = () => {
 
       if (!response.ok) {
         // If the user does not exist, show a popup and log out
-        alert("An admin has deleted your account. You will now be logged out.");
         localStorage.removeItem("token"); // Remove the token
         navigate("/login"); // Redirect to the login page
       }
@@ -306,7 +305,7 @@ const ClientDashboard = () => {
       });
 
       if (response.ok) {
-        alert("Account deleted successfully.");
+        alert("Account deleted successfully. Taking you to the login page.");
         localStorage.removeItem("token"); // Clear the token
         window.location.href = "/login"; // Redirect to login page
       } else {

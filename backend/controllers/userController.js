@@ -6,7 +6,14 @@ const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
 const freelancerInformation = require('../models/freelancerInformationModel');
 const Project = require('../models/projectModel'); // Import the Project model
+const nodemailer = require("nodemailer"); // Import nodemailer for sending emails
 
+// Function to generate a random 6-digit OTP
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// @route   POST /users/register
+// @desc    Generate OTP and send it to the user's email
+// @access  Public
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -22,27 +29,38 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Create a new user
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role,
+    // Store the OTP temporarily in memory or a cache (e.g., Redis)
+    // For simplicity, we'll use a temporary object here
+    global.tempOtpStore = global.tempOtpStore || {};
+    global.tempOtpStore[email] = { otp, name, email, password, role };
+
+    // Send OTP to the user's email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // Your email
+        pass: process.env.EMAIL_PASS, // Your email password
+      },
     });
 
-    // Save the user to the database
-    await user.save();
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email - OTP",
+      text: `Your OTP for email verification is: ${otp}`,
+    };
 
-    res.status(201).json({ message: "User registered successfully" });
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "OTP sent to your email. Please verify to complete registration." });
   } catch (error) {
     console.error("Error in registerUser:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 router.post('/login', async (req, res) => {
   const { email, password, role } = req.body; // Include role from the frontend
@@ -373,6 +391,67 @@ router.get("/allfreelancers", async (req, res) => {
   } catch (error) {
     console.error("Error fetching freelancers:", error);
     res.status(500).json({ message: "Error fetching freelancers", error });
+  }
+});
+
+// @route   POST /users/verify-otp
+// @desc    Verify OTP and save the user in the database
+// @access  Public
+router.post("/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    // Check if the OTP exists for the email
+    if (!global.tempOtpStore || !global.tempOtpStore[email]) {
+      return res.status(400).json({ error: "OTP expired or invalid. Please register again." });
+    }
+
+    const { otp: storedOtp, name, password, role } = global.tempOtpStore[email];
+
+    // Check if the OTP matches
+    if (storedOtp !== otp) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save the user in the database
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      isActive: true, // Mark the user as active
+    });
+
+    await user.save();
+
+    // Clear the OTP from the temporary store
+    delete global.tempOtpStore[email];
+
+    res.status(200).json({ message: "Account verified successfully. You can now log in." });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// @route   POST /users/check-email
+// @desc    Check if email already exists
+// @access  Public
+router.post("/check-email", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.status(200).json({ exists: true });
+    }
+    res.status(200).json({ exists: false });
+  } catch (err) {
+    console.error("Error checking email existence:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

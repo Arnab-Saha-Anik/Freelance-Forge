@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-// import Navbar from "./components/Navbar";
 import Register from "./pages/Register";
 import ClientDashboard from "./components/Dashboard/ClientDashboard";
 import FreelancerDashboard from "./components/Dashboard/FreelancerDashboard";
@@ -10,17 +9,18 @@ import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRou
 import FreelancerProfile from "./pages/FreelancerProfile";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
+import VerifyOTP from "./pages/VerifyOtp"; // Import the VerifyOTP page
 
 function App() {
   return (
     <>
-      {/* <Navbar /> */}
 
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} /> {/* Add this route */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
