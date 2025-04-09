@@ -415,7 +415,7 @@ const FreelancerProfile = () => {
                 <button
                   type="submit"
                   style={{ padding: "10px 15px" }}
-                  disabled={!isFreelancerInfoChanged} // Disable the button if no changes are made
+                  disabled={!isFreelancerInfoChanged} 
                 >
                   Update Freelancer Information
                 </button>

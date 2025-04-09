@@ -6,14 +6,14 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    userType: "default", // Default to 'select'
+    userType: "default",
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Freelance Forge - Login"; // Set the document title
+    document.title = "Freelance Forge - Login";
   }, []);
 
   const handleInputChange = (e) => {
@@ -36,14 +36,13 @@ const Login = () => {
     }
 
     try {
-      // Send login data to the backend
       const response = await axios.post("http://localhost:5000/users/login", {
         email,
         password,
         role,
       });
 
-      const backendRole = response.data.role; // Get the role from the backend response
+      const backendRole = response.data.role;
 
       if (backendRole.toLowerCase() !== role.toLowerCase()) {
         setErrorMessage("Selected role does not match your account role.");
@@ -52,16 +51,15 @@ const Login = () => {
 
       setSuccessMessage("Login successful!");
       setErrorMessage("");
-      localStorage.setItem("token", response.data.token); // Store the token in localStorage
+      localStorage.setItem("token", response.data.token);
 
-      // Redirect based on role
       if (backendRole.toLowerCase() === "freelancer") {
         navigate("/freelancer-dashboard", { state: { token: response.data.token } });
       } else if (backendRole.toLowerCase() === "client") {
         navigate("/client-dashboard");
       }
     } catch (err) {
-      console.log(err.response); // Log the error for debugging
+      console.log(err.response);
       setErrorMessage(err.response?.data?.error || "An error occurred.");
       setSuccessMessage("");
     }

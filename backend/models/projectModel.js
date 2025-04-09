@@ -5,10 +5,10 @@ const projectSchema = new mongoose.Schema({
   description: { type: String, required: true },
   budget: { type: Number, required: true },
   deadline: { type: Date, required: true },
-  client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Foreign key to User
+  client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
 });
 
-// Add a compound unique index for client and title
+
 projectSchema.index({ client: 1, title: 1 }, { unique: true });
 
 module.exports = mongoose.model("Project", projectSchema);

@@ -5,44 +5,41 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
 const freelancerInformation = require('../models/freelancerInformationModel');
-const Project = require('../models/projectModel'); // Import the Project model
-const nodemailer = require("nodemailer"); // Import nodemailer for sending emails
+const Project = require('../models/projectModel'); 
+const nodemailer = require("nodemailer"); 
 
-// Function to generate a random 6-digit OTP
+
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// @route   POST /users/register
-// @desc    Generate OTP and send it to the user's email
-// @access  Public
+
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Validate required fields
+    
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check if the user already exists
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Generate OTP
+    
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store the OTP temporarily in memory or a cache (e.g., Redis)
-    // For simplicity, we'll use a temporary object here
+    
     global.tempOtpStore = global.tempOtpStore || {};
     global.tempOtpStore[email] = { otp, name, email, password, role };
 
-    // Send OTP to the user's email
+    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_PASS, // Your email password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, 
       },
     });
 
@@ -63,29 +60,29 @@ router.post("/register", async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password, role } = req.body; // Include role from the frontend
+  const { email, password, role } = req.body; 
   if (!email || !password || !role) {
       return res.status(400).json({ error: 'Email, password, and role are required' });
   }
   try {
-      // Find user by email
+      
       const user = await User.findOne({ email });
       if (!user) {
           return res.status(400).json({ error: 'Invalid email or password' });
       }
 
-      // Compare passwords
+      
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
           return res.status(400).json({ error: 'Invalid email or password' });
       }
 
-      // Check if the role matches
+      
       if (user.role.toLowerCase() !== role.toLowerCase()) {
           return res.status(403).json({ error: 'Selected role does not match your account role' });
       }
 
-      // Generate JWT token
+      
       const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
       res.status(200).json({ message: 'Login successful', token, role: user.role });
@@ -94,54 +91,52 @@ router.post('/login', async (req, res) => {
   }
 }); 
 
-// @route   PUT /users/update
-// @desc    Update user profile (name, password)
-// @access  Private
+
 router.put("/update", verifyToken, async (req, res) => {
   const { name, currentPassword, newPassword, confirmPassword } = req.body;
 
   try {
-    // Find the user by ID
+    
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if no changes are made
+    
     if (!name && !currentPassword && !newPassword && !confirmPassword) {
       return res.status(400).json({ error: "No changes detected" });
     }
 
-    // Verify the current password if provided
+    
     if (currentPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
 
-      // Check if the new password is the same as the current password
+      
       if (newPassword && (await bcrypt.compare(newPassword, user.password))) {
         return res.status(400).json({ error: "New password cannot be the same as the current password" });
       }
 
-      // Check if new password and confirm password match
+      
       if (newPassword && newPassword !== confirmPassword) {
         return res.status(400).json({ error: "New password and confirm password do not match" });
       }
 
-      // Update the user's password if provided
+      
       if (newPassword) {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
       }
     }
 
-    // Update the user's name if provided
+    
     if (name && name !== user.name) {
       user.name = name;
     }
 
-    // Save the updated user
+    
     await user.save();
 
     res.json({ message: "Profile updated successfully", name: user.name });
@@ -151,54 +146,52 @@ router.put("/update", verifyToken, async (req, res) => {
   }
 });
 
-// @route   PUT /users/client/update
-// @desc    Update client profile (name, password)
-// @access  Private
+
 router.put("/client/update", verifyToken, async (req, res) => {
   const { name, currentPassword, newPassword, confirmPassword } = req.body;
 
   try {
-    // Find the user by ID from the token
+    
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if no changes are made
+    
     if (!name && !currentPassword && !newPassword && !confirmPassword) {
       return res.status(400).json({ error: "No changes detected" });
     }
 
-    // Verify the current password if provided
+    
     if (currentPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
 
-      // Check if the new password is the same as the current password
+      
       if (newPassword && (await bcrypt.compare(newPassword, user.password))) {
         return res.status(400).json({ error: "New password cannot be the same as the current password" });
       }
 
-      // Check if new password and confirm password match
+      
       if (newPassword && newPassword !== confirmPassword) {
         return res.status(400).json({ error: "New password and confirm password do not match" });
       }
 
-      // Update the user's password if provided
+      
       if (newPassword) {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
       }
     }
 
-    // Update the user's name if provided
+    
     if (name && name !== user.name) {
       user.name = name;
     }
 
-    // Save the updated user
+    
     await user.save();
 
     res.status(200).json({ message: "Profile updated successfully", name: user.name });
@@ -208,29 +201,27 @@ router.put("/client/update", verifyToken, async (req, res) => {
   }
 });
 
-// @route   DELETE /users/delete
-// @desc    Delete user account and corresponding freelancer profile
-// @access  Private
+
 router.delete("/delete", verifyToken, async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find the user by email
+    
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Verify the password
+    
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid password" });
     }
 
-    // Delete the freelancer profile associated with the user
+    
     await freelancerInformation.findOneAndDelete({ userId: user._id });
 
-    // Delete the user account
+    
     await User.findByIdAndDelete(user._id);
 
     res.json({ message: "Account and freelancer profile deleted successfully" });
@@ -240,34 +231,32 @@ router.delete("/delete", verifyToken, async (req, res) => {
   }
 });
 
-// @route   DELETE /client/delete
-// @desc    Delete client account and associated projects
-// @access  Private
+
 router.delete("/client/delete", verifyToken, async (req, res) => {
   const { email, currentPassword } = req.body;
 
   try {
-    // Find the user by ID from the token
+    
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if the provided email matches the user's email
+    
     if (user.email !== email) {
       return res.status(400).json({ error: "The email you provided is not associated with your account." });
     }
 
-    // Verify the password
+    
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid password" });
     }
 
-    // Delete all projects associated with the client
+    
     await Project.deleteMany({ client: user._id });
 
-    // Delete the user account
+    
     await User.findByIdAndDelete(user._id);
 
     res.status(200).json({ message: "Account and associated projects deleted successfully" });
@@ -277,25 +266,23 @@ router.delete("/client/delete", verifyToken, async (req, res) => {
   }
 });
 
-// @route   DELETE /users/admin/:id
-// @desc    Admin deletes a user account
-// @access  Admin
+
 router.delete("/admin/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate the ID
+    
     if (!id || id.length !== 24) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    // Find and delete the user by ID
+    
     const user = await User.findByIdAndDelete(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Delete the associated freelancer profile, if it exists
+    
     await freelancerInformation.findOneAndDelete({ userId: id });
 
     res.status(200).json({ message: "User and associated freelancer profile deleted successfully" });
@@ -305,10 +292,10 @@ router.delete("/admin/:id", async (req, res) => {
   }
 });
 
-// GET /users/me - Fetch logged-in user's data
+
 router.get("/me", verifyToken, async (req, res) => {
   try {
-    // Fetch the user data using the ID from the token
+    
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -327,7 +314,7 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-// Validate user credentials
+
 router.post("/validate", async (req, res) => {
   const { email, password } = req.body;
 
@@ -349,12 +336,10 @@ router.post("/validate", async (req, res) => {
   }
 });
 
-// @route   GET /users
-// @desc    Fetch all users
-// @access  Public
+
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find({}, { password: 0 }); // Exclude the password field
+    const users = await User.find({}, { password: 0 }); 
     res.status(200).json(users);
   } catch (err) {
     console.error("Error fetching users:", err);
@@ -362,9 +347,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// @route   GET /users/check/:id
-// @desc    Check if a user exists
-// @access  Private
+
 router.get("/check/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -381,9 +364,7 @@ router.get("/check/:id", verifyToken, async (req, res) => {
   }
 });
 
-// @route   GET /freelancers
-// @desc    Fetch all freelancers
-// @access  Public
+
 router.get("/allfreelancers", async (req, res) => {
   try {
     const freelancers = await User.find({ role: "Freelancer" }, { name: 1, email: 1 }); // Only return name and email
@@ -394,40 +375,38 @@ router.get("/allfreelancers", async (req, res) => {
   }
 });
 
-// @route   POST /users/verify-otp
-// @desc    Verify OTP and save the user in the database
-// @access  Public
+
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    // Check if the OTP exists for the email
+    
     if (!global.tempOtpStore || !global.tempOtpStore[email]) {
       return res.status(400).json({ error: "OTP expired or invalid. Please register again." });
     }
 
     const { otp: storedOtp, name, password, role } = global.tempOtpStore[email];
 
-    // Check if the OTP matches
+    
     if (storedOtp !== otp) {
       return res.status(400).json({ error: "Invalid OTP" });
     }
 
-    // Hash the password
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save the user in the database
+    
     const user = new User({
       name,
       email,
       password: hashedPassword,
       role,
-      isActive: true, // Mark the user as active
+      isActive: true, 
     });
 
     await user.save();
 
-    // Clear the OTP from the temporary store
+    
     delete global.tempOtpStore[email];
 
     res.status(200).json({ message: "Account verified successfully. You can now log in." });
@@ -437,9 +416,7 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// @route   POST /users/check-email
-// @desc    Check if email already exists
-// @access  Public
+
 router.post("/check-email", async (req, res) => {
   const { email } = req.body;
 

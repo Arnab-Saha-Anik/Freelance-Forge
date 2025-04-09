@@ -3,32 +3,32 @@ const mongoose = require("mongoose");
 const freelancerInformationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Reference to the User model
+    ref: "User", 
     required: true,
   },
   skills: {
-    type: [String], // Array of skills
+    type: [String], 
     required: true,
     default: [],
   },
   portfolio: {
-    type: String, // URL to the portfolio
+    type: String, 
     required: true,
   },
   experience: {
-    type: String, // Description of experience
+    type: String, 
     required: true,
   },
   earnings: {
-    type: Number, // Total earnings
+    type: Number, 
     default: 0,
   },
   reviews: {
-    type: Number, // Average reviews
+    type: Number, 
     default: 0,
   },
   projectsCompleted: {
-    type: Number, // Number of completed projects
+    type: Number, 
     default: 0,
   },
 });
