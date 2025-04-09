@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -11,6 +11,10 @@ const VerifyOTP = () => {
 
   // Retrieve the email from the navigation state
   const email = location.state?.email;
+
+  useEffect(() => {
+    document.title = "Freelance Forge - Verify OTP"; // Set the document title
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

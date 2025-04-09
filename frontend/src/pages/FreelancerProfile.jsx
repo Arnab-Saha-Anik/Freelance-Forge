@@ -129,7 +129,6 @@ const FreelancerProfile = () => {
         });
 
         if (!response.ok) {
-          const data = await response.json();
           handleGlobalLogout(navigate); // Log out after the alert is dismissed
         }
       } catch (err) {
@@ -142,6 +141,10 @@ const FreelancerProfile = () => {
 
     return () => clearInterval(interval); // Cleanup on component unmount
   }, [token, navigate]);
+
+  useEffect(() => {
+    document.title = "Freelance Forge - Freelancer Profile"; // Set the document title
+  }, []);
 
   const handleFreelancerInfoChange = (e) => {
     setFreelancerInfo({ ...freelancerInfo, [e.target.name]: e.target.value });

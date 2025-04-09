@@ -27,6 +27,10 @@ const AdminDashboard = () => {
     }
   }, [token, navigate]);
 
+  useEffect(() => {
+    document.title = "Freelance Forge - Admin Dashboard"; // Set the document title
+  }, []);
+
   // Logout function
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the token from localStorage

@@ -367,8 +367,20 @@ const ClientDashboard = () => {
     window.location.href = "/login"; // Redirect to login page
   };
 
+  useEffect(() => {
+    document.title = "Freelance Forge - Client Dashboard"; // Set the document title
+  }, []);
+
   return (
-    <div style={{ padding: "20px", textAlign: "center" }}>
+    <div
+      style={{
+        padding: "20px",
+        textAlign: "center",
+        backgroundColor: "#723456", // Deeper blue background color
+        color: "#FFFFFF", // White text for better contrast
+        minHeight: "100vh", // Ensure the background covers the full viewport height
+      }}
+    >
       <h1>Welcome, {username}</h1>
 
       {/* Popup Message */}
@@ -406,7 +418,15 @@ const ClientDashboard = () => {
       <div style={{ position: "absolute", top: "20px", right: "40px" }}>
         <button
           onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-          style={{ padding: "10px" }}
+          style={{
+            padding: "10px",
+            backgroundColor: "#28A745", // Green color for "My Account" button
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
         >
           My Account
         </button>
@@ -415,12 +435,12 @@ const ClientDashboard = () => {
             style={{
               position: "absolute",
               top: "50px",
-              right: "20px", // Move the dropdown more to the left
+              right: "20px",
               backgroundColor: "#f9f9f9",
               border: "1px solid #ddd",
               padding: "20px",
               zIndex: 1000,
-              width: "300px", // Ensure proper alignment
+              width: "300px",
             }}
           >
             <form onSubmit={handleAccountUpdate}>
@@ -562,7 +582,16 @@ const ClientDashboard = () => {
       <div>
         <button
           onClick={() => setShowPostProject(!showPostProject)}
-          style={{ padding: "10px", marginBottom: "20px" }}
+          style={{
+            padding: "10px",
+            marginBottom: "20px",
+            backgroundColor: "#28A745", // Green
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
         >
           {showPostProject ? "Hide Post Project" : "Post a Project"}
         </button>
@@ -600,7 +629,18 @@ const ClientDashboard = () => {
               required
               style={{ padding: "10px", marginRight: "10px" }}
             />
-            <button type="submit" style={{ padding: "10px" }}>
+            <button
+              type="submit"
+              style={{
+                padding: "10px",
+                backgroundColor: "#007BFF", // Blue
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
               Post Project
             </button>
           </form>
@@ -611,7 +651,16 @@ const ClientDashboard = () => {
       <div>
         <button
           onClick={() => setShowProjects(!showProjects)}
-          style={{ padding: "10px", marginBottom: "20px" }}
+          style={{
+            padding: "10px",
+            marginBottom: "20px",
+            backgroundColor: "#FFC107", // Yellow
+            color: "#000000", // Black text for "See My Projects"
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
         >
           {showProjects ? "Hide My Projects" : "See My Projects"}
         </button>
@@ -627,7 +676,8 @@ const ClientDashboard = () => {
                     border: "1px solid #ddd",
                     padding: "10px",
                     margin: "10px",
-                    backgroundColor: "#f9f9f9",
+                    backgroundColor: "#FFFFFF", // White background for project cards
+                    color: "#000000", // Black text for project details
                   }}
                 >
                   <h3>{project.title}</h3>
@@ -638,10 +688,12 @@ const ClientDashboard = () => {
                     onClick={() => handleDeleteProject(project._id)}
                     style={{
                       padding: "5px 10px",
-                      backgroundColor: "#f44336",
-                      color: "white",
+                      backgroundColor: "#DC3545", // Red
+                      color: "#FFFFFF",
                       border: "none",
+                      borderRadius: "5px",
                       cursor: "pointer",
+                      fontWeight: "bold",
                     }}
                   >
                     Delete Project
@@ -657,7 +709,7 @@ const ClientDashboard = () => {
 
       {/* Display freelancers */}
       <div>
-        <h2>Freelancers</h2>
+        <h2 style={{ color: "#000000" }}>Freelancers</h2> {/* Black text for "Freelancers" */}
         {loadingFreelancers ? (
           <p>Loading freelancers...</p>
         ) : freelancers.length > 0 ? (
@@ -671,8 +723,8 @@ const ClientDashboard = () => {
                 backgroundColor: "#f9f9f9",
               }}
             >
-              <h3>{freelancer.name || "Not Given"}</h3>
-              <p>Email: {freelancer.email || "Not Given"}</p>
+              <h3 style={{ color: "#000000" }}>{freelancer.name || "Not Given"}</h3> {/* Black text */}
+              <p style={{ color: "#000000" }}>Email: {freelancer.email || "Not Given"}</p> {/* Black text */}
             </div>
           ))
         ) : (

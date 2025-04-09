@@ -27,7 +27,7 @@ const FreelancerDashboard = () => {
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; // Decode userId from token
 
   useEffect(() => {
-    document.title = "Freelancer Dashboard";
+    document.title = "Freelance Forge - Freelancer Dashboard";
 
     if (!token) {
       console.error("No token found");

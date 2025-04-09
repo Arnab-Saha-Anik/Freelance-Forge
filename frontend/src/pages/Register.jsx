@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -12,6 +12,10 @@ const Register = () => {
   });
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Freelance Forge - Register"; // Set the document title
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

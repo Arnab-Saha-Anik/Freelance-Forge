@@ -13,7 +13,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Login - Freelance Forge"; // Set the document title
+    document.title = "Freelance Forge - Login"; // Set the document title
   }, []);
 
   const handleInputChange = (e) => {
