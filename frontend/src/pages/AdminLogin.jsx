@@ -7,19 +7,19 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Freelance Forge - Admin Login"; // Set the document title
+    document.title = "Freelance Forge - Admin Login"; 
   }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // Hardcoded admin credentials
+    
     if (email === "asaa@gmail.com" && password === "1234") {
-      // Generate a simple token using Base64 encoding
+      
       const token = btoa(JSON.stringify({ email, role: "admin" }));
-      localStorage.setItem("token", token); // Store the token in localStorage
+      localStorage.setItem("token", token); 
       alert("Login successful!");
-      navigate("/admin-dashboard"); // Redirect to AdminDashboard
+      navigate("/admin-dashboard"); 
     } else {
       alert("Invalid email or password.");
     }

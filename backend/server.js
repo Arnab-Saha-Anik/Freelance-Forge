@@ -1,32 +1,31 @@
 const express = require("express");
-const dotenv = require("dotenv"); // For environment variables
-const cors = require("cors"); // Import cors middleware
-const connectDB = require("./config/database"); // Import the database connection
-const userController = require("./controllers/userController"); // Import user routes
-const freelancerInformationController = require("./controllers/freelancerInformationController"); // Import freelancer routes
-const projectController = require("./controllers/projectController"); // Import project routes
-
+const dotenv = require("dotenv"); 
+const cors = require("cors"); 
+const connectDB = require("./config/database"); 
+const userController = require("./controllers/userController"); 
+const freelancerInformationController = require("./controllers/freelancerInformationController"); 
+const projectController = require("./controllers/projectController"); 
 dotenv.config();
 
-// Connect to MongoDB
+
 connectDB();
 
 const app = express();
 
-// Enable CORS
-app.use(cors()); // Add this line to enable CORS for all routes
 
-// Middleware for parsing JSON and URL-encoded data
+app.use(cors()); 
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use("/users", userController); // Use the user routes
+
+app.use("/users", userController); 
 app.use("/projects", projectController);
-app.use("/freelancers", freelancerInformationController); // Use the freelancer routes
+app.use("/freelancers", freelancerInformationController); 
 
 
-// Start the server
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`Server running on port http://localhost:${PORT}`)

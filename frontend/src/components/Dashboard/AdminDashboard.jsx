@@ -8,48 +8,48 @@ const AdminDashboard = () => {
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // New loading state for token validation
+  const [isLoading, setIsLoading] = useState(true); 
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const alertShown = useRef(false); // Ref to track if the alert has been shown
+  const alertShown = useRef(false); 
 
-  // Redirect to AdminLogin if no token is found
+  
   useEffect(() => {
     if (!token) {
       if (!alertShown.current) {
         alert("Unauthorized access. Please log in as an admin.");
-        alertShown.current = true; // Mark the alert as shown
+        alertShown.current = true; 
       }
       navigate("/admin-login");
     } else {
-      setIsLoading(false); // Stop loading if token is valid
+      setIsLoading(false); 
     }
   }, [token, navigate]);
 
   useEffect(() => {
-    document.title = "Freelance Forge - Admin Dashboard"; // Set the document title
+    document.title = "Freelance Forge - Admin Dashboard"; 
   }, []);
 
-  // Logout function
+  
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the token from localStorage
+    localStorage.removeItem("token"); 
     alert("You have been logged out.");
-    navigate("/admin-login"); // Redirect to AdminLogin
+    navigate("/admin-login"); 
   };
 
-  // Fetch all users
+  
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
       const response = await fetch("http://localhost:5000/users", {
         headers: {
-          Authorization: `Bearer ${token}`, // Include the token if required
+          Authorization: `Bearer ${token}`, 
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.map(({ _id, name, email, role }) => ({ _id, name, email, role }))); // Include _id
+        setUsers(data.map(({ _id, name, email, role }) => ({ _id, name, email, role }))); 
       } else {
         const errorData = await response.json();
         console.error("Error fetching users:", errorData);
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch all projects
+  
   const fetchProjects = async () => {
     setLoadingProjects(true);
     try {
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
             budget,
             deadline,
           }))
-        ); // Include _id
+        ); 
       } else {
         alert("Failed to fetch projects.");
       }
@@ -90,9 +90,9 @@ const AdminDashboard = () => {
     }
   };
 
-  // Delete a user
+  
   const handleDeleteUser = async (userId) => {
-    console.log("Deleting user with ID:", userId); // Debugging log
+    console.log("Deleting user with ID:", userId); 
 
     if (!userId) {
       console.error("User ID is undefined.");
@@ -109,27 +109,27 @@ const AdminDashboard = () => {
           },
         });
 
-        console.log("Response status:", response.status); // Debugging log
+        console.log("Response status:", response.status); 
         if (response.ok) {
           const data = await response.json();
-          console.log("Response data:", data); // Debugging log
+          console.log("Response data:", data); 
           alert(data.message || "User deleted successfully.");
           setUsers(users.filter((user) => user._id !== userId));
         } else {
           const errorData = await response.json();
-          console.error("Error response data:", errorData); // Debugging log
+          console.error("Error response data:", errorData); 
           alert(errorData.message || "Failed to delete user.");
         }
       } catch (err) {
-        console.error("Error deleting user:", err); // Debugging log
+        console.error("Error deleting user:", err);
         alert("An error occurred while deleting the user.");
       }
     }
   };
 
-  // Delete a project
+  
   const handleDeleteProject = async (projectId) => {
-    console.log("Deleting project with ID:", projectId); // Debugging log
+    console.log("Deleting project with ID:", projectId); 
 
     if (!projectId) {
       console.error("Project ID is undefined.");
@@ -144,21 +144,21 @@ const AdminDashboard = () => {
         });
         if (response.ok) {
           alert("Project deleted successfully.");
-          setProjects(projects.filter((project) => project._id !== projectId)); // Remove the deleted project from the state
+          setProjects(projects.filter((project) => project._id !== projectId)); 
         } else {
-          const errorData = await response.json(); // Parse the error response
-          console.error("Error deleting project:", errorData); // Log the error details
+          const errorData = await response.json(); 
+          console.error("Error deleting project:", errorData); 
           alert(errorData.message || "Failed to delete project.");
         }
       } catch (err) {
-        console.error("Error deleting project:", err); // Log the error
+        console.error("Error deleting project:", err); 
         alert("An error occurred while deleting the project.");
       }
     }
   };
 
   if (isLoading) {
-    // Show a loading state while validating the token
+    
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         <h2>Loading...</h2>
@@ -174,7 +174,7 @@ const AdminDashboard = () => {
         style={{
           position: "absolute",
           top: "20px",
-          right: "20px", // Positioned further to the right
+          right: "20px", 
           padding: "10px 20px",
           backgroundColor: "#DC3545",
           color: "#FFFFFF",

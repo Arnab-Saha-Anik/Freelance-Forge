@@ -8,12 +8,10 @@ const VerifyOTP = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Retrieve the email from the navigation state
   const email = location.state?.email;
 
   useEffect(() => {
-    document.title = "Freelance Forge - Verify OTP"; // Set the document title
+    document.title = "Freelance Forge - Verify OTP";
   }, []);
 
   const handleInputChange = (e) => {
@@ -36,7 +34,7 @@ const VerifyOTP = () => {
       setSuccessMessage(response.data.message);
       setErrorMessage("");
       alert("Account verified successfully! Redirecting to login...");
-      navigate("/login"); // Redirect to login page
+      navigate("/login");
     } catch (err) {
       console.error(err.response);
       setErrorMessage(err.response?.data?.error || "An error occurred.");

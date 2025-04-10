@@ -15,16 +15,16 @@ const ProtectedRoute = ({ allowedRole }) => {
     const userRole = decoded.role.toLowerCase();
 
     if (userRole !== allowedRole.toLowerCase()) {
-      // Redirect to login if the role does not match
+      
       return <Navigate to="/login" replace />;
     }
   } catch (err) {
     console.error("Invalid token:", err);
-    // Redirect to login if the token is invalid
+    
     return <Navigate to="/login" replace />;
   }
 
-  // Render the child components if the user is authorized
+  
   return <Outlet />;
 };
 

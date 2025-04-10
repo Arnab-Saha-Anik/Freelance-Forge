@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 const HomePage = () => {
   const navigate = useNavigate();
   const [featuredProjects, setFeaturedProjects] = useState([]);
-  const [showProjects, setShowProjects] = useState(false); // State to toggle dropdown
+  const [showProjects, setShowProjects] = useState(false); 
 
   useEffect(() => {
     document.title = "Freelance Forge";
 
-    // Fetch featured projects from the backend
+    
     const fetchFeaturedProjects = async () => {
       try {
         const response = await fetch("http://localhost:5000/projects/featured");
@@ -30,10 +30,10 @@ const HomePage = () => {
   return (
     <div
       style={{
-        display: "flex", // Use flexbox
-        flexDirection: "column", // Stack items vertically
-        justifyContent: "center", // Center items vertically
-        alignItems: "center", // Center items horizontally
+        display: "flex", 
+        flexDirection: "column", 
+        justifyContent: "center", 
+        alignItems: "center", 
         textAlign: "center",
         padding: "20px",
         backgroundImage:
@@ -41,7 +41,7 @@ const HomePage = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        minHeight: "100vh", // Full viewport height
+        minHeight: "100vh", 
       }}
     >
       <h1 style={{ color: "#000000", fontSize: "3rem", fontWeight: "bold" }}>
@@ -100,7 +100,7 @@ const HomePage = () => {
             fontWeight: "bold",
             transition: "background-color 0.3s",
           }}
-          onClick={() => setShowProjects(!showProjects)} // Toggle dropdown
+          onClick={() => setShowProjects(!showProjects)} 
         >
           {showProjects ? "Hide Featured Projects" : "See Our Featured Projects Here"}
         </button>
@@ -125,8 +125,8 @@ const HomePage = () => {
                     backgroundColor: "#FFFFFF",
                     borderRadius: "10px",
                     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-                    textAlign: "center", // Center text inside project cards
-                    margin: "0 auto", // Center the project cards
+                    textAlign: "center", 
+                    margin: "0 auto", 
                   }}
                 >
                   <h3 style={{ color: "#000000", fontSize: "1.5rem", fontWeight: "bold" }}>

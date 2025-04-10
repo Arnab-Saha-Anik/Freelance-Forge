@@ -3,28 +3,28 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { handleGlobalLogout } from "../../utils/logout";
 
 const FreelancerDashboard = () => {
-  const [showBidModal, setShowBidModal] = useState(false); // State to toggle bid modal
-  const [selectedProject, setSelectedProject] = useState(null); // State to store the selected project
-  const [bidAmount, setBidAmount] = useState(""); // State to store the bid amount
-  const [showLearningMaterials, setShowLearningMaterials] = useState(false); // State to toggle learning materials
-  const [projects, setProjects] = useState([]); // State to store all projects
-  const [loading, setLoading] = useState(true); // State to manage loading
-  const [error, setError] = useState(null); // State to manage errors
+  const [showBidModal, setShowBidModal] = useState(false); 
+  const [selectedProject, setSelectedProject] = useState(null); 
+  const [bidAmount, setBidAmount] = useState(""); 
+  const [showLearningMaterials, setShowLearningMaterials] = useState(false); 
+  const [projects, setProjects] = useState([]); 
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null); 
   const [freelancerData, setFreelancerData] = useState({
     earnings: 0,
     reviews: 0,
     projectsCompleted: 0,
-  }); // State to store freelancer-specific data
-  const [userName, setUserName] = useState("Loading..."); // State to store the user's name
-  const [dropdownOpen, setDropdownOpen] = useState(false); // State to toggle dropdown
-  const [profileExists, setProfileExists] = useState(false); // Track if the profile exists
-  const [loadingProfile, setLoadingProfile] = useState(true); // New state for profile loading
-  const navigate = useNavigate(); // For navigation
-  const location = useLocation(); // To access state passed via navigation
+  }); 
+  const [userName, setUserName] = useState("Loading..."); 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [profileExists, setProfileExists] = useState(false); 
+  const [loadingProfile, setLoadingProfile] = useState(true); 
+  const navigate = useNavigate(); 
+  const location = useLocation(); 
 
-  // Use token from state or fallback to localStorage
+  
   const token = location.state?.token || localStorage.getItem("token");
-  const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; // Decode userId from token
+  const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
 
   useEffect(() => {
     document.title = "Freelance Forge - Freelancer Dashboard";
@@ -32,11 +32,11 @@ const FreelancerDashboard = () => {
     if (!token) {
       console.error("No token found");
       setUserName("Error fetching name");
-      navigate("/login"); // Redirect to login if no token is found
+      navigate("/login"); 
       return;
     }
 
-    // Fetch the updated user information from the backend
+  
     const fetchUserInfo = async () => {
       try {
         const response = await fetch("http://localhost:5000/users/me", {
@@ -47,7 +47,7 @@ const FreelancerDashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setUserName(data.name); // Set the updated name
+          setUserName(data.name); 
         } else {
           console.error("Failed to fetch user info");
           setUserName("Error fetching name");
@@ -58,7 +58,7 @@ const FreelancerDashboard = () => {
       }
     };
 
-    // Fetch projects and freelancer data
+    
     const fetchProjects = async () => {
       try {
         const response = await fetch("http://localhost:5000/projects", {
@@ -82,7 +82,7 @@ const FreelancerDashboard = () => {
 
     const fetchFreelancerData = async () => {
       try {
-        const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from token
+        const userId = JSON.parse(atob(token.split(".")[1])).id; 
         const freelancerResponse = await fetch(`http://localhost:5000/freelancers/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -109,18 +109,17 @@ const FreelancerDashboard = () => {
       }
     };
 
-    fetchUserInfo(); // Fetch the updated user info
+    fetchUserInfo(); 
     fetchProjects();
     fetchFreelancerData();
   }, [navigate, token]);
 
   useEffect(() => {
     const fetchProfileExistence = async () => {
-      setLoadingProfile(true); // Start loading
+      setLoadingProfile(true); 
       try {
-        const userId = JSON.parse(atob(token.split(".")[1])).id; // Decode userId from token
-
-        // Check if the freelancer profile exists
+        const userId = JSON.parse(atob(token.split(".")[1])).id; 
+        
         const response = await fetch(`http://localhost:5000/freelancers/check/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,71 +128,71 @@ const FreelancerDashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setProfileExists(data.exists); // Set profile existence
+          setProfileExists(data.exists); 
         } else {
-          setProfileExists(false); // Profile does not exist
+          setProfileExists(false); 
         }
       } catch (err) {
         console.error("Error checking profile existence:", err);
-        setProfileExists(false); // Assume profile does not exist on error
+        setProfileExists(false); 
       } finally {
-        setLoadingProfile(false); // End loading
+        setLoadingProfile(false); 
       }
     };
 
     fetchProfileExistence();
   }, [token]);
 
-  // Memoize the `checkUserExists` function
+  
   const checkUserExists = useCallback(async () => {
     try {
-      console.log("Checking if user exists..."); // Debugging log
+      console.log("Checking if user exists..."); 
       const response = await fetch(`http://localhost:5000/users/check/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log("Response status:", response.status); // Debugging log
+      console.log("Response status:", response.status); 
       if (!response.ok) {
-        console.log("User does not exist. Triggering logout."); // Debugging log
+        console.log("User does not exist. Triggering logout."); 
         window.alert("An admin has deleted your account. You will now be logged out.");
         setTimeout(() => {
-          handleGlobalLogout(navigate); // Log out after the alert is dismissed
+          handleGlobalLogout(navigate); 
         }, 0);
       } else {
-        console.log("User exists. No action needed."); // Debugging log
+        console.log("User exists. No action needed."); 
       }
     } catch (err) {
       console.error("Error checking user existence:", err);
       
       setTimeout(() => {
-        handleGlobalLogout(navigate); // Log out after the alert is dismissed
+        handleGlobalLogout(navigate); 
       }, 0);
     }
   }, [userId, token, navigate]);
 
   useEffect(() => {
-    console.log("useEffect triggered"); // Debugging log
+    console.log("useEffect triggered"); 
 
     if (!token) {
-      navigate("/login"); // Redirect to login if no token is found
+      navigate("/login"); 
       return;
     }
 
     const interval = setInterval(checkUserExists, 1000);
 
-    return () => clearInterval(interval); // Cleanup on component unmount
+    return () => clearInterval(interval); 
   }, [token, navigate, checkUserExists]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the token from localStorage
-    navigate("/login"); // Redirect to the login page
+    localStorage.removeItem("token"); 
+    navigate("/login"); 
   };
 
   const handleBidClick = (project) => {
-    setSelectedProject(project); // Set the selected project
-    setShowBidModal(true); // Show the bid modal
+    setSelectedProject(project); 
+    setShowBidModal(true);
   };
 
   const handleBidSubmit = async (e) => {
@@ -201,7 +200,7 @@ const FreelancerDashboard = () => {
 
     if (!token) {
       alert("No token found. Please log in again.");
-      navigate("/login"); // Redirect to login
+      navigate("/login"); 
       return;
     }
 
@@ -217,8 +216,8 @@ const FreelancerDashboard = () => {
 
       if (response.ok) {
         alert(`Your bid of $${bidAmount} has been submitted for "${selectedProject.title}"`);
-        setShowBidModal(false); // Close the modal
-        setBidAmount(""); // Reset the bid amount
+        setShowBidModal(false); 
+        setBidAmount(""); 
       } else {
         alert("Failed to submit bid. Please try again.");
       }
@@ -263,8 +262,8 @@ const FreelancerDashboard = () => {
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           style={{
-            backgroundColor: "#007BFF", // Blue background for the button
-            color: "#FFFFFF", // White text for better contrast
+            backgroundColor: "#007BFF", 
+            color: "#FFFFFF", 
             border: "none",
             padding: "10px 20px",
             borderRadius: "5px",
@@ -274,10 +273,12 @@ const FreelancerDashboard = () => {
             display: "flex",
             alignItems: "center",
             gap: "5px",
+            transition: "background-color 0.3s ease", // Smooth hover transition
           }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")} // Darker blue on hover
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")} // Reset to original color
         >
-          My Account
-          <span style={{ fontSize: "14px" }}>▼</span> {/* Down arrow */}
+          My Account {dropdownOpen ? "▲" : "▼"} {/* Arrow changes dynamically */}
         </button>
 
         {/* Dropdown Menu */}
@@ -285,14 +286,14 @@ const FreelancerDashboard = () => {
           <div
             style={{
               position: "absolute",
-              top: "100%", // Position below the button
-              right: "0", // Align to the right edge of the button
-              backgroundColor: "#444444", // Dark background for the dropdown
-              color: "#FFFFFF", // White text for dropdown items
+              top: "100%", 
+              right: "0", 
+              backgroundColor: "#444444", 
+              color: "#FFFFFF", 
               borderRadius: "10px",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Add a subtle shadow
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", 
               padding: "15px",
-              minWidth: "250px", // Set a fixed width for the dropdown
+              minWidth: "250px", 
             }}
           >
             <ul style={{ listStyleType: "none", margin: 0, padding: 0 }}>
@@ -314,10 +315,10 @@ const FreelancerDashboard = () => {
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FFD700", // Gold color for Profile Settings
+                    color: "#FFD700", 
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", // Slightly smaller font size for Profile Settings
+                    fontSize: "18px", 
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",
@@ -334,10 +335,10 @@ const FreelancerDashboard = () => {
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FF0000", // Red color for Logout
+                    color: "#FF0000", 
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", // Slightly smaller font size for Logout
+                    fontSize: "18px", 
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",
@@ -549,7 +550,7 @@ const FreelancerDashboard = () => {
                     transition: "background-color 0.3s",
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px", // Add spacing between text and arrow
+                    gap: "10px", 
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
@@ -576,7 +577,7 @@ const FreelancerDashboard = () => {
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             zIndex: 1000,
             textAlign: "center",
-            width: "400px", // Set a fixed width for the modal
+            width: "400px", 
           }}
         >
           {/* Display the project name */}

@@ -17,24 +17,24 @@ const ClientDashboard = () => {
     name: "",
   });
   const [originalAccountInfo, setOriginalAccountInfo] = useState({});
-  const [username, setUsername] = useState("Loading..."); // State to store the username
+  const [username, setUsername] = useState("Loading..."); 
   const [showProjects, setShowProjects] = useState(false);
   const [showPostProject, setShowPostProject] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingFreelancers, setLoadingFreelancers] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
-  const [popupMessage, setPopupMessage] = useState(""); // Popup message state
-  const [popupType, setPopupType] = useState(""); // Popup type (success or error)
+  const [popupMessage, setPopupMessage] = useState(""); 
+  const [popupType, setPopupType] = useState(""); 
   const [deleteAccountInfo, setDeleteAccountInfo] = useState({
     email: "",
     currentPassword: "",
   });
 
-  const token = localStorage.getItem("token"); // Token for authentication
-  const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; // Decode client ID from token
+  const token = localStorage.getItem("token"); 
+  const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
   const navigate = useNavigate();
 
-  // Decode the token to extract the username and set initial name
+  
   useEffect(() => {
     if (token) {
       const decodedToken = JSON.parse(atob(token.split(".")[1]));
@@ -42,7 +42,7 @@ const ClientDashboard = () => {
     }
   }, [token]);
 
-  // Function to check if the user exists
+  
   const checkUserExists = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/users/check/${loggedInClientId}`, {
@@ -52,30 +52,30 @@ const ClientDashboard = () => {
       });
 
       if (!response.ok) {
-        // If the user does not exist, show a popup and log out
-        localStorage.removeItem("token"); // Remove the token
-        navigate("/login"); // Redirect to the login page
+        
+        localStorage.removeItem("token"); 
+        navigate("/login"); 
       }
     } catch (err) {
       console.error("Error checking user existence:", err);
       alert("An admin has deleted your account. You will now be logged out.");
-      localStorage.removeItem("token"); // Remove the token
-      navigate("/login"); // Redirect to the login page
+      localStorage.removeItem("token"); 
+      navigate("/login"); 
     }
   }, [loggedInClientId, token, navigate]);
 
-  // Periodically check user existence
+  
   useEffect(() => {
     if (!token) {
       navigate("/login");
       return;
     }
 
-    const interval = setInterval(checkUserExists, 1000); // Check every second
-    return () => clearInterval(interval); // Cleanup on component unmount
+    const interval = setInterval(checkUserExists, 1000);
+    return () => clearInterval(interval); 
   }, [checkUserExists, token, navigate]);
 
-  // Fetch account information from the backend
+  
   useEffect(() => {
     const fetchAccountInfo = async () => {
       try {
@@ -104,19 +104,19 @@ const ClientDashboard = () => {
     fetchAccountInfo();
   }, [token]);
 
-  // Memoize fetchProjects to avoid re-creation on every render
+  
   const fetchProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
       const response = await fetch("http://localhost:5000/projects/client/projects", {
         headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, 
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setProjects(data); // Update the state with the fetched projects
+        setProjects(data); 
       } else {
         console.error("Failed to fetch projects");
       }
@@ -127,13 +127,13 @@ const ClientDashboard = () => {
     }
   }, [token]);
 
-  // Memoize fetchFreelancers to avoid re-creation on every render
+
   const fetchFreelancers = useCallback(async () => {
     setLoadingFreelancers(true);
     try {
-      const response = await fetch(`http://localhost:5000/users/allfreelancers`); // Public route, no token required
+      const response = await fetch(`http://localhost:5000/users/allfreelancers`); 
       const data = await response.json();
-      console.log("Freelancers fetched:", data); // Log the fetched data
+      console.log("Freelancers fetched:", data); 
       setFreelancers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching freelancers:", error);
@@ -142,12 +142,12 @@ const ClientDashboard = () => {
     }
   }, []);
 
-  // Fetch freelancers when the component loads
+  
   useEffect(() => {
     fetchFreelancers();
   }, [fetchFreelancers]);
 
-  // Fetch projects and freelancers when toggled
+  
   useEffect(() => {
     if (showProjects) {
       fetchProjects();
@@ -169,7 +169,7 @@ const ClientDashboard = () => {
           description: newProject.description,
           budget: newProject.budget,
           deadline: newProject.deadline,
-          client: loggedInClientId, // Pass the client ID
+          client: loggedInClientId, 
         }),
       });
 
@@ -200,7 +200,7 @@ const ClientDashboard = () => {
   const handleAccountUpdate = async (e) => {
     e.preventDefault();
 
-    // Validation: Check if no changes are made
+    
     if (
       accountInfo.name === originalAccountInfo.name &&
       !accountInfo.newPassword &&
@@ -211,14 +211,14 @@ const ClientDashboard = () => {
       return;
     }
 
-    // Validation: Check if current password is provided
+    
     if (!accountInfo.currentPassword) {
       setPopupMessage("Please provide your current password.");
       setPopupType("error");
       return;
     }
 
-    // Validation: Check if new password matches confirm password
+    
     if (accountInfo.newPassword !== accountInfo.confirmNewPassword) {
       setPopupMessage("New password and confirm password do not match.");
       setPopupType("error");
@@ -230,7 +230,7 @@ const ClientDashboard = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({
           name: accountInfo.name,
@@ -244,7 +244,7 @@ const ClientDashboard = () => {
         const data = await response.json();
         setPopupMessage("Account updated successfully!");
         setPopupType("success");
-        setOriginalAccountInfo({ name: data.name }); // Update original values
+        setOriginalAccountInfo({ name: data.name });
         setAccountInfo((prev) => ({
           ...prev,
           currentPassword: "",
@@ -252,7 +252,7 @@ const ClientDashboard = () => {
           confirmNewPassword: "",
         }));
 
-        // Fetch updated user information and update the username
+        
         const userResponse = await fetch(`http://localhost:5000/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -261,7 +261,7 @@ const ClientDashboard = () => {
 
         if (userResponse.ok) {
           const updatedUser = await userResponse.json();
-          setUsername(updatedUser.name); // Update the username state
+          setUsername(updatedUser.name); 
         }
       } else {
         const data = await response.json();
@@ -278,11 +278,13 @@ const ClientDashboard = () => {
   const handleDeleteAccount = async (e) => {
     e.preventDefault();
 
+    // Ensure email and password are provided
     if (!deleteAccountInfo.email || !deleteAccountInfo.currentPassword) {
       alert("Please provide your email and current password.");
       return;
     }
 
+    // Confirm deletion
     const confirmDelete = window.confirm(
       "Are you sure you want to delete your account? This action cannot be undone."
     );
@@ -296,7 +298,7 @@ const ClientDashboard = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({
           email: deleteAccountInfo.email,
@@ -331,13 +333,13 @@ const ClientDashboard = () => {
       const response = await fetch(`http://localhost:5000/projects/client/delete/${projectId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, 
         },
       });
 
       if (response.ok) {
         alert("Project deleted successfully.");
-        setProjects(projects.filter((project) => project._id !== projectId)); // Update the UI
+        setProjects(projects.filter((project) => project._id !== projectId));
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete project.");
@@ -356,7 +358,7 @@ const ClientDashboard = () => {
       !accountInfo.confirmNewPassword) ||
     accountInfo.newPassword !== accountInfo.confirmNewPassword;
 
-  // Function to close the popup message
+  
   const closePopup = () => {
     setPopupMessage("");
     setPopupType("");
@@ -368,7 +370,7 @@ const ClientDashboard = () => {
   };
 
   useEffect(() => {
-    document.title = "Freelance Forge - Client Dashboard"; // Set the document title
+    document.title = "Freelance Forge - Client Dashboard"; 
   }, []);
 
   return (
@@ -376,9 +378,9 @@ const ClientDashboard = () => {
       style={{
         padding: "20px",
         textAlign: "center",
-        backgroundColor: "#723456", // Deeper blue background color
-        color: "#FFFFFF", // White text for better contrast
-        minHeight: "100vh", // Ensure the background covers the full viewport height
+        backgroundColor: "#723456",
+        color: "#FFFFFF", 
+        minHeight: "100vh", 
       }}
     >
       <h1>Welcome, {username}</h1>
@@ -420,7 +422,7 @@ const ClientDashboard = () => {
           onClick={() => setShowAccountDropdown(!showAccountDropdown)}
           style={{
             padding: "10px",
-            backgroundColor: "#28A745", // Green color for "My Account" button
+            backgroundColor: "#28A745", 
             color: "#FFFFFF",
             border: "none",
             borderRadius: "5px",
@@ -449,7 +451,7 @@ const ClientDashboard = () => {
                 name="name"
                 placeholder="Name"
                 value={accountInfo.name}
-                onChange={handleAccountInfoChange} // Use the function here
+                onChange={handleAccountInfoChange} 
                 style={{
                   padding: "10px",
                   marginBottom: "10px",
@@ -462,7 +464,7 @@ const ClientDashboard = () => {
                 name="currentPassword"
                 placeholder="Current Password"
                 value={accountInfo.currentPassword}
-                onChange={handleAccountInfoChange} // Use the function here
+                onChange={handleAccountInfoChange} 
                 style={{
                   padding: "10px",
                   marginBottom: "10px",
@@ -475,7 +477,7 @@ const ClientDashboard = () => {
                 name="newPassword"
                 placeholder="New Password"
                 value={accountInfo.newPassword}
-                onChange={handleAccountInfoChange} // Use the function here
+                onChange={handleAccountInfoChange} 
                 style={{
                   padding: "10px",
                   marginBottom: "10px",
@@ -488,7 +490,7 @@ const ClientDashboard = () => {
                 name="confirmNewPassword"
                 placeholder="Confirm New Password"
                 value={accountInfo.confirmNewPassword}
-                onChange={handleAccountInfoChange} // Use the function here
+                onChange={handleAccountInfoChange}
                 style={{
                   padding: "10px",
                   marginBottom: "10px",
@@ -633,7 +635,7 @@ const ClientDashboard = () => {
               type="submit"
               style={{
                 padding: "10px",
-                backgroundColor: "#007BFF", // Blue
+                backgroundColor: "#007BFF",
                 color: "#FFFFFF",
                 border: "none",
                 borderRadius: "5px",
@@ -654,8 +656,8 @@ const ClientDashboard = () => {
           style={{
             padding: "10px",
             marginBottom: "20px",
-            backgroundColor: "#FFC107", // Yellow
-            color: "#000000", // Black text for "See My Projects"
+            backgroundColor: "#FFC107", 
+            color: "#000000", 
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
@@ -676,8 +678,8 @@ const ClientDashboard = () => {
                     border: "1px solid #ddd",
                     padding: "10px",
                     margin: "10px",
-                    backgroundColor: "#FFFFFF", // White background for project cards
-                    color: "#000000", // Black text for project details
+                    backgroundColor: "#FFFFFF", 
+                    color: "#000000", 
                   }}
                 >
                   <h3>{project.title}</h3>
@@ -688,7 +690,7 @@ const ClientDashboard = () => {
                     onClick={() => handleDeleteProject(project._id)}
                     style={{
                       padding: "5px 10px",
-                      backgroundColor: "#DC3545", // Red
+                      backgroundColor: "#DC3545", 
                       color: "#FFFFFF",
                       border: "none",
                       borderRadius: "5px",

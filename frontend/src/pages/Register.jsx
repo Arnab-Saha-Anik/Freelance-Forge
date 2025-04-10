@@ -14,7 +14,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Freelance Forge - Register"; // Set the document title
+    document.title = "Freelance Forge - Register";
   }, []);
 
   const handleInputChange = (e) => {
@@ -27,26 +27,22 @@ const Register = () => {
 
     const { fullName, email, password, confirmPassword, role } = formData;
 
-    // Validate required fields
     if (!fullName || !email || !password || !confirmPassword) {
       setErrorMessage("Please fill out all fields.");
       return;
     }
 
-    // Validate role selection
     if (role === "default") {
       setErrorMessage("Please select a valid role (Client or Freelancer).");
       return;
     }
 
-    // Validate password match
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match. Please try again.");
       return;
     }
 
     try {
-      // Check if the email already exists
       const emailCheckResponse = await axios.post("http://localhost:5000/users/check-email", { email });
 
       if (emailCheckResponse.data.exists) {
@@ -54,11 +50,9 @@ const Register = () => {
         return;
       }
 
-      // Redirect to OTP verification page immediately
       alert("An OTP has been sent to your email (check spam if you don't find). Please verify to complete registration.");
       navigate("/verify-otp", { state: { email } });
 
-      // Send registration data to the backend in the background
       await axios.post("http://localhost:5000/users/register", {
         name: fullName,
         email,
@@ -66,7 +60,7 @@ const Register = () => {
         role,
       });
     } catch (err) {
-      console.error(err.response); // Log the error for debugging
+      console.error(err.response);
       setErrorMessage(err.response?.data?.message || "An error occurred.");
     }
   };
