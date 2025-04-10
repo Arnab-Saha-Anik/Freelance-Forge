@@ -253,17 +253,17 @@ const FreelancerDashboard = () => {
       {/* Dropdown Menu */}
       <div
         style={{
-          position: "absolute", 
-          top: "20px", 
-          right: "20px", 
+          position: "absolute",
+          top: "20px",
+          right: "20px",
         }}
       >
         {/* My Account Button */}
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           style={{
-            backgroundColor: "#007BFF", 
-            color: "#FFFFFF", 
+            backgroundColor: "#007BFF", // Blue background for the button
+            color: "#FFFFFF", // White text for better contrast
             border: "none",
             padding: "10px 20px",
             borderRadius: "5px",
@@ -286,14 +286,14 @@ const FreelancerDashboard = () => {
           <div
             style={{
               position: "absolute",
-              top: "100%", 
-              right: "0", 
-              backgroundColor: "#444444", 
-              color: "#FFFFFF", 
+              top: "100%", // Position below the button
+              right: "0", // Align to the right edge of the button
+              backgroundColor: "#444444", // Dark background for the dropdown
+              color: "#FFFFFF", // White text for dropdown items
               borderRadius: "10px",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", 
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Add a subtle shadow
               padding: "15px",
-              minWidth: "250px", 
+              minWidth: "250px", // Set a fixed width for the dropdown
             }}
           >
             <ul style={{ listStyleType: "none", margin: 0, padding: 0 }}>
@@ -315,10 +315,10 @@ const FreelancerDashboard = () => {
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FFD700", 
+                    color: "#FFD700", // Gold color for Profile Settings
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", 
+                    fontSize: "18px", // Slightly smaller font size for Profile Settings
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",
@@ -335,10 +335,10 @@ const FreelancerDashboard = () => {
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FF0000", 
+                    color: "#FF0000", // Red color for Logout
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", 
+                    fontSize: "18px", // Slightly smaller font size for Logout
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",

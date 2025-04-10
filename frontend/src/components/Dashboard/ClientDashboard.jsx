@@ -298,7 +298,7 @@ const ClientDashboard = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
         body: JSON.stringify({
           email: deleteAccountInfo.email,
@@ -308,8 +308,9 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         alert("Account deleted successfully. Taking you to the login page.");
-        localStorage.removeItem("token"); 
-        window.location.href = "/login"; 
+        localStorage.removeItem("token"); // Clear the token
+        setDeleteAccountInfo({ email: "", currentPassword: "" }); // Reset the delete account state
+        window.location.href = "/login"; // Redirect to login page
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete account.");
@@ -365,8 +366,9 @@ const ClientDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); 
-    window.location.href = "/login"; 
+    localStorage.removeItem("token"); // Clear the token
+    setDeleteAccountInfo({ email: "", currentPassword: "" }); // Reset the delete account state
+    window.location.href = "/login"; // Redirect to login page
   };
 
   useEffect(() => {
