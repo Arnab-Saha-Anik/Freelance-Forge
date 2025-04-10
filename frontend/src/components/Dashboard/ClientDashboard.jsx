@@ -308,8 +308,8 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         alert("Account deleted successfully. Taking you to the login page.");
-        localStorage.removeItem("token"); // Clear the token
-        window.location.href = "/login"; // Redirect to login page
+        localStorage.removeItem("token"); 
+        window.location.href = "/login"; 
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete account.");
@@ -365,8 +365,8 @@ const ClientDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Clear the token
-    window.location.href = "/login"; // Redirect to login page
+    localStorage.removeItem("token"); 
+    window.location.href = "/login"; 
   };
 
   useEffect(() => {

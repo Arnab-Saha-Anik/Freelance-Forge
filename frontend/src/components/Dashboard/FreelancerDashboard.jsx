@@ -253,9 +253,9 @@ const FreelancerDashboard = () => {
       {/* Dropdown Menu */}
       <div
         style={{
-          position: "absolute", // Position the button absolutely
-          top: "20px", // Add spacing from the top
-          right: "20px", // Add spacing from the right
+          position: "absolute", 
+          top: "20px", 
+          right: "20px", 
         }}
       >
         {/* My Account Button */}
