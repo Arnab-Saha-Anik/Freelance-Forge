@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const FreelancerInformation = require("../models/freelancerInformationModel");
 const User = require("../models/userModel");
-const { verifyToken } = require("../middleware/authMiddleware"); // Import verifyToken middleware
+const { verifyToken } = require("../middleware/authMiddleware"); 
 
 
 router.get("/:userId", verifyToken, async (req, res) => {
