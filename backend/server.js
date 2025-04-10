@@ -5,6 +5,7 @@ const connectDB = require("./config/database");
 const userController = require("./controllers/userController"); 
 const freelancerInformationController = require("./controllers/freelancerInformationController"); 
 const projectController = require("./controllers/projectController"); 
+const notificationController = require("./controllers/notificationController");
 dotenv.config();
 
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/users", userController); 
 app.use("/projects", projectController);
 app.use("/freelancers", freelancerInformationController); 
+app.use("/notifications", notificationController);
 
 
 

@@ -1,15 +1,46 @@
 const express = require("express");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel"); 
+const Notification = require("../models/notificationModel");
 const { verifyToken } = require("../middleware/authMiddleware");
+const cron = require("node-cron");
 const router = express.Router();
 
+// Schedule a task to run every day at midnight
+cron.schedule("0 0 * * *", async () => {
+  try {
+    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+
+    // Find projects with deadlines earlier than today
+    const expiredProjects = await Project.find({ deadline: { $lt: today } });
+
+    // Delete expired projects and create notifications
+    for (const project of expiredProjects) {
+      await Notification.create({
+        user: project.client,
+        message: `Your project "${project.title}" has been deleted because its deadline has passed.`,
+      });
+
+      await Project.findByIdAndDelete(project._id);
+    }
+
+    console.log(`Deleted ${expiredProjects.length} expired projects and notified users.`);
+  } catch (error) {
+    console.error("Error deleting expired projects and notifying users:", error);
+  }
+});
 
 router.post("/create", verifyToken, async (req, res) => {
   const { title, description, budget, deadline, client } = req.body;
 
   if (!client) {
     return res.status(400).json({ error: "Client ID is required" });
+  }
+
+  // Validate that the deadline is not in the past
+  const today = new Date().toISOString().split("T")[0];
+  if (deadline < today) {
+    return res.status(400).json({ error: "The deadline cannot be a date in the past." });
   }
 
   try {
@@ -166,6 +197,40 @@ router.put("/client/update", verifyToken, async (req, res) => {
     res.json({ message: "Profile updated successfully", name: user.name });
   } catch (err) {
     console.error("Error in /client/update:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+router.put("/client/update/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { budget, deadline } = req.body;
+
+  // Validate that the deadline is not in the past
+  const today = new Date().toISOString().split("T")[0];
+  if (deadline && deadline < today) {
+    return res.status(400).json({ error: "The deadline cannot be a date in the past." });
+  }
+
+  try {
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to update this project" });
+    }
+
+    if (budget) project.budget = budget;
+    if (deadline) project.deadline = deadline;
+
+    await project.save();
+
+    res.status(200).json({ message: "Project updated successfully", project });
+  } catch (error) {
+    console.error("Error updating project:", error);
     res.status(500).json({ error: "Server error" });
   }
 });

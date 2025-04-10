@@ -29,6 +29,13 @@ const ClientDashboard = () => {
     email: "",
     currentPassword: "",
   });
+  const [editProject, setEditProject] = useState({
+    id: null,
+    budget: "",
+    deadline: "",
+  });
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const token = localStorage.getItem("token"); 
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -142,6 +149,44 @@ const ClientDashboard = () => {
     }
   }, []);
 
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/notifications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data); // Store notifications in state
+      } else {
+        console.error("Failed to fetch notifications.");
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const markNotificationsAsRead = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/notifications/mark-as-read", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        fetchNotifications(); // Refresh notifications
+      } else {
+        console.error("Failed to mark notifications as read.");
+      }
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+    }
+  };
+
   
   useEffect(() => {
     fetchFreelancers();
@@ -156,6 +201,13 @@ const ClientDashboard = () => {
 
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate that the deadline is not in the past
+    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    if (newProject.deadline < today) {
+      alert("The deadline cannot be a date in the past. Please select a valid date.");
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:5000/projects/create", {
@@ -351,6 +403,26 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/notifications/${notificationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setNotifications(notifications.filter((n) => n._id !== notificationId)); // Remove the deleted notification from state
+        alert("Notification deleted successfully.");
+      } else {
+        console.error("Failed to delete notification.");
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
   const isUpdateDisabled =
     !accountInfo.currentPassword ||
     !accountInfo.name ||
@@ -417,171 +489,245 @@ const ClientDashboard = () => {
           </button>
         </div>
       )}
-
-      {/* My Account Dropdown in Top-Right Corner */}
-      <div style={{ position: "absolute", top: "20px", right: "40px" }}>
-        <button
-          onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-          style={{
-            padding: "10px",
-            backgroundColor: "#28A745", 
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          My Account
-        </button>
-        {showAccountDropdown && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50px",
-              right: "20px",
-              backgroundColor: "#f9f9f9",
-              border: "1px solid #ddd",
-              padding: "20px",
-              zIndex: 1000,
-              width: "300px",
+      {/* My Account and Notifications Dropdown in Top-Right Corner */}
+      <div style={{ position: "absolute", top: "20px", right: "40px", display: "flex", gap: "20px" }}>
+        {/* Notifications Button */}
+        <div>
+          <button
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              if (!showNotifications) {
+                markNotificationsAsRead(); // Mark notifications as read when opened
+              }
             }}
-          >
-            <form onSubmit={handleAccountUpdate}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={accountInfo.name}
-                onChange={handleAccountInfoChange} 
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="password"
-                name="currentPassword"
-                placeholder="Current Password"
-                value={accountInfo.currentPassword}
-                onChange={handleAccountInfoChange} 
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="password"
-                name="newPassword"
-                placeholder="New Password"
-                value={accountInfo.newPassword}
-                onChange={handleAccountInfoChange} 
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="password"
-                name="confirmNewPassword"
-                placeholder="Confirm New Password"
-                value={accountInfo.confirmNewPassword}
-                onChange={handleAccountInfoChange}
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <button
-                type="submit"
-                disabled={isUpdateDisabled}
-                style={{
-                  padding: "10px",
-                  backgroundColor: isUpdateDisabled ? "#ccc" : "#007BFF",
-                  color: "white",
-                  border: "none",
-                  cursor: isUpdateDisabled ? "not-allowed" : "pointer",
-                  width: "100%",
-                }}
-              >
-                Update Information
-              </button>
-            </form>
-            <form onSubmit={handleDeleteAccount} style={{ marginTop: "20px" }}>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={deleteAccountInfo.email}
-                onChange={(e) =>
-                  setDeleteAccountInfo({ ...deleteAccountInfo, email: e.target.value })
-                }
-                required
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="password"
-                name="currentPassword"
-                placeholder="Current Password"
-                value={deleteAccountInfo.currentPassword}
-                onChange={(e) =>
-                  setDeleteAccountInfo({ ...deleteAccountInfo, currentPassword: e.target.value })
-                }
-                required
-                style={{
-                  padding: "10px",
-                  marginBottom: "10px",
-                  width: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f44336",
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-              >
-                Delete Account
-              </button>
-              {/* Logout Button */}
-              <div style={{ marginTop: "20px", textAlign: "center" }}>
-              <button
-              onClick={handleLogout}
-              style={{
+            style={{
               padding: "10px",
               backgroundColor: "#007BFF",
-              color: "white",
+              color: "#FFFFFF",
               border: "none",
+              borderRadius: "5px",
               cursor: "pointer",
-             }}
+              fontWeight: "bold",
+            }}
+          >
+            Notifications
+          </button>
+          {showNotifications && (
+            <div
+              style={{
+                position: "absolute",
+                top: "50px",
+                right: "0",
+                backgroundColor: "#FFFFFF",
+                border: "1px solid #ddd",
+                borderRadius: "5px",
+                padding: "10px",
+                width: "300px",
+                zIndex: 1000,
+              }}
             >
-             Logout
-            </button>
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <div
+                    key={notification._id}
+                    style={{
+                      padding: "10px",
+                      borderBottom: "1px solid #ddd",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p style={{ margin: 0 }}>{notification.message}</p>
+                    <button
+                      onClick={() => handleDeleteNotification(notification._id)}
+                      style={{
+                        backgroundColor: "#DC3545", // Red
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        padding: "5px 10px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p style={{ textAlign: "center", color: "#555" }}>
+                  You do not have any notifications.
+                </p>
+              )}
             </div>
-            </form>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* My Account Button */}
+        <div>
+          <button
+            onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+            style={{
+              padding: "10px",
+              backgroundColor: "#28A745", // Green
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            My Account
+          </button>
+          {showAccountDropdown && (
+            <div
+              style={{
+                position: "absolute",
+                top: "50px",
+                right: "20px",
+                backgroundColor: "#f9f9f9",
+                border: "1px solid #ddd",
+                padding: "20px",
+                zIndex: 1000,
+                width: "300px",
+              }}
+            >
+              <form onSubmit={handleAccountUpdate}>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={accountInfo.name}
+                  onChange={handleAccountInfoChange} 
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <input
+                  type="password"
+                  name="currentPassword"
+                  placeholder="Current Password"
+                  value={accountInfo.currentPassword}
+                  onChange={handleAccountInfoChange} 
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <input
+                  type="password"
+                  name="newPassword"
+                  placeholder="New Password"
+                  value={accountInfo.newPassword}
+                  onChange={handleAccountInfoChange} 
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <input
+                  type="password"
+                  name="confirmNewPassword"
+                  placeholder="Confirm New Password"
+                  value={accountInfo.confirmNewPassword}
+                  onChange={handleAccountInfoChange}
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={isUpdateDisabled}
+                  style={{
+                    padding: "10px",
+                    backgroundColor: isUpdateDisabled ? "#ccc" : "#007BFF",
+                    color: "white",
+                    border: "none",
+                    cursor: isUpdateDisabled ? "not-allowed" : "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Update Information
+                </button>
+              </form>
+              <form onSubmit={handleDeleteAccount} style={{ marginTop: "20px" }}>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={deleteAccountInfo.email}
+                  onChange={(e) =>
+                    setDeleteAccountInfo({ ...deleteAccountInfo, email: e.target.value })
+                  }
+                  required
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <input
+                  type="password"
+                  name="currentPassword"
+                  placeholder="Current Password"
+                  value={deleteAccountInfo.currentPassword}
+                  onChange={(e) =>
+                    setDeleteAccountInfo({ ...deleteAccountInfo, currentPassword: e.target.value })
+                  }
+                  required
+                  style={{
+                    padding: "10px",
+                    marginBottom: "10px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#f44336",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Delete Account
+                </button>
+                {/* Logout Button */}
+                <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <button
+                onClick={handleLogout}
+                style={{
+                padding: "10px",
+                backgroundColor: "#007BFF",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+               }}
+              >
+               Logout
+              </button>
+              </div>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
       
-
       {/* Dropdown to Post a Project */}
       <div>
         <button
@@ -688,20 +834,139 @@ const ClientDashboard = () => {
                   <p>{project.description}</p>
                   <p>Budget: ${project.budget}</p>
                   <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
-                  <button
-                    onClick={() => handleDeleteProject(project._id)}
-                    style={{
-                      padding: "5px 10px",
-                      backgroundColor: "#DC3545", 
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Delete Project
-                  </button>
+
+                  {editProject.id === project._id ? (
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+
+                        // Validate that the deadline is not in the past
+                        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+                        if (editProject.deadline < today) {
+                          alert("The deadline cannot be a date in the past. Please select a valid date.");
+                          return;
+                        }
+
+                        try {
+                          const response = await fetch(
+                            `http://localhost:5000/projects/client/update/${editProject.id}`,
+                            {
+                              method: "PUT",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({
+                                budget: editProject.budget,
+                                deadline: editProject.deadline,
+                              }),
+                            }
+                          );
+
+                          if (response.ok) {
+                            alert("Project updated successfully!");
+                            setEditProject({ id: null, budget: "", deadline: "" });
+                            fetchProjects(); // Refresh the projects list
+                          } else {
+                            const data = await response.json();
+                            alert(data.error || "Failed to update project.");
+                          }
+                        } catch (error) {
+                          console.error("Error updating project:", error);
+                          alert("An error occurred while updating the project.");
+                        }
+                      }}
+                    >
+                      <input
+                        type="number"
+                        placeholder="New Budget"
+                        value={editProject.budget}
+                        onChange={(e) =>
+                          setEditProject({ ...editProject, budget: e.target.value })
+                        }
+                        required
+                        style={{ padding: "5px", marginRight: "10px" }}
+                      />
+                      <input
+                        type="date"
+                        placeholder="New Deadline"
+                        value={editProject.deadline}
+                        onChange={(e) =>
+                          setEditProject({ ...editProject, deadline: e.target.value })
+                        }
+                        required
+                        style={{ padding: "5px", marginRight: "10px" }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: "#28A745", // Green
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditProject({ id: null, budget: "", deadline: "" })}
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: "#DC3545", // Red
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() =>
+                          setEditProject({
+                            id: project._id,
+                            budget: project.budget,
+                            deadline: project.deadline.split("T")[0], // Format date for input
+                          })
+                        }
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: "#FFC107", // Yellow
+                          color: "#000000",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          marginRight: "10px",
+                        }}
+                      >
+                        Edit Project
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProject(project._id)}
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: "#DC3545", // Red
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Delete Project
+                      </button>
+                    </>
+                  )}
                 </div>
               ))
             ) : (
