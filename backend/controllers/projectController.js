@@ -77,6 +77,17 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/featured", async (req, res) => {
+  try {
+    // Fetch the latest 6 projects sorted by the MongoDB _id field
+    const featuredProjects = await Project.find().sort({ _id: -1 }).limit(6);
+    res.status(200).json(featuredProjects);
+  } catch (error) {
+    console.error("Error fetching featured projects:", error);
+    res.status(500).json({ message: "Error fetching featured projects", error });
+  }
+});
+
 router.get("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
@@ -141,17 +152,6 @@ router.delete("/admin/:id", async (req, res) => {
   } catch (err) {
     console.error("Error deleting project:", err);
     res.status(500).json({ message: "Error deleting project", error: err.message });
-  }
-});
-
-
-router.get("/featured", async (req, res) => {
-  try {
-    const featuredProjects = await Project.find().sort({ createdAt: -1 }).limit(6);
-    res.status(200).json(featuredProjects);
-  } catch (error) {
-    console.error("Error fetching featured projects:", error);
-    res.status(500).json({ message: "Error fetching featured projects", error });
   }
 });
 
