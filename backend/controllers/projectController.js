@@ -268,27 +268,34 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    
+    // Validate project ID
     if (!id || id.length !== 24) {
       return res.status(400).json({ error: "Invalid project ID" });
     }
 
-    
+    // Find the project
     const project = await Project.findById(id);
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    
+    // Ensure the client is authorized to delete the project
     if (project.client.toString() !== req.user.id) {
       return res.status(403).json({ error: "You are not authorized to delete this project" });
     }
 
+    // Check if the project has an associated direct hire with status "accepted"
+    const acceptedDirectHire = await DirectHire.findOne({ projectId: id, status: "accepted" });
+    if (acceptedDirectHire) {
+      return res.status(400).json({
+        error: "This project cannot be deleted because it has been accepted by a freelancer.",
+      });
+    }
 
     // Delete the project
     await Project.findByIdAndDelete(id);
 
-    // Delete all associated DirectHire records
+    // Delete all associated direct hire records
     await DirectHire.deleteMany({ projectId: id });
 
     res.status(200).json({ message: "Project and associated direct hire records deleted successfully." });

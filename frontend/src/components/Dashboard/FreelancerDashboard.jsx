@@ -298,7 +298,7 @@ const FreelancerDashboard = () => {
 
       if (response.ok) {
         alert("Congratulations! Start working on this project and maintain the deadline!");
-        fetchHireOffers(); // Refresh the list
+        fetchHireOffers(); // Refresh the list of pending offers
       } else {
         const data = await response.json();
         alert(data.error || "Failed to accept the project.");
@@ -320,7 +320,7 @@ const FreelancerDashboard = () => {
 
       if (response.ok) {
         alert("Project rejected successfully.");
-        fetchHireOffers(); // Refresh the list
+        fetchHireOffers(); // Refresh the list of pending offers
       } else {
         const data = await response.json();
         alert(data.error || "Failed to reject the project.");

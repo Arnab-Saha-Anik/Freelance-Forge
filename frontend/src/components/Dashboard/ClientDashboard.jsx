@@ -69,7 +69,6 @@ const ClientDashboard = () => {
       }
     } catch (err) {
       console.error("Error checking user existence:", err);
-      alert("An admin has deleted your account. You will now be logged out.");
       localStorage.removeItem("token"); 
       navigate("/login"); 
     }

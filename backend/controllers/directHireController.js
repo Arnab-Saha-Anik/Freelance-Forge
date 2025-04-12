@@ -68,10 +68,10 @@ router.get("/client", verifyToken, async (req, res) => {
   }
 });
 
-// Get Direct Hires for a Freelancer
+// Get Direct Hires for a Freelancer (Pending Only)
 router.get("/freelancer", verifyToken, async (req, res) => {
   try {
-    const directHires = await DirectHire.find({ freelancerId: req.user.id })
+    const directHires = await DirectHire.find({ freelancerId: req.user.id, status: "pending" }) // Filter by pending status
       .populate("clientId", "name email")
       .populate("projectId", "title description budget deadline");
 
