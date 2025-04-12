@@ -746,11 +746,14 @@ const FreelancerDashboard = () => {
                   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                 }}
               >
-                <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>{project.title}</h3>
-                <p style={{ marginBottom: "10px" }}>{project.description}</p>
+                <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>Title: {project.title}</h3>
+                <p style={{ marginBottom: "10px" }}>Description: {project.description}</p>
                 <p style={{ marginBottom: "10px", fontWeight: "bold" }}>Budget: ${project.budget}</p>
                 <p style={{ marginBottom: "10px" }}>
                   Deadline: {new Date(project.deadline).toLocaleDateString()}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  Client Email: {project.client?.email || "N/A"}
                 </p>
                 <button
                   style={{

@@ -69,7 +69,11 @@ router.post("/create", verifyToken, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const projects = await Project.find();
+    // Fetch all projects and populate the client field to include the email
+    const projects = await Project.find()
+      .populate("client", "email name") // Populate the client field with email and name
+      .exec();
+
     res.status(200).json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
