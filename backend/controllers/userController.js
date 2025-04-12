@@ -367,11 +367,37 @@ router.get("/check/:id", verifyToken, async (req, res) => {
 
 router.get("/allfreelancers", async (req, res) => {
   try {
-    const freelancers = await User.find({ role: "Freelancer" }, { name: 1, email: 1 }); // Only return name and email
+    // Use aggregation to join the User and FreelancerInformation collections
+    const freelancers = await User.aggregate([
+      {
+        $lookup: {
+          from: "freelancerinformations", // The name of the FreelancerInformation collection
+          localField: "_id", // The field in the User collection
+          foreignField: "userId", // The field in the FreelancerInformation collection
+          as: "profile", // The name of the joined field
+        },
+      },
+      {
+        $match: {
+          role: "Freelancer", // Only include users with the "Freelancer" role
+          "profile.0": { $exists: true }, // Only include users with a profile
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          "profile.skills": 1,
+          "profile.portfolio": 1,
+          "profile.experience": 1,
+        },
+      },
+    ]);
+
     res.status(200).json(freelancers);
   } catch (error) {
-    console.error("Error fetching freelancers:", error);
-    res.status(500).json({ message: "Error fetching freelancers", error });
+    console.error("Error fetching freelancers with profiles:", error);
+    res.status(500).json({ message: "Error fetching freelancers with profiles", error });
   }
 });
 
@@ -429,6 +455,17 @@ router.post("/check-email", async (req, res) => {
   } catch (err) {
     console.error("Error checking email existence:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Fetch unread notifications count for the logged-in user
+router.get("/unread-count", verifyToken, async (req, res) => {
+  try {
+    const unreadCount = await Notification.countDocuments({ user: req.user.id, read: false });
+    res.status(200).json({ unreadCount });
+  } catch (error) {
+    console.error("Error fetching unread notifications count:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

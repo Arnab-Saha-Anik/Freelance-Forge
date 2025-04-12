@@ -19,10 +19,13 @@ const FreelancerDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profileExists, setProfileExists] = useState(false); 
   const [loadingProfile, setLoadingProfile] = useState(true); 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showHireOffers, setShowHireOffers] = useState(false);
+  const [hireOffers, setHireOffers] = useState([]);
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
-  
   const token = location.state?.token || localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
 
@@ -36,7 +39,6 @@ const FreelancerDashboard = () => {
       return;
     }
 
-  
     const fetchUserInfo = async () => {
       try {
         const response = await fetch("http://localhost:5000/users/me", {
@@ -58,7 +60,6 @@ const FreelancerDashboard = () => {
       }
     };
 
-    
     const fetchProjects = async () => {
       try {
         const response = await fetch("http://localhost:5000/projects", {
@@ -143,7 +144,48 @@ const FreelancerDashboard = () => {
     fetchProfileExistence();
   }, [token]);
 
-  
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/notifications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      } else {
+        console.error("Failed to fetch notifications.");
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  }, [token]);
+
+  const fetchHireOffers = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/direct-hire/freelancer", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHireOffers(data);
+      } else {
+        console.error("Failed to fetch hire offers.");
+      }
+    } catch (error) {
+      console.error("Error fetching hire offers:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
   const checkUserExists = useCallback(async () => {
     try {
       console.log("Checking if user exists..."); 
@@ -156,7 +198,6 @@ const FreelancerDashboard = () => {
       console.log("Response status:", response.status); 
       if (!response.ok) {
         console.log("User does not exist. Triggering logout."); 
-        window.alert("An admin has deleted your account. You will now be logged out.");
         setTimeout(() => {
           handleGlobalLogout(navigate); 
         }, 0);
@@ -227,6 +268,69 @@ const FreelancerDashboard = () => {
     }
   };
 
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/notifications/${notificationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setNotifications(notifications.filter((n) => n._id !== notificationId));
+      } else {
+        console.error("Failed to delete notification.");
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  const handleAcceptOffer = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/direct-hire/accept/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Congratulations! Start working on this project and maintain the deadline!");
+        fetchHireOffers(); // Refresh the list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to accept the project.");
+      }
+    } catch (error) {
+      console.error("Error accepting project:", error);
+      alert("An error occurred while accepting the project.");
+    }
+  };
+
+  const handleRejectOffer = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/direct-hire/reject/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Project rejected successfully.");
+        fetchHireOffers(); // Refresh the list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to reject the project.");
+      }
+    } catch (error) {
+      console.error("Error rejecting project:", error);
+      alert("An error occurred while rejecting the project.");
+    }
+  };
+
   return (
     <div
       style={{
@@ -250,7 +354,7 @@ const FreelancerDashboard = () => {
         </p>
       ) : null}
 
-      {/* Dropdown Menu */}
+      {/* My Account Dropdown */}
       <div
         style={{
           position: "absolute",
@@ -258,12 +362,11 @@ const FreelancerDashboard = () => {
           right: "20px",
         }}
       >
-        {/* My Account Button */}
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           style={{
-            backgroundColor: "#007BFF", // Blue background for the button
-            color: "#FFFFFF", // White text for better contrast
+            backgroundColor: "#007BFF",
+            color: "#FFFFFF",
             border: "none",
             padding: "10px 20px",
             borderRadius: "5px",
@@ -273,27 +376,26 @@ const FreelancerDashboard = () => {
             display: "flex",
             alignItems: "center",
             gap: "5px",
-            transition: "background-color 0.3s ease", // Smooth hover transition
+            transition: "background-color 0.3s ease",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")} // Darker blue on hover
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")} // Reset to original color
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
         >
-          My Account {dropdownOpen ? "▲" : "▼"} {/* Arrow changes dynamically */}
+          My Account {dropdownOpen ? "▲" : "▼"}
         </button>
 
-        {/* Dropdown Menu */}
         {dropdownOpen && (
           <div
             style={{
               position: "absolute",
-              top: "100%", // Position below the button
-              right: "0", // Align to the right edge of the button
-              backgroundColor: "#444444", // Dark background for the dropdown
-              color: "#FFFFFF", // White text for dropdown items
+              top: "100%",
+              right: "0",
+              backgroundColor: "#444444",
+              color: "#FFFFFF",
               borderRadius: "10px",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Add a subtle shadow
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
               padding: "15px",
-              minWidth: "250px", // Set a fixed width for the dropdown
+              minWidth: "250px",
             }}
           >
             <ul style={{ listStyleType: "none", margin: 0, padding: 0 }}>
@@ -315,10 +417,10 @@ const FreelancerDashboard = () => {
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FFD700", // Gold color for Profile Settings
+                    color: "#FFD700",
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", // Slightly smaller font size for Profile Settings
+                    fontSize: "18px",
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",
@@ -329,16 +431,39 @@ const FreelancerDashboard = () => {
                   Profile Settings
                 </button>
               </li>
+              <li style={{ marginTop: "10px" }}>
+                <button
+                  onClick={() => {
+                    setShowHireOffers(!showHireOffers);
+                    if (!showHireOffers) fetchHireOffers();
+                  }}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "#FFD700",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    padding: 0,
+                    display: "block",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  Hire Offers
+                </button>
+              </li>
               <li>
                 <button
                   onClick={handleLogout}
                   style={{
                     backgroundColor: "transparent",
                     border: "none",
-                    color: "#FF0000", // Red color for Logout
+                    color: "#FF0000",
                     textDecoration: "underline",
                     cursor: "pointer",
-                    fontSize: "18px", // Slightly smaller font size for Logout
+                    fontSize: "18px",
                     fontWeight: "bold",
                     padding: 0,
                     display: "block",
@@ -353,12 +478,100 @@ const FreelancerDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Notifications Section */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "200px", // Adjusted to place it beside "My Account"
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        {/* Notification Button */}
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          style={{
+            backgroundColor: "#007BFF",
+            color: "#FFFFFF",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "18px",
+            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            transition: "background-color 0.3s ease",
+          }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
+        >
+          Notifications {showNotifications ? "▲" : "▼"}
+        </button>
+
+        {/* Notifications Dropdown */}
+        {showNotifications && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50px",
+              right: "0",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #ddd",
+              borderRadius: "5px",
+              padding: "10px",
+              width: "300px",
+              zIndex: 1000,
+            }}
+          >
+            {notifications.length > 0 ? (
+              notifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  style={{
+                    padding: "10px",
+                    borderBottom: "1px solid #ddd",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    color: "#000000",
+                  }}
+                >
+                  <p style={{ margin: 0 }}>{notification.message}</p>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={() => handleDeleteNotification(notification._id)}
+                      style={{
+                        backgroundColor: "#DC3545",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        padding: "5px 10px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ textAlign: "center", color: "#555" }}>
+                No notifications available.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
       
       {/* The rest of the code remains unchanged */}
       {/* Learning Materials Section */}
       {/* Projects Section */}
       {/* Bid Modal */}
-
 
       {/* Learning Materials Section */}
       <div
@@ -550,7 +763,7 @@ const FreelancerDashboard = () => {
                     transition: "background-color 0.3s",
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px", 
+                    gap: "10px",
                   }}
                   onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
@@ -631,6 +844,112 @@ const FreelancerDashboard = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Hire Offers Section */}
+      {showHireOffers && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100px", // Adjust this value to position it properly
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "80%", // Adjust width as needed
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowHireOffers(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              backgroundColor: "#FF0000",
+              borderRadius: "50%",
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: "20px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            ✖
+          </button>
+
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Hire Offers</h2>
+          {hireOffers.length > 0 ? (
+            hireOffers.map((offer) => (
+              <div
+                key={offer._id}
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#333333",
+                  borderRadius: "10px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                }}
+              >
+                <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
+                  Project: {offer.projectId.title}
+                </h3>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Description:</strong> {offer.projectId.description}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Budget:</strong> ${offer.projectId.budget}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Deadline:</strong>{" "}
+                  {new Date(offer.projectId.deadline).toLocaleDateString()}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Client Name:</strong> {offer.clientId.name}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Client Email:</strong> {offer.clientId.email}
+                </p>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={() => handleAcceptOffer(offer._id)}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#28A745",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleRejectOffer(offer._id)}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#DC3545",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#FFD700" }}>
+              No hire offers available.
+            </p>
+          )}
         </div>
       )}
     </div>

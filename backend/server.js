@@ -6,6 +6,7 @@ const userController = require("./controllers/userController");
 const freelancerInformationController = require("./controllers/freelancerInformationController"); 
 const projectController = require("./controllers/projectController"); 
 const notificationController = require("./controllers/notificationController");
+const directHireController = require("./controllers/directHireController");
 dotenv.config();
 
 
@@ -25,6 +26,7 @@ app.use("/users", userController);
 app.use("/projects", projectController);
 app.use("/freelancers", freelancerInformationController); 
 app.use("/notifications", notificationController);
+app.use("/direct-hire", directHireController);
 
 
 

@@ -76,6 +76,27 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid project ID." });
+  }
+
+  try {
+    const project = await Project.findById(id).populate("client", "name email");
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    res.status(200).json(project);
+  } catch (error) {
+    console.error("Error fetching project details:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 router.delete("/:id", async (req, res) => {
   try {
@@ -213,6 +234,12 @@ router.put("/client/update/:id", verifyToken, async (req, res) => {
   }
 
   try {
+    const directHire = await DirectHire.findOne({ projectId: id, status: "accepted" });
+    if (directHire) {
+      return res.status(400).json({
+        error: "The project is already being accepted based on current requirements. Now, it is not possible to change the requirements!",
+      });
+    }
     const project = await Project.findById(id);
 
     if (!project) {

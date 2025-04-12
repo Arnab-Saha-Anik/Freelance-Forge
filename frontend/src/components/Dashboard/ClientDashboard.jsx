@@ -36,6 +36,10 @@ const ClientDashboard = () => {
   });
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showDirectHireModal, setShowDirectHireModal] = useState(false);
+  const [selectedFreelancerId, setSelectedFreelancerId] = useState(null);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const token = localStorage.getItem("token"); 
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -134,13 +138,31 @@ const ClientDashboard = () => {
     }
   }, [token]);
 
+  const fetchProjectsForDirectHire = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/projects/client/projects", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data); // Store projects in state
+      } else {
+        console.error("Failed to fetch projects for direct hire.");
+      }
+    } catch (error) {
+      console.error("Error fetching projects for direct hire:", error);
+    }
+  }, [token]);
 
   const fetchFreelancers = useCallback(async () => {
     setLoadingFreelancers(true);
     try {
-      const response = await fetch(`http://localhost:5000/users/allfreelancers`); 
+      const response = await fetch("http://localhost:5000/users/allfreelancers");
       const data = await response.json();
-      console.log("Freelancers fetched:", data); 
+      console.log("Freelancers fetched:", data); // Debugging
       setFreelancers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching freelancers:", error);
@@ -443,6 +465,40 @@ const ClientDashboard = () => {
     window.location.href = "/login"; // Redirect to login page
   };
 
+  const handleDirectHireClick = async (freelancerId) => {
+    await fetchProjectsForDirectHire(); // Fetch projects for direct hire
+    setSelectedFreelancerId(freelancerId);
+    setShowDirectHireModal(true);
+  };
+
+  const handleDirectHire = async (projectId) => {
+    try {
+      const response = await fetch("http://localhost:5000/direct-hire", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          freelancerId: selectedFreelancerId,
+          projectId,
+        }),
+      });
+  
+      if (response.ok) {
+        alert("Freelancer has been offered to hire successfully!");
+        setShowDirectHireModal(false);
+        setSelectedProjectId(null); // Reset selected project
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to hire freelancer.");
+      }
+    } catch (error) {
+      console.error("Error hiring freelancer:", error);
+      alert("An error occurred while hiring the freelancer.");
+    }
+  };
+
   useEffect(() => {
     document.title = "Freelance Forge - Client Dashboard"; 
   }, []);
@@ -518,7 +574,7 @@ const ClientDashboard = () => {
                 position: "absolute",
                 top: "50px",
                 right: "0",
-                backgroundColor: "#FFFFFF",
+                backgroundColor: "#FFFFFF", // White background
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 padding: "10px",
@@ -538,7 +594,14 @@ const ClientDashboard = () => {
                       alignItems: "center",
                     }}
                   >
-                    <p style={{ margin: 0 }}>{notification.message}</p>
+                    <p
+                      style={{
+                        margin: 0,
+                        color: "#000000", // Change text color to black
+                      }}
+                    >
+                      {notification.message}
+                    </p>
                     <button
                       onClick={() => handleDeleteNotification(notification._id)}
                       style={{
@@ -556,7 +619,7 @@ const ClientDashboard = () => {
                   </div>
                 ))
               ) : (
-                <p style={{ textAlign: "center", color: "#555" }}>
+                <p style={{ textAlign: "center", color: "#555555" /* Dark gray for no notifications */ }}>
                   You do not have any notifications.
                 </p>
               )}
@@ -978,7 +1041,7 @@ const ClientDashboard = () => {
 
       {/* Display freelancers */}
       <div>
-        <h2 style={{ color: "#000000" }}>Freelancers</h2> {/* Black text for "Freelancers" */}
+        <h2 style={{ color: "#000000" }}>Freelancers</h2>
         {loadingFreelancers ? (
           <p>Loading freelancers...</p>
         ) : freelancers.length > 0 ? (
@@ -992,14 +1055,170 @@ const ClientDashboard = () => {
                 backgroundColor: "#f9f9f9",
               }}
             >
-              <h3 style={{ color: "#000000" }}>{freelancer.name || "Not Given"}</h3> {/* Black text */}
-              <p style={{ color: "#000000" }}>Email: {freelancer.email || "Not Given"}</p> {/* Black text */}
+              <h3 style={{ color: "#000000" }}>{freelancer.name || "Not Given"}</h3>
+              <p style={{ color: "#000000" }}>Email: {freelancer.email || "Not Given"}</p>
+              <p style={{ color: "#000000" }}>
+                Skills: {freelancer.profile?.[0]?.skills?.join(", ") || "Not Provided"}
+              </p>
+              <p style={{ color: "#000000" }}>
+                Portfolio:{" "}
+                {freelancer.profile?.[0]?.portfolio ? (
+                  <a
+                    href={freelancer.profile[0].portfolio}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#007BFF" }}
+                  >
+                    View Portfolio
+                  </a>
+                ) : (
+                  "Not Provided"
+                )}
+              </p>
+              <p style={{ color: "#000000" }}>
+                Experience: {freelancer.profile?.[0]?.experience || "Not Provided"}
+              </p>
+              <button
+                onClick={() => handleDirectHireClick(freelancer._id)}
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#28A745",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Direct Hire
+              </button>
             </div>
           ))
         ) : (
           <p>No freelancers found.</p>
         )}
       </div>
+
+      {showDirectHireModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "400px",
+            color: "#000000", // Ensure text color is black
+          }}
+        >
+          <h3>Select a Project to Hire</h3>
+          <div style={{ marginBottom: "20px", position: "relative" }}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              style={{
+                padding: "10px",
+                backgroundColor: "#007BFF",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                width: "100%",
+                textAlign: "left",
+              }}
+            >
+              {selectedProjectId
+                ? projects.find((project) => project._id === selectedProjectId)?.title
+                : "Select a Project"}
+            </button>
+            {isDropdownOpen && (
+              <ul
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: "0",
+                  width: "100%",
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  listStyleType: "none",
+                  padding: "10px",
+                  margin: "0",
+                  zIndex: 1000,
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                }}
+              >
+                {projects.map((project) => (
+                  <li
+                    key={project._id}
+                    onClick={() => {
+                      setSelectedProjectId(project._id);
+                      setIsDropdownOpen(false); // Close the dropdown after selection
+                    }}
+                    style={{
+                      padding: "10px",
+                      cursor: "pointer",
+                      backgroundColor:
+                        selectedProjectId === project._id ? "#007BFF" : "#FFFFFF",
+                      color: selectedProjectId === project._id ? "#FFFFFF" : "#000000",
+                      borderRadius: "5px",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = "#007BFF")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor =
+                        selectedProjectId === project._id ? "#007BFF" : "#FFFFFF")
+                    }
+                  >
+                    {project.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              if (selectedProjectId) {
+                handleDirectHire(selectedProjectId);
+              } else {
+                alert("Please select a project before confirming.");
+              }
+            }}
+            style={{
+              marginTop: "10px",
+              padding: "10px",
+              backgroundColor: "#28A745", // Green
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              width: "100%",
+            }}
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => setShowDirectHireModal(false)}
+            style={{
+              marginTop: "10px",
+              padding: "10px",
+              backgroundColor: "#DC3545", // Red
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              width: "100%",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 };
