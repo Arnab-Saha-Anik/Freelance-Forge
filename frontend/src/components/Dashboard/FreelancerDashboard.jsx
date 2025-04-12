@@ -852,7 +852,7 @@ const FreelancerDashboard = () => {
         <div
           style={{
             position: "absolute",
-            top: "100px", // Adjust this value to position it properly
+            top: "100px",
             left: "50%",
             transform: "translateX(-50%)",
             padding: "20px",
@@ -861,7 +861,7 @@ const FreelancerDashboard = () => {
             color: "#FFFFFF",
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             zIndex: 1000,
-            width: "80%", // Adjust width as needed
+            width: "80%",
           }}
         >
           {/* Close Button */}
@@ -884,70 +884,77 @@ const FreelancerDashboard = () => {
           </button>
 
           <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Hire Offers</h2>
-          {hireOffers.length > 0 ? (
-            hireOffers.map((offer) => (
-              <div
-                key={offer._id}
-                style={{
-                  marginBottom: "20px",
-                  padding: "15px",
-                  backgroundColor: "#333333",
-                  borderRadius: "10px",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                }}
-              >
-                <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
-                  Project: {offer.projectId.title}
-                </h3>
-                <p style={{ marginBottom: "10px" }}>
-                  <strong>Description:</strong> {offer.projectId.description}
-                </p>
-                <p style={{ marginBottom: "10px" }}>
-                  <strong>Budget:</strong> ${offer.projectId.budget}
-                </p>
-                <p style={{ marginBottom: "10px" }}>
-                  <strong>Deadline:</strong>{" "}
-                  {new Date(offer.projectId.deadline).toLocaleDateString()}
-                </p>
-                <p style={{ marginBottom: "10px" }}>
-                  <strong>Client Name:</strong> {offer.clientId.name}
-                </p>
-                <p style={{ marginBottom: "10px" }}>
-                  <strong>Client Email:</strong> {offer.clientId.email}
-                </p>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => handleAcceptOffer(offer._id)}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#28A745",
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleRejectOffer(offer._id)}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#DC3545",
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Reject
-                  </button>
+          {Array.isArray(hireOffers) && hireOffers.length > 0 ? (
+            hireOffers.map((offer) => {
+              // Ensure the project exists before accessing its properties
+              if (!offer.projectId) {
+                return null; // Skip this entry if projectId is null or undefined
+              }
+
+              return (
+                <div
+                  key={offer._id}
+                  style={{
+                    marginBottom: "20px",
+                    padding: "15px",
+                    backgroundColor: "#333333",
+                    borderRadius: "10px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  }}
+                >
+                  <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
+                    Project: {offer.projectId.title}
+                  </h3>
+                  <p style={{ marginBottom: "10px" }}>
+                    <strong>Description:</strong> {offer.projectId.description}
+                  </p>
+                  <p style={{ marginBottom: "10px" }}>
+                    <strong>Budget:</strong> ${offer.projectId.budget}
+                  </p>
+                  <p style={{ marginBottom: "10px" }}>
+                    <strong>Deadline:</strong>{" "}
+                    {new Date(offer.projectId.deadline).toLocaleDateString()}
+                  </p>
+                  <p style={{ marginBottom: "10px" }}>
+                    <strong>Client Name:</strong> {offer.clientId?.name || "N/A"}
+                  </p>
+                  <p style={{ marginBottom: "10px" }}>
+                    <strong>Client Email:</strong> {offer.clientId?.email || "N/A"}
+                  </p>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={() => handleAcceptOffer(offer._id)}
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#28A745",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleRejectOffer(offer._id)}
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#DC3545",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <p style={{ textAlign: "center", color: "#FFD700" }}>
-              No hire offers available.
+            <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px" }}>
+              No hire offers available now!
             </p>
           )}
         </div>

@@ -4,6 +4,7 @@ const User = require("../models/userModel");
 const Notification = require("../models/notificationModel");
 const { verifyToken } = require("../middleware/authMiddleware");
 const cron = require("node-cron");
+const DirectHire = require("../models/directHireModel");
 const router = express.Router();
 
 // Schedule a task to run every day at midnight
@@ -284,9 +285,13 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
     }
 
 
+    // Delete the project
     await Project.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Project deleted successfully" });
+    // Delete all associated DirectHire records
+    await DirectHire.deleteMany({ projectId: id });
+
+    res.status(200).json({ message: "Project and associated direct hire records deleted successfully." });
   } catch (err) {
     console.error("Error deleting project:", err);
     res.status(500).json({ error: "Server error" });

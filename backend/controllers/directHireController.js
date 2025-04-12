@@ -120,6 +120,19 @@ router.put("/accept/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to accept this project." });
     }
 
+    // Check if the project has already been accepted
+    const existingAcceptedHire = await DirectHire.findOne({
+      projectId: directHire.projectId._id,
+      status: "accepted",
+    });
+
+    if (existingAcceptedHire) {
+      return res.status(400).json({
+        error: "This project has already been accepted by another freelancer.",
+      });
+    }
+
+    // Mark the direct hire as accepted
     directHire.status = "accepted";
     await directHire.save();
 
@@ -141,20 +154,28 @@ router.delete("/reject/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Find the direct hire record
     const directHire = await DirectHire.findById(id).populate("projectId").populate("clientId");
 
     if (!directHire) {
       return res.status(404).json({ error: "Direct hire record not found." });
     }
 
+    // Ensure the freelancer is authorized to reject the offer
     if (directHire.freelancerId.toString() !== req.user.id) {
       return res.status(403).json({ error: "You are not authorized to reject this project." });
+    }
+
+    // Fetch the freelancer's email
+    const freelancer = await User.findById(req.user.id).select("email");
+    if (!freelancer) {
+      return res.status(404).json({ error: "Freelancer not found." });
     }
 
     // Notify the client about the rejection
     await Notification.create({
       user: directHire.clientId._id, // Reference the client
-      message: `Freelancer (${req.user.email}) has rejected your hire offer for the project "${directHire.projectId.title}".`,
+      message: `Freelancer (${freelancer.email}) has rejected your hire offer for the project "${directHire.projectId.title}".`,
     });
 
     // Delete the direct hire record

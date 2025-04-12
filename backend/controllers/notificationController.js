@@ -6,7 +6,13 @@ const { verifyToken } = require("../middleware/authMiddleware");
 // Fetch notifications for the logged-in user
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const notifications = await Notification.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const notifications = await Notification.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user", // Populate the user field
+        select: "email", // Fetch only the email field
+      });
+
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Error fetching notifications:", error);
