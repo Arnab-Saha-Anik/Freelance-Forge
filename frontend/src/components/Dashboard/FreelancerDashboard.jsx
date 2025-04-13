@@ -26,6 +26,8 @@ const FreelancerDashboard = () => {
   const [myBids, setMyBids] = useState({}); // Store bids for all projects
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [showSelectedBids, setShowSelectedBids] = useState(false);
+  const [selectedBids, setSelectedBids] = useState([]); // Add state for selected bids
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
@@ -390,6 +392,95 @@ const FreelancerDashboard = () => {
     }
   }, [projects, fetchMyBid]); // Include 'fetchMyBid' in the dependency array
 
+  const handleAcceptBid = async (bidId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/bids/accept/${bidId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        alert("Bid accepted successfully! Now, work on this project maintaining the deadline.");
+        fetchSelectedBids(); // Refresh the selected bids
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to accept bid.");
+      }
+    } catch (error) {
+      console.error("Error accepting bid:", error);
+      alert("An error occurred while accepting the bid.");
+    }
+  };
+  
+  const handleRejectBid = async (bidId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/bids/reject/${bidId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        alert("Bid rejected successfully.");
+        fetchSelectedBids(); // Refresh the selected bids
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to reject bid.");
+      }
+    } catch (error) {
+      console.error("Error rejecting bid:", error);
+      alert("An error occurred while rejecting the bid.");
+    }
+  };
+
+  const handleDeleteBid = async (bidId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/bids/${bidId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Bid deleted successfully.");
+        fetchSelectedBids(); // Refresh the selected bids
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to delete bid.");
+      }
+    } catch (error) {
+      console.error("Error deleting bid:", error);
+      alert("An error occurred while deleting the bid.");
+    }
+  };
+
+  const fetchSelectedBids = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/bids/selected", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedBids(data);
+      } else {
+        console.error("Failed to fetch selected bids.");
+      }
+    } catch (error) {
+      console.error("Error fetching selected bids:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchSelectedBids();
+  }, [fetchSelectedBids]);
+
   return (
     <div
       style={{
@@ -513,7 +604,30 @@ const FreelancerDashboard = () => {
                   Hire Offers
                 </button>
               </li>
-              <li>
+              <li style={{ marginTop: "10px" }}>
+                <button
+                  onClick={() => {
+                    setShowSelectedBids(!showSelectedBids);
+                    if (!showSelectedBids) fetchSelectedBids(); // Fetch selected bids when toggling
+                  }}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "#FFD700",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    padding: 0,
+                    display: "block",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  Bids Selected
+                </button>
+              </li>
+              <li style={{ marginTop: "10px" }}>
                 <button
                   onClick={handleLogout}
                   style={{
@@ -794,109 +908,123 @@ const FreelancerDashboard = () => {
           <p style={{ textAlign: "center" }}>No projects available.</p>
         ) : (
           <ul style={{ listStyleType: "none", padding: 0, fontSize: "18px" }}>
-            {projects.map((project) => {
-              const myBid = myBids[project._id]; // Get the bid for this project
+  {projects.map((project) => {
+    const myBid = myBids[project._id]; // Get the bid for this project
 
-              return (
-                <li
-                  key={project._id}
-                  style={{
-                    marginBottom: "20px",
-                    padding: "15px",
-                    backgroundColor: "#333333",
-                    borderRadius: "10px",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                  }}
-                >
-                  <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>Title: {project.title}</h3>
-                  <p style={{ marginBottom: "10px" }}>Description: {project.description}</p>
-                  <p style={{ marginBottom: "10px", fontWeight: "bold" }}>Budget: ${project.budget}</p>
-                  <p style={{ marginBottom: "10px" }}>
-                    Deadline: {new Date(project.deadline).toLocaleDateString()}
-                  </p>
-                  <p style={{ marginBottom: "10px" }}>
-                    Client Email: {project.client?.email || "N/A"}
-                  </p>
+    return (
+      <li
+        key={project._id}
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          backgroundColor: "#333333",
+          borderRadius: "10px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>Title: {project.title}</h3>
+        <p style={{ marginBottom: "10px" }}>Description: {project.description}</p>
+        <p style={{ marginBottom: "10px", fontWeight: "bold" }}>Budget: ${project.budget}</p>
+        <p style={{ marginBottom: "10px" }}>
+          Deadline: {new Date(project.deadline).toLocaleDateString()}
+        </p>
+        <p style={{ marginBottom: "10px" }}>
+          Client Email: {project.client?.email || "N/A"}
+        </p>
 
-                  {myBid ? (
-                    <>
-                      <button
-                        style={{
-                          padding: "10px 20px",
-                          backgroundColor: "#007BFF",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          marginRight: "10px",
-                        }}
-                        onClick={() => {
-                          setSelectedProject(project);
-                          setBidAmount(myBid.amount); // Pre-fill the bid amount
-                          setShowBidModal(true);
-                        }}
-                      >
-                        Update Bid
-                      </button>
-                      <button
-                        style={{
-                          padding: "10px 20px",
-                          backgroundColor: "#DC3545",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
-                              method: "DELETE",
-                              headers: {
-                                Authorization: `Bearer ${token}`,
-                              },
-                            });
+        {myBid ? (
+          myBid.status === "accepted" ? (
+            <span
+              style={{
+                padding: "5px 30px",
+                backgroundColor: "#28A745",
+                color: "#FFFFFF",
+                borderRadius: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Accepted
+            </span>
+          ) : (
+            <>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#007BFF",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  marginRight: "10px",
+                }}
+                onClick={() => {
+                  setSelectedProject(project);
+                  setBidAmount(myBid.amount); // Pre-fill the bid amount
+                  setShowBidModal(true);
+                }}
+              >
+                Update Bid
+              </button>
+              <button
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#DC3545",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
+                      method: "DELETE",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
 
-                            if (response.ok) {
-                              alert("Bid deleted successfully.");
-                              setMyBids((prevBids) => {
-                                const updatedBids = { ...prevBids };
-                                delete updatedBids[project._id];
-                                return updatedBids;
-                              });
-                            } else {
-                              alert("Failed to delete bid.");
-                            }
-                          } catch (error) {
-                            console.error("Error deleting bid:", error);
-                            alert("An error occurred while deleting the bid.");
-                          }
-                        }}
-                      >
-                        Delete Bid
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#007BFF",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setShowBidModal(true);
-                      }}
-                    >
-                      Bid
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                    if (response.ok) {
+                      alert("Bid deleted successfully.");
+                      setMyBids((prevBids) => {
+                        const updatedBids = { ...prevBids };
+                        delete updatedBids[project._id];
+                        return updatedBids;
+                      });
+                    } else {
+                      alert("Failed to delete bid.");
+                    }
+                  } catch (error) {
+                    console.error("Error deleting bid:", error);
+                    alert("An error occurred while deleting the bid.");
+                  }
+                }}
+              >
+                Delete Bid
+              </button>
+            </>
+          )
+        ) : (
+          <button
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#007BFF",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              setSelectedProject(project);
+              setShowBidModal(true);
+            }}
+          >
+            Bid
+          </button>
+        )}
+      </li>
+    );
+  })}
+</ul>
         )}
       </div>
 
@@ -1083,6 +1211,141 @@ const FreelancerDashboard = () => {
         </div>
       )}
       {showPopup && <Popup message={popupMessage} onClose={() => setShowPopup(false)} />}
+       
+      {showSelectedBids && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "80%",
+          }}
+        >
+          <button
+            onClick={() => setShowSelectedBids(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              backgroundColor: "#FF0000",
+              borderRadius: "50%",
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: "20px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            ✖
+          </button>
+
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Bids Selected</h2>
+          {selectedBids.length > 0 ? (
+            selectedBids.map((bid) => (
+              <div
+                key={bid.bidId}
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#333333",
+                  borderRadius: "10px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                }}
+              >
+                <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
+                  Project: {bid.project?.title || "N/A"}
+                </h3>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Description:</strong> {bid.project?.description || "N/A"}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Budget:</strong> ${bid.project?.budget || 0}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Deadline:</strong>{" "}
+                  {bid.project?.deadline
+                    ? new Date(bid.project.deadline).toLocaleDateString()
+                    : "N/A"}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Client Email:</strong> {bid.client?.email || "N/A"}
+                </p>
+                <p style={{ marginBottom: "10px" }}>
+                  <strong>Bid Amount:</strong> ${bid.bidAmount}
+                </p>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {bid.status === "accepted" ? (
+                    <span
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#28A745",
+                        color: "#FFFFFF",
+                        borderRadius: "5px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Accepted
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleAcceptBid(bid.bidId)}
+                        style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#007BFF",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => handleRejectBid(bid.bidId)}
+                        style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#DC3545",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBid(bid.bidId)}
+                        style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#FF0000",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px" }}>
+              No selected bids available.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -527,6 +527,15 @@ const ClientDashboard = () => {
   };
 
   const handleSelectBid = async (bidId) => {
+    // Show a confirmation alert
+    const confirmSelect = window.confirm(
+      "Once you select, you cannot cancel it. Are you sure you want to proceed?"
+    );
+  
+    if (!confirmSelect) {
+      return; // Exit the function if the user cancels
+    }
+  
     try {
       const response = await fetch(`http://localhost:5000/bids/select/${bidId}`, {
         method: "PUT",
