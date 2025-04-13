@@ -173,7 +173,7 @@ const ClientDashboard = () => {
     }
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const response = await fetch("http://localhost:5000/notifications", {
         headers: {
@@ -183,14 +183,14 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data); // Store notifications in state
+        setNotifications(data);
       } else {
         console.error("Failed to fetch notifications.");
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  };
+  }, [token]); // Add 'token' as a dependency
 
   const markNotificationsAsRead = async () => {
     try {
@@ -222,6 +222,10 @@ const ClientDashboard = () => {
       fetchProjects();
     }
   }, [showProjects, fetchProjects, fetchFreelancers]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]); // Include 'fetchNotifications' in the dependency array
 
   const handleProjectSubmit = async (e) => {
     e.preventDefault();

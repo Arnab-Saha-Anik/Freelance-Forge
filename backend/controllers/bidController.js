@@ -3,6 +3,8 @@ const router = express.Router();
 const Bid = require("../models/bidModel");
 const Notification = require("../models/notificationModel"); // Import the Notification model
 const { verifyToken } = require("../middleware/authMiddleware");
+const Project = require("../models/projectModel");
+const User = require("../models/userModel");
 
 // Route to fetch accepted bids
 router.get("/accepted", verifyToken, async (req, res) => {
@@ -52,16 +54,16 @@ router.get("/:projectId/my-bid", verifyToken, async (req, res) => {
   }
 });
 
-// Route to submit a bid for a project
+// Route to create a new bid
 router.post("/:projectId/bid", verifyToken, async (req, res) => {
   try {
     const { projectId } = req.params;
     const { bidAmount } = req.body;
-    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+    const freelancerId = req.user.id;
 
-    // Validate projectId as a valid ObjectId
-    if (!projectId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ error: "Invalid project ID" });
+    const project = await Project.findById(projectId).populate("client", "email"); // Populate client email
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
     }
 
     // Check if the freelancer has already submitted a bid for this project
@@ -76,6 +78,15 @@ router.post("/:projectId/bid", verifyToken, async (req, res) => {
       freelancerId,
       amount: bidAmount,
       status: "pending",
+    });
+
+    // Fetch freelancer's email
+    const freelancer = await User.findById(freelancerId);
+
+    // Create a notification for the client
+    await Notification.create({
+      user: project.client._id, // Client ID
+      message: `Freelancer (${freelancer.email}) has posted a bid for project "${project.title}".`,
     });
 
     res.status(201).json({ message: "Bid submitted successfully.", bid: newBid });
@@ -159,9 +170,8 @@ router.put("/:bidId", verifyToken, async (req, res) => {
   try {
     const { bidId } = req.params;
     const { bidAmount } = req.body;
-    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+    const freelancerId = req.user.id;
 
-    // Find the bid and ensure it belongs to the logged-in freelancer
     const bid = await Bid.findOneAndUpdate(
       { _id: bidId, freelancerId },
       { amount: bidAmount },
@@ -171,6 +181,15 @@ router.put("/:bidId", verifyToken, async (req, res) => {
     if (!bid) {
       return res.status(404).json({ error: "Bid not found or you are not authorized to update this bid." });
     }
+
+    const project = await Project.findById(bid.projectId).populate("client", "email");
+    const freelancer = await User.findById(freelancerId);
+
+    // Create a notification for the client
+    await Notification.create({
+      user: project.client._id, // Client ID
+      message: `Freelancer (${freelancer.email}) has updated their bid for project "${project.title}".`,
+    });
 
     res.status(200).json({ message: "Bid updated successfully.", bid });
   } catch (error) {
@@ -183,14 +202,21 @@ router.put("/:bidId", verifyToken, async (req, res) => {
 router.delete("/:bidId", verifyToken, async (req, res) => {
   try {
     const { bidId } = req.params;
-    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+    const freelancerId = req.user.id;
 
-    // Find the bid and ensure it belongs to the logged-in freelancer
     const bid = await Bid.findOneAndDelete({ _id: bidId, freelancerId });
-
     if (!bid) {
       return res.status(404).json({ error: "Bid not found or you are not authorized to delete this bid." });
     }
+
+    const project = await Project.findById(bid.projectId).populate("client", "email");
+    const freelancer = await User.findById(freelancerId);
+
+    // Create a notification for the client
+    await Notification.create({
+      user: project.client._id, // Client ID
+      message: `Freelancer (${freelancer.email}) has deleted their bid for project "${project.title}".`,
+    });
 
     res.status(200).json({ message: "Bid deleted successfully." });
   } catch (error) {

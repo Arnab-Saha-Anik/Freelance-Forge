@@ -9,8 +9,8 @@ router.get("/", verifyToken, async (req, res) => {
     const notifications = await Notification.find({ user: req.user.id })
       .sort({ createdAt: -1 })
       .populate({
-        path: "user", // Populate the user field
-        select: "email", // Fetch only the email field
+        path: "user",
+        select: "email",
       });
 
     res.status(200).json(notifications);
