@@ -40,6 +40,9 @@ const ClientDashboard = () => {
   const [selectedFreelancerId, setSelectedFreelancerId] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [bids, setBids] = useState([]); // State to store bids
+  const [showBidsModal, setShowBidsModal] = useState(false); // State to control the modal
+  const [selectedProjectTitle, setSelectedProjectTitle] = useState(""); // State to store the project title
 
   const token = localStorage.getItem("token"); 
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -496,6 +499,54 @@ const ClientDashboard = () => {
       console.error("Error hiring freelancer:", error);
       alert("An error occurred while hiring the freelancer.");
     }
+  };
+
+  const fetchBidsForProject = async (projectId, projectTitle) => {
+    try {
+      const response = await fetch(`http://localhost:5000/bids/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setBids(data); // Store the fetched bids in state
+        setSelectedProjectTitle(projectTitle); // Set the project title
+        setShowBidsModal(true); // Show the modal
+      } else {
+        console.error("Failed to fetch bids for the project.");
+      }
+    } catch (error) {
+      console.error("Error fetching bids for the project:", error);
+    }
+  };
+
+  const handleSelectBid = async (bidId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/bids/select/${bidId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        alert("Bid selected successfully!");
+        setShowBidsModal(false); // Close the modal after selecting a bid
+        fetchProjects(); // Refresh the projects list
+      } else {
+        console.error("Failed to select bid.");
+      }
+    } catch (error) {
+      console.error("Error selecting bid:", error);
+    }
+  };
+  
+  const closeBidsModal = () => {
+    setShowBidsModal(false);
+    setBids([]);
+    setSelectedProjectTitle("");
   };
 
   useEffect(() => {
@@ -1027,6 +1078,22 @@ const ClientDashboard = () => {
                       >
                         Delete Project
                       </button>
+                      <button
+                        onClick={() => fetchBidsForProject(project._id, project.title)}
+                        style={{
+                          padding: "5px 10px", // Reduced height
+                          backgroundColor: "#007BFF", // Blue
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          marginLeft: "10px",
+                          textAlign: "center",
+                        }}
+                      >
+                        View Bids
+                      </button>
                     </>
                   )}
                 </div>
@@ -1215,6 +1282,85 @@ const ClientDashboard = () => {
             }}
           >
             Cancel
+          </button>
+        </div>
+      )}
+
+      {showBidsModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "600px",
+            maxHeight: "80vh",
+            overflowY: "auto",
+            color: "#000000", // Black text
+          }}
+        >
+          <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
+            Bids for "{selectedProjectTitle}"
+          </h3>
+          {bids.length > 0 ? (
+            bids.map((bid) => (
+              <div
+                key={bid._id}
+                style={{
+                  borderBottom: "1px solid #ddd",
+                  padding: "10px 0",
+                  marginBottom: "10px",
+                }}
+              >
+                <p>
+                  <strong>Freelancer:</strong> {bid.freelancerId.name || "N/A"}
+                </p>
+                <p>
+                  <strong>Email:</strong> {bid.freelancerId.email || "N/A"}
+                </p>
+                <p>
+                  <strong>Bid Amount:</strong> ${bid.amount}
+                </p>
+                <button
+                  onClick={() => handleSelectBid(bid._id)}
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#28A745", // Green
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    marginTop: "10px",
+                  }}
+                >
+                  Select Bid
+                </button>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#555" }}>
+              No bids available for this project.
+            </p>
+          )}
+          <button
+            onClick={closeBidsModal}
+            style={{
+              marginTop: "20px",
+              padding: "10px",
+              backgroundColor: "#DC3545", // Red
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              width: "100%",
+            }}
+          >
+            Close
           </button>
         </div>
       )}
