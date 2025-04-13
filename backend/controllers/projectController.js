@@ -5,6 +5,7 @@ const Notification = require("../models/notificationModel");
 const { verifyToken } = require("../middleware/authMiddleware");
 const cron = require("node-cron");
 const DirectHire = require("../models/directHireModel");
+const Bid = require("../models/bidModel"); // Adjust the path if necessary
 const router = express.Router();
 
 // Schedule a task to run every day at midnight
@@ -296,16 +297,27 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
       });
     }
 
+    // Check if all associated bids are in "pending" status
+    const nonPendingBids = await Bid.find({ projectId: id, status: { $ne: "pending" } });
+    if (nonPendingBids.length > 0) {
+      return res.status(400).json({
+        error: "This project cannot be deleted because it has bids that are not in 'pending' status.",
+      });
+    }
+
     // Delete the project
     await Project.findByIdAndDelete(id);
+
+    // Delete all associated bids
+    await Bid.deleteMany({ projectId: id });
 
     // Delete all associated direct hire records
     await DirectHire.deleteMany({ projectId: id });
 
-    res.status(200).json({ message: "Project and associated direct hire records deleted successfully." });
+    res.status(200).json({ message: "Project, associated bids, and direct hire records deleted successfully." });
   } catch (err) {
     console.error("Error deleting project:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 });
 

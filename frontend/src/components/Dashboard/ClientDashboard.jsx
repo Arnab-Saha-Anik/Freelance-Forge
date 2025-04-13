@@ -410,16 +410,16 @@ const ClientDashboard = () => {
       const response = await fetch(`http://localhost:5000/projects/client/delete/${projectId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
         alert("Project deleted successfully.");
-        setProjects(projects.filter((project) => project._id !== projectId));
+        fetchProjects(); // Refresh the project list
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to delete project.");
+        alert(data.error || "Failed to delete the project.");
       }
     } catch (error) {
       console.error("Error deleting project:", error);

@@ -34,6 +34,57 @@ router.get("/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+// Route to fetch a freelancer's bid for a specific project
+router.get("/:projectId/my-bid", verifyToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+
+    const bid = await Bid.findOne({ projectId, freelancerId });
+    if (!bid) {
+      return res.status(404).json({ error: "No bid found for this project." });
+    }
+
+    res.status(200).json(bid);
+  } catch (error) {
+    console.error("Error fetching bid:", error);
+    res.status(500).json({ error: "Failed to fetch bid." });
+  }
+});
+
+// Route to submit a bid for a project
+router.post("/:projectId/bid", verifyToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { bidAmount } = req.body;
+    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+
+    // Validate projectId as a valid ObjectId
+    if (!projectId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ error: "Invalid project ID" });
+    }
+
+    // Check if the freelancer has already submitted a bid for this project
+    const existingBid = await Bid.findOne({ projectId, freelancerId });
+    if (existingBid) {
+      return res.status(400).json({ error: "You have already submitted a bid for this project." });
+    }
+
+    // Create a new bid
+    const newBid = await Bid.create({
+      projectId,
+      freelancerId,
+      amount: bidAmount,
+      status: "pending",
+    });
+
+    res.status(201).json({ message: "Bid submitted successfully.", bid: newBid });
+  } catch (error) {
+    console.error("Error submitting bid:", error);
+    res.status(500).json({ error: "Failed to submit bid" });
+  }
+});
+
 // Route to select a bid
 router.put("/select/:bidId", verifyToken, async (req, res) => {
   try {
@@ -100,6 +151,51 @@ router.delete("/reject/:bidId", verifyToken, async (req, res) => {
   } catch (error) {
     console.error("Error rejecting bid:", error);
     res.status(500).json({ error: "Failed to reject bid" });
+  }
+});
+
+// Route to update a bid
+router.put("/:bidId", verifyToken, async (req, res) => {
+  try {
+    const { bidId } = req.params;
+    const { bidAmount } = req.body;
+    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+
+    // Find the bid and ensure it belongs to the logged-in freelancer
+    const bid = await Bid.findOneAndUpdate(
+      { _id: bidId, freelancerId },
+      { amount: bidAmount },
+      { new: true }
+    );
+
+    if (!bid) {
+      return res.status(404).json({ error: "Bid not found or you are not authorized to update this bid." });
+    }
+
+    res.status(200).json({ message: "Bid updated successfully.", bid });
+  } catch (error) {
+    console.error("Error updating bid:", error);
+    res.status(500).json({ error: "Failed to update bid." });
+  }
+});
+
+// Route to delete a bid
+router.delete("/:bidId", verifyToken, async (req, res) => {
+  try {
+    const { bidId } = req.params;
+    const freelancerId = req.user.id; // Assuming `verifyToken` adds `user` to `req`
+
+    // Find the bid and ensure it belongs to the logged-in freelancer
+    const bid = await Bid.findOneAndDelete({ _id: bidId, freelancerId });
+
+    if (!bid) {
+      return res.status(404).json({ error: "Bid not found or you are not authorized to delete this bid." });
+    }
+
+    res.status(200).json({ message: "Bid deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting bid:", error);
+    res.status(500).json({ error: "Failed to delete bid." });
   }
 });
 
