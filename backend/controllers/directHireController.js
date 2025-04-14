@@ -4,6 +4,7 @@ const Project = require("../models/projectModel");
 const Notification = require("../models/notificationModel");
 const User = require("../models/userModel");
 const { verifyToken } = require("../middleware/authMiddleware");
+const Activity = require("../models/activityModel"); // Import the Activity model
 
 const router = express.Router();
 
@@ -36,7 +37,11 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     await directHire.save();
-
+    const freelancer = await User.findById(freelancerId).select("email");
+    await Activity.create({
+      userId: req.user.id,
+      action: `You have offered a direct hire to freelancer (${freelancer.email}) for the project "${project.title}".`,
+    });
     // Notify the freelancer
     await Notification.create({
       user: freelancerId,
@@ -53,6 +58,57 @@ router.post("/", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// // New Direct Hire Route
+// router.post("/", verifyToken, async (req, res) => {
+//   const { freelancerId } = req.params;
+//   const { projectId } = req.body;
+
+//   try {
+//     // Find the project
+//     const project = await Project.findById(projectId).populate("client", "name email");
+//     if (!project) {
+//       return res.status(404).json({ error: "Project not found" });
+//     }
+
+//     // Ensure the client is authorized
+//     if (project.client._id.toString() !== req.user.id) {
+//       return res.status(403).json({ error: "You are not authorized to hire for this project." });
+//     }
+
+//     // Find the freelancer's email
+//     const freelancer = await User.findById(freelancerId).select("email");
+//     if (!freelancer) {
+//       return res.status(404).json({ error: "Freelancer not found." });
+//     }
+
+//     // Create a DirectHire record
+//     const directHire = await DirectHire.create({
+//       projectId,
+//       freelancerId,
+//       clientId: req.user.id,
+//       status: "pending",
+//     });
+
+//     // Log the activity for the client
+//     await Activity.create({
+//       userId: req.user.id,
+//       action: `You have offered a direct hire to freelancer (${freelancer.email}) for the project "${project.title}".`,
+//     });
+
+//     // Notify the freelancer
+//     await Notification.create({
+//       user: freelancerId,
+//       projectId: projectId,
+//       message: `You have been offered to be hired for the project "${project.title}".`,
+//     });
+
+//     res.status(201).json({ message: "Direct hire created successfully.", directHire });
+//   } catch (error) {
+//     console.error("Error creating direct hire:", error);
+//     res.status(500).json({ error: "Failed to create direct hire." });
+//   }
+// });
 
 // Get Direct Hires for a Client
 router.get("/client", verifyToken, async (req, res) => {
@@ -135,11 +191,17 @@ router.put("/accept/:id", verifyToken, async (req, res) => {
     // Mark the direct hire as accepted
     directHire.status = "accepted";
     await directHire.save();
+    const freelancer = await User.findById(req.user.id).select("email");
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You accepted the direct hire for project "${directHire.projectId.title}".`,
+    });
 
     // Notify the client
     await Notification.create({
       user: directHire.clientId._id,
-      message: `Freelancer (${req.user.email}) has accepted your project "${directHire.projectId.title}".`,
+      message: `Freelancer (${freelancer.email}) has accepted your project "${directHire.projectId.title}".`,
     });
 
     res.status(200).json({ message: "Project accepted successfully." });
@@ -171,6 +233,12 @@ router.delete("/reject/:id", verifyToken, async (req, res) => {
     if (!freelancer) {
       return res.status(404).json({ error: "Freelancer not found." });
     }
+
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You rejected the direct hire for project "${directHire.projectId.title}".`,
+    });
 
     // Notify the client about the rejection
     await Notification.create({

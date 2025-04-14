@@ -6,6 +6,7 @@ const { verifyToken } = require("../middleware/authMiddleware");
 const cron = require("node-cron");
 const DirectHire = require("../models/directHireModel");
 const Bid = require("../models/bidModel"); // Adjust the path if necessary
+const Activity = require("../models/activityModel"); // Import the Activity model
 const router = express.Router();
 
 // Schedule a task to run every day at midnight
@@ -16,19 +17,23 @@ cron.schedule("0 0 * * *", async () => {
     // Find projects with deadlines earlier than today
     const expiredProjects = await Project.find({ deadline: { $lt: today } });
 
-    // Delete expired projects and create notifications
     for (const project of expiredProjects) {
+      // Notify the client
       await Notification.create({
         user: project.client,
-        message: `Your project "${project.title}" has been deleted because its deadline has passed.`,
+        message: `The deadline for your project "${project.title}" has passed.`,
       });
 
-      await Project.findByIdAndDelete(project._id);
+      // Log the activity
+      await Activity.create({
+        userId: project.client,
+        action: `The deadline for your project "${project.title}" has passed.`,
+      });
     }
 
-    console.log(`Deleted ${expiredProjects.length} expired projects and notified users.`);
+    console.log(`Notified clients about ${expiredProjects.length} expired projects.`);
   } catch (error) {
-    console.error("Error deleting expired projects and notifying users:", error);
+    console.error("Error notifying clients about expired projects:", error);
   }
 });
 
@@ -39,7 +44,6 @@ router.post("/create", verifyToken, async (req, res) => {
     return res.status(400).json({ error: "Client ID is required" });
   }
 
-  // Validate that the deadline is not in the past
   const today = new Date().toISOString().split("T")[0];
   if (deadline < today) {
     return res.status(400).json({ error: "The deadline cannot be a date in the past." });
@@ -55,13 +59,20 @@ router.post("/create", verifyToken, async (req, res) => {
     });
 
     await project.save();
+
+    // Log the activity
+    await Activity.create({
+      userId: client,
+      action: `You created a project titled "${title}".`,
+    });
+
     res.status(201).json(project);
-  } catch (error) {
-    if (error.code === 11000) {
+  } catch (error) {if (error.code === 11000) {
       return res.status(400).json({
         error: `A project with the title "${title}" already exists for this client.`,
       });
     }
+
     console.error("Error creating project:", error);
     res.status(500).json({ error: "Server error" });
   }
@@ -229,6 +240,7 @@ router.put("/client/update", verifyToken, async (req, res) => {
 });
 
 
+// Update Project
 router.put("/client/update/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { budget, deadline } = req.body;
@@ -261,6 +273,12 @@ router.put("/client/update/:id", verifyToken, async (req, res) => {
 
     await project.save();
 
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You updated the project "${project.title}".`,
+    });
+
     res.status(200).json({ message: "Project updated successfully", project });
   } catch (error) {
     console.error("Error updating project:", error);
@@ -269,6 +287,7 @@ router.put("/client/update/:id", verifyToken, async (req, res) => {
 });
 
 
+// Delete Project
 router.delete("/client/delete/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -297,24 +316,16 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
       });
     }
 
-    // Check if all associated bids are in "pending" status
-    const nonPendingBids = await Bid.find({ projectId: id, status: { $ne: "pending" } });
-    if (nonPendingBids.length > 0) {
-      return res.status(400).json({
-        error: "This project cannot be deleted because it has bids that are not in 'pending' status.",
-      });
-    }
-
     // Delete the project
     await Project.findByIdAndDelete(id);
 
-    // Delete all associated bids
-    await Bid.deleteMany({ projectId: id });
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You deleted the project "${project.title}".`,
+    });
 
-    // Delete all associated direct hire records
-    await DirectHire.deleteMany({ projectId: id });
-
-    res.status(200).json({ message: "Project, associated bids, and direct hire records deleted successfully." });
+    res.status(200).json({ message: "Project deleted successfully." });
   } catch (err) {
     console.error("Error deleting project:", err);
     res.status(500).json({ error: "Server error", details: err.message });

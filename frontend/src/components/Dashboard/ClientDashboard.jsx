@@ -43,6 +43,8 @@ const ClientDashboard = () => {
   const [bids, setBids] = useState([]); // State to store bids
   const [showBidsModal, setShowBidsModal] = useState(false); // State to control the modal
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(""); // State to store the project title
+  const [activityLogs, setActivityLogs] = useState([]); // State to store activity logs
+  const [showActivityHistory, setShowActivityHistory] = useState(false); // State to control the activity history modal
 
   const token = localStorage.getItem("token"); 
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -562,6 +564,25 @@ const ClientDashboard = () => {
     setSelectedProjectTitle("");
   };
 
+  const fetchActivityLogs = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/activities", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setActivityLogs(data); // Store the fetched activity logs in state
+      } else {
+        console.error("Failed to fetch activity logs.");
+      }
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+    }
+  };
+
   useEffect(() => {
     document.title = "Freelance Forge - Client Dashboard"; 
   }, []);
@@ -833,22 +854,46 @@ const ClientDashboard = () => {
                 >
                   Delete Account
                 </button>
-                {/* Logout Button */}
-                <div style={{ marginTop: "20px", textAlign: "center" }}>
-                <button
-                onClick={handleLogout}
-                style={{
-                padding: "10px",
-                backgroundColor: "#007BFF",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-               }}
-              >
-               Logout
-              </button>
-              </div>
               </form>
+
+              {/* Activity History Button */}
+              <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <button
+                  onClick={() => {
+                    setShowActivityHistory(!showActivityHistory);
+                    if (!showActivityHistory) fetchActivityLogs(); // Fetch activity logs when toggling
+                  }}
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#FFC107", // Yellow
+                    color: "#000000", // Black text
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    width: "100%", // Match the width of other buttons
+                    fontWeight: "bold",
+                  }}
+                >
+                  Activity History
+                </button>
+              </div>
+
+              {/* Logout Button */}
+              <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#007BFF", // Blue
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    width: "100%", // Match the width of other buttons
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1377,6 +1422,65 @@ const ClientDashboard = () => {
           </button>
         </div>
       )}
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+</div>
+{showActivityHistory && (
+  <div
+    style={{
+      position: "absolute",
+      top: "100px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      padding: "20px",
+      backgroundColor: "#444444",
+      borderRadius: "10px",
+      color: "#FFFFFF",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+      zIndex: 1000,
+      width: "80%",
+    }}
+  >
+    <button
+      onClick={() => setShowActivityHistory(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        backgroundColor: "#FF0000",
+        borderRadius: "50%",
+        border: "none",
+        color: "#FFFFFF",
+        fontSize: "20px",
+        fontWeight: "bold",
+        cursor: "pointer",
+      }}
+    >
+      ✖
+    </button>
+
+    <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Activity History</h2>
+    {activityLogs.length > 0 ? (
+      activityLogs.map((log, index) => (
+        <div
+          key={index}
+          style={{
+            marginBottom: "10px",
+            padding: "10px",
+            backgroundColor: "#333333",
+            borderRadius: "5px",
+          }}
+        >
+          <p>{log.action}</p>
+          <p style={{ fontSize: "12px", color: "#AAAAAA" }}>
+            {new Date(log.timestamp).toLocaleString()}
+          </p>
+        </div>
+      ))
+    ) : (
+      <p style={{ textAlign: "center", color: "#FFD700" }}>No activity found.</p>
+    )}
+  </div>
+)}
     </div>
   );
 };

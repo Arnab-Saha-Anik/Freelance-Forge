@@ -5,6 +5,8 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../middleware/authMiddleware");
 const freelancerInformation = require('../models/freelancerInformationModel');
+const Activity = require('../models/activityModel');
+const Notification = require('../models/notificationModel');
 const Project = require('../models/projectModel'); 
 const nodemailer = require("nodemailer"); 
 
@@ -96,19 +98,16 @@ router.put("/update", verifyToken, async (req, res) => {
   const { name, currentPassword, newPassword, confirmPassword } = req.body;
 
   try {
-    
-    const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    
-    if (!name && !currentPassword && !newPassword && !confirmPassword) {
+        if (!name && !currentPassword && !newPassword && !confirmPassword) {
       return res.status(400).json({ error: "No changes detected" });
     }
 
-    
-    if (currentPassword) {
+        if (currentPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ error: "Current password is incorrect" });
@@ -123,25 +122,28 @@ router.put("/update", verifyToken, async (req, res) => {
       if (newPassword && newPassword !== confirmPassword) {
         return res.status(400).json({ error: "New password and confirm password do not match" });
       }
-
       
       if (newPassword) {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
       }
     }
-
     
     if (name && name !== user.name) {
       user.name = name;
     }
-
     
     await user.save();
 
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: "You updated your user information.",
+    });
+
     res.json({ message: "Profile updated successfully", name: user.name });
   } catch (err) {
-    console.error(err);
+    console.error("Error updating user information:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -151,18 +153,15 @@ router.put("/client/update", verifyToken, async (req, res) => {
   const { name, currentPassword, newPassword, confirmPassword } = req.body;
 
   try {
-    
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    
     if (!name && !currentPassword && !newPassword && !confirmPassword) {
       return res.status(400).json({ error: "No changes detected" });
     }
 
-    
     if (currentPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
@@ -174,29 +173,32 @@ router.put("/client/update", verifyToken, async (req, res) => {
         return res.status(400).json({ error: "New password cannot be the same as the current password" });
       }
 
-      
+
       if (newPassword && newPassword !== confirmPassword) {
         return res.status(400).json({ error: "New password and confirm password do not match" });
       }
 
-      
       if (newPassword) {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
       }
     }
 
-    
     if (name && name !== user.name) {
       user.name = name;
     }
 
-    
     await user.save();
+
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: "You updated your account information.",
+    });
 
     res.status(200).json({ message: "Profile updated successfully", name: user.name });
   } catch (err) {
-    console.error("Error in /client/update:", err);
+    console.error("Error updating account information:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

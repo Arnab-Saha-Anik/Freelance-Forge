@@ -28,6 +28,8 @@ const FreelancerDashboard = () => {
   const [popupMessage, setPopupMessage] = useState("");
   const [showSelectedBids, setShowSelectedBids] = useState(false);
   const [selectedBids, setSelectedBids] = useState([]); // Add state for selected bids
+  const [showActivityHistory, setShowActivityHistory] = useState(false); // Add state for activity history
+  const [activityLogs, setActivityLogs] = useState([]); // Add state for activity logs
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
@@ -436,27 +438,6 @@ const FreelancerDashboard = () => {
     }
   };
 
-  const handleDeleteBid = async (bidId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/bids/${bidId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        alert("Bid deleted successfully.");
-        fetchSelectedBids(); // Refresh the selected bids
-      } else {
-        const data = await response.json();
-        alert(data.error || "Failed to delete bid.");
-      }
-    } catch (error) {
-      console.error("Error deleting bid:", error);
-      alert("An error occurred while deleting the bid.");
-    }
-  };
 
   const fetchSelectedBids = useCallback(async () => {
     try {
@@ -480,6 +461,25 @@ const FreelancerDashboard = () => {
   useEffect(() => {
     fetchSelectedBids();
   }, [fetchSelectedBids]);
+
+  const fetchActivityLogs = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/activities", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivityLogs(data);
+      } else {
+        console.error("Failed to fetch activity logs.");
+      }
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+    }
+  }, [token]);
 
   return (
     <div
@@ -629,6 +629,29 @@ const FreelancerDashboard = () => {
               </li>
               <li style={{ marginTop: "10px" }}>
                 <button
+                  onClick={() => {
+                    setShowActivityHistory(!showActivityHistory);
+                    if (!showActivityHistory) fetchActivityLogs(); // Fetch activity logs when toggling
+                  }}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "#FFD700",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    padding: 0,
+                    display: "block",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  Activity History
+                </button>
+              </li>
+              <li style={{ marginTop: "10px" }}>
+                <button
                   onClick={handleLogout}
                   style={{
                     backgroundColor: "transparent",
@@ -647,6 +670,7 @@ const FreelancerDashboard = () => {
                   Logout
                 </button>
               </li>
+              
             </ul>
           </div>
         )}
@@ -1321,19 +1345,6 @@ const FreelancerDashboard = () => {
                       >
                         Reject
                       </button>
-                      <button
-                        onClick={() => handleDeleteBid(bid.bidId)}
-                        style={{
-                          padding: "10px 20px",
-                          backgroundColor: "#FF0000",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button>
                     </>
                   )}
                 </div>
@@ -1346,6 +1357,63 @@ const FreelancerDashboard = () => {
           )}
         </div>
       )}
+      {showActivityHistory && (
+  <div
+    style={{
+      position: "absolute",
+      top: "100px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      padding: "20px",
+      backgroundColor: "#444444",
+      borderRadius: "10px",
+      color: "#FFFFFF",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+      zIndex: 1000,
+      width: "80%",
+    }}
+  >
+    <button
+      onClick={() => setShowActivityHistory(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        backgroundColor: "#FF0000",
+        borderRadius: "50%",
+        border: "none",
+        color: "#FFFFFF",
+        fontSize: "20px",
+        fontWeight: "bold",
+        cursor: "pointer",
+      }}
+    >
+      ✖
+    </button>
+
+    <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Activity History</h2>
+    {activityLogs.length > 0 ? (
+      activityLogs.map((log, index) => (
+        <div
+          key={index}
+          style={{
+            marginBottom: "10px",
+            padding: "10px",
+            backgroundColor: "#333333",
+            borderRadius: "5px",
+          }}
+        >
+          <p>{log.action}</p>
+          <p style={{ fontSize: "12px", color: "#AAAAAA" }}>
+            {new Date(log.timestamp).toLocaleString()}
+          </p>
+        </div>
+      ))
+    ) : (
+      <p style={{ textAlign: "center", color: "#FFD700" }}>No activity found.</p>
+    )}
+  </div>
+)}
     </div>
   );
 };

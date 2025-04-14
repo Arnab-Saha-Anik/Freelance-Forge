@@ -8,6 +8,7 @@ const projectController = require("./controllers/projectController");
 const notificationController = require("./controllers/notificationController");
 const directHireController = require("./controllers/directHireController");
 const bidController = require("./controllers/bidController"); // Import the bid controller
+const activityController = require("./controllers/activityController"); // Import the activity controller
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/freelancers", freelancerInformationController);
 app.use("/notifications", notificationController);
 app.use("/direct-hire", directHireController);
 app.use("/bids", bidController); // Add the bid routes
+app.use("/activities", activityController); // Add the activity routes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>

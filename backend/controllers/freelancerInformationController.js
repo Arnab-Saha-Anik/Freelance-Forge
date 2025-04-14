@@ -3,7 +3,7 @@ const router = express.Router();
 const FreelancerInformation = require("../models/freelancerInformationModel");
 const User = require("../models/userModel");
 const { verifyToken } = require("../middleware/authMiddleware"); 
-
+const Activity = require("../models/activityModel"); // Import the Activity model
 
 router.get("/:userId", verifyToken, async (req, res) => {
   try {
@@ -55,6 +55,13 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     await freelancerInformation.save();
+
+    // Log the activity
+    await Activity.create({
+      userId,
+      action: "You created your freelancer profile.",
+    });
+
     res.status(201).json(freelancerInformation);
   } catch (err) {
     console.error("Error creating freelancer profile:", err); // Log the error
@@ -77,8 +84,15 @@ router.put("/:userId", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Freelancer profile not found" });
     }
 
+    // Log the activity
+    await Activity.create({
+      userId: req.params.userId,
+      action: "You updated your freelancer profile.",
+    });
+
     res.json(freelancerInformation);
   } catch (err) {
+    console.error("Error updating freelancer profile:", err);
     res.status(500).json({ error: "Server error" });
   }
 });

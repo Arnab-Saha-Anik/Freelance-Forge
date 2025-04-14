@@ -5,6 +5,7 @@ const Notification = require("../models/notificationModel"); // Import the Notif
 const { verifyToken } = require("../middleware/authMiddleware");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel");
+const Activity = require("../models/activityModel"); // Import the Activity model
 
 // Route to fetch accepted bids
 router.get("/accepted", verifyToken, async (req, res) => {
@@ -104,7 +105,7 @@ router.post("/:projectId/bid", verifyToken, async (req, res) => {
     const { bidAmount } = req.body;
     const freelancerId = req.user.id;
 
-    const project = await Project.findById(projectId).populate("client", "email"); // Populate client email
+    const project = await Project.findById(projectId).populate("client", "email");
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
@@ -122,9 +123,12 @@ router.post("/:projectId/bid", verifyToken, async (req, res) => {
       amount: bidAmount,
       status: "pending",
     });
-
-    // Fetch freelancer's email
-    const freelancer = await User.findById(freelancerId);
+    const freelancer = await User.findById(req.user.id).select("email");
+    // Log the activity
+    await Activity.create({
+      userId: freelancerId,
+      action: `You placed a bid of $${bidAmount} on project "${project.title}".`,
+    });
 
     // Create a notification for the client
     await Notification.create({
@@ -144,21 +148,26 @@ router.put("/select/:bidId", verifyToken, async (req, res) => {
   try {
     const { bidId } = req.params;
 
-    // Find the bid and update its status to "selected"
     const bid = await Bid.findByIdAndUpdate(
       bidId,
       { status: "selected" },
       { new: true }
-    ).populate("freelancerId projectId");
+    ).populate("freelancerId", "email").populate("projectId", "title client");
 
     if (!bid) {
       return res.status(404).json({ error: "Bid not found" });
     }
 
-    // Create a notification for the freelancer
+    // Notify the freelancer
     await Notification.create({
-      user: bid.freelancerId._id, // Freelancer ID
-      message: `Your bid $${bid.amount} for "${bid.projectId.title}" has been selected.`,
+      user: bid.freelancerId._id,
+      message: `Your bid of $${bid.amount} for the project "${bid.projectId.title}" has been selected.`,
+    });
+
+    // Log the activity for the client
+    await Activity.create({
+      userId: bid.projectId.client,
+      action: `You selected the bid of $${bid.amount} for the project "${bid.projectId.title}" to the freelancer (${bid.freelancerId.email}).`,
     });
 
     res.status(200).json({ message: "Bid selected successfully.", bid });
@@ -184,12 +193,17 @@ router.put("/accept/:bidId", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Bid not found" });
     }
 
-    // Fetch the clientId from the Project model
     const project = await Project.findById(bid.projectId).populate("client", "email");
 
     if (!project || !project.client) {
       return res.status(404).json({ error: "Client not found for the project." });
     }
+
+    // Log the activity
+    await Activity.create({
+      userId: bid.freelancerId._id,
+      action: `You accepted the project "${project.title}" for $${bid.amount}.`,
+    });
 
     // Create a notification for the client
     await Notification.create({
@@ -209,27 +223,28 @@ router.delete("/reject/:bidId", verifyToken, async (req, res) => {
   try {
     const { bidId } = req.params;
 
-    // Find the bid
-    const bid = await Bid.findById(bidId);
+    const bid = await Bid.findById(bidId).populate("projectId");
 
     if (!bid) {
       return res.status(404).json({ error: "Bid not found." });
     }
 
-    // Check if the bid status is not "pending" or "selected"
     if (bid.status !== "pending" && bid.status !== "selected") {
       return res.status(400).json({ error: "The bid has already been accepted and cannot be rejected." });
     }
 
-    // Delete the bid
     await bid.deleteOne();
 
-    const project = await Project.findById(bid.projectId).populate("client", "email");
-
-    // Create a notification for the client
+    // Notify the client
     await Notification.create({
-      user: project.client._id, // Client ID
-      message: `Your selected bid for "${project.title}" has been rejected by the freelancer.`,
+      user: bid.projectId.client,
+      message: `The selected bid for your project "${bid.projectId.title}" has been rejected by the freelancer.`,
+    });
+
+    // Log the activity for the client
+    await Activity.create({
+      userId: bid.freelancerId._id,
+      action: `You have rejected the bid for the project "${bid.projectId.title}"`,
     });
 
     res.status(200).json({ message: "Bid rejected successfully." });
@@ -261,7 +276,12 @@ router.put("/:bidId", verifyToken, async (req, res) => {
     await bid.save();
 
     const project = await Project.findById(bid.projectId).populate("client", "email");
-    const freelancer = await User.findById(freelancerId);
+    const freelancer = await User.findById(req.user.id).select("email");
+    // Log the activity
+    await Activity.create({
+      userId: freelancerId,
+      action: `You updated your bid to $${bidAmount} for project "${project.title}".`,
+    });
 
     // Create a notification for the client
     await Notification.create({
@@ -294,10 +314,16 @@ router.delete("/:bidId", verifyToken, async (req, res) => {
       return res.status(400).json({ error: "The bid has already been accepted and cannot be deleted." });
     }
 
+    const project = await Project.findById(bid.projectId).populate("client", "email");
+
     // Delete the bid
     await bid.deleteOne();
 
-    const project = await Project.findById(bid.projectId).populate("client", "email");
+    // Log the activity
+    await Activity.create({
+      userId: freelancerId,
+      action: `You deleted your bid for project "${project.title}".`,
+    });
 
     // Create a notification for the client
     await Notification.create({
