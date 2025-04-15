@@ -12,7 +12,10 @@ const router = express.Router();
 // Schedule a task to run every day at midnight
 cron.schedule("0 0 * * *", async () => {
   try {
-    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    // const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to 00:00:00
 
     // Find projects with deadlines earlier than today
     const expiredProjects = await Project.find({ deadline: { $lt: today } });
@@ -24,11 +27,6 @@ cron.schedule("0 0 * * *", async () => {
         message: `The deadline for your project "${project.title}" has passed.`,
       });
 
-      // Log the activity
-      await Activity.create({
-        userId: project.client,
-        action: `The deadline for your project "${project.title}" has passed.`,
-      });
     }
 
     console.log(`Notified clients about ${expiredProjects.length} expired projects.`);

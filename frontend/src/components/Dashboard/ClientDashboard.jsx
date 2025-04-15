@@ -584,8 +584,9 @@ const ClientDashboard = () => {
     }
   };
 
-  const handleViewCompletion = (percentage) => {
+  const handleViewCompletion = (percentage, title) => {
     setCompletionPercentage(percentage || 0); // Set the completion percentage
+    setSelectedProjectTitle(title); // Set the project title
     setShowCompletionModal(true); // Show the modal
   };
 
@@ -1015,7 +1016,7 @@ const ClientDashboard = () => {
                   {project.status === "accepted" ? (
                     // Show the "View Project Completion Percentage" button for accepted projects
                     <button
-                      onClick={() => handleViewCompletion(project.completedpercentage)}
+                      onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
                       style={{
                         padding: "10px",
                         backgroundColor: "#007BFF", // Blue
@@ -1519,7 +1520,10 @@ const ClientDashboard = () => {
       textAlign: "center",
     }}
   >
-    <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p> {/* Black text */}
+    {/* Display the project title */}
+    <h3 style={{ color: "#000000", marginBottom: "10px" }}>{selectedProjectTitle}</h3>
+    {/* Display the project completion percentage */}
+    <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p>
     <button
       onClick={() => setShowCompletionModal(false)} // Close the modal
       style={{
