@@ -45,6 +45,8 @@ const ClientDashboard = () => {
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(""); // State to store the project title
   const [activityLogs, setActivityLogs] = useState([]); // State to store activity logs
   const [showActivityHistory, setShowActivityHistory] = useState(false); // State to control the activity history modal
+  const [showCompletionModal, setShowCompletionModal] = useState(false); // State to control the modal visibility
+  const [completionPercentage, setCompletionPercentage] = useState(0); // State to store the completion percentage
 
   const token = localStorage.getItem("token"); 
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -444,7 +446,6 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         setNotifications(notifications.filter((n) => n._id !== notificationId)); // Remove the deleted notification from state
-        alert("Notification deleted successfully.");
       } else {
         console.error("Failed to delete notification.");
       }
@@ -581,6 +582,11 @@ const ClientDashboard = () => {
     } catch (error) {
       console.error("Error fetching activity logs:", error);
     }
+  };
+
+  const handleViewCompletion = (percentage) => {
+    setCompletionPercentage(percentage || 0); // Set the completion percentage
+    setShowCompletionModal(true); // Show the modal
   };
 
   useEffect(() => {
@@ -1006,7 +1012,23 @@ const ClientDashboard = () => {
                   <p>Budget: ${project.budget}</p>
                   <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
 
-                  {editProject.id === project._id ? (
+                  {project.status === "accepted" ? (
+                    // Show the "View Project Completion Percentage" button for accepted projects
+                    <button
+                      onClick={() => handleViewCompletion(project.completedpercentage)}
+                      style={{
+                        padding: "10px",
+                        backgroundColor: "#007BFF", // Blue
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      View Project Completion Percentage
+                    </button>
+                  ) : editProject.id === project._id ? (
                     <form
                       onSubmit={async (e) => {
                         e.preventDefault();
@@ -1479,6 +1501,40 @@ const ClientDashboard = () => {
     ) : (
       <p style={{ textAlign: "center", color: "#FFD700" }}>No activity found.</p>
     )}
+  </div>
+)}
+
+{showCompletionModal && (
+  <div
+    style={{
+      position: "fixed",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      backgroundColor: "#FFFFFF",
+      padding: "20px",
+      borderRadius: "10px",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+      zIndex: 1000,
+      textAlign: "center",
+    }}
+  >
+    <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p> {/* Black text */}
+    <button
+      onClick={() => setShowCompletionModal(false)} // Close the modal
+      style={{
+        padding: "10px 20px",
+        backgroundColor: "#007BFF",
+        color: "#FFFFFF",
+        border: "none",
+        borderRadius: "5px",
+        cursor: "pointer",
+        fontWeight: "bold",
+        marginTop: "10px",
+      }}
+    >
+      OK
+    </button>
   </div>
 )}
     </div>

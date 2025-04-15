@@ -9,6 +9,7 @@ const projectSchema = new mongoose.Schema({
   status: { type: String, enum: ["pending", "selected", "accepted", "done"], default: "pending" }, 
   acceptedFreelancer: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Added field to store accepted freelancer
   acceptedmoney: { type: Number }, // Added field to store accepted money
+  completedpercentage: { type: Number, default: 0 }, // Added field to store completed percentage
 });
 
 

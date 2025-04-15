@@ -381,4 +381,43 @@ router.put("/status/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+// Route to update project completion percentage
+router.put("/update-completion/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const { completedpercentage } = req.body;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    // Ensure the freelancer updating the percentage is the accepted freelancer
+    if (project.acceptedFreelancer.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to update this project." });
+    }
+
+    // Validate the completion percentage
+    if (completedpercentage < 0 || completedpercentage > 100) {
+      return res.status(400).json({ error: "Completion percentage must be between 0 and 100." });
+    }
+
+    // Update the completion percentage
+    project.completedpercentage = completedpercentage;
+    await project.save();
+
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You updated the completion percentage of the project "${project.title}" to ${completedpercentage}%.`,
+    });
+
+    res.status(200).json({ message: "Project completion percentage updated successfully.", project });
+  } catch (error) {
+    console.error("Error updating project completion percentage:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
