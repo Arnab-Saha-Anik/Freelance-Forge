@@ -5,7 +5,10 @@ const projectSchema = new mongoose.Schema({
   description: { type: String, required: true },
   budget: { type: Number, required: true },
   deadline: { type: Date, required: true },
-  client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
+  client: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  status: { type: String, enum: ["pending", "selected", "accepted", "done"], default: "pending" }, 
+  acceptedFreelancer: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Added field to store accepted freelancer
+  acceptedmoney: { type: Number }, // Added field to store accepted money
 });
 
 

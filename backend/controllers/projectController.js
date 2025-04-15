@@ -252,22 +252,33 @@ router.put("/client/update/:id", verifyToken, async (req, res) => {
   }
 
   try {
-    const directHire = await DirectHire.findOne({ projectId: id, status: "accepted" });
-    if (directHire) {
-      return res.status(400).json({
-        error: "The project is already being accepted based on current requirements. Now, it is not possible to change the requirements!",
-      });
-    }
     const project = await Project.findById(id);
 
     if (!project) {
-      return res.status(404).json({ error: "Project not found" });
+      return res.status(404).json({ error: "Project not found." });
     }
 
+    // Ensure the client is authorized to update the project
     if (project.client.toString() !== req.user.id) {
-      return res.status(403).json({ error: "You are not authorized to update this project" });
+      return res.status(403).json({ error: "You are not authorized to update this project." });
     }
 
+    // Check if the project status is "accepted"
+    if (project.status === "accepted") {
+      return res.status(400).json({
+        error: "This project cannot be updated because its status is 'accepted'.",
+      });
+    }
+
+    // Check if a direct hire has been placed for the project
+    const directHireExists = await DirectHire.findOne({ projectId: id });
+    if (directHireExists) {
+      return res.status(400).json({
+        error: "This project cannot be updated because a direct hire has been placed.",
+      });
+    }
+
+    // Update the project fields
     if (budget) project.budget = budget;
     if (deadline) project.deadline = deadline;
 
@@ -308,11 +319,10 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to delete this project" });
     }
 
-    // Check if the project has an associated direct hire with status "accepted"
-    const acceptedDirectHire = await DirectHire.findOne({ projectId: id, status: "accepted" });
-    if (acceptedDirectHire) {
+    // Check if the project status is not "accepted"
+    if (project.status === "accepted") {
       return res.status(400).json({
-        error: "This project cannot be deleted because it has been accepted by a freelancer.",
+        error: "This project cannot be deleted because its status is 'accepted'.",
       });
     }
 
@@ -329,6 +339,45 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Error deleting project:", err);
     res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
+
+// Update Project Status
+router.put("/status/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ["pending", "selected", "accepted", "done"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: "Invalid project status." });
+  }
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    // Ensure the client is authorized to update the project
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to update this project." });
+    }
+
+    // Update the project status
+    project.status = status;
+    await project.save();
+
+    // Log the activity
+    await Activity.create({
+      userId: req.user.id,
+      action: `You updated the status of the project "${project.title}" to "${status}".`,
+    });
+
+    res.status(200).json({ message: "Project status updated successfully.", project });
+  } catch (error) {
+    console.error("Error updating project status:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

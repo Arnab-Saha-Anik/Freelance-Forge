@@ -80,7 +80,17 @@ const FreelancerDashboard = () => {
         }
 
         const data = await response.json();
-        setProjects(data);
+
+        // Filter projects based on the freelancer's role
+        const filteredProjects = data.filter((project) => {
+          // If the project is accepted, only show it to the accepted freelancer
+          if (project.status === "accepted") {
+            return project.acceptedFreelancer === userId; // Show only if the logged-in freelancer is the accepted one
+          }
+          return true; // Show all other projects
+        });
+
+        setProjects(filteredProjects);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -956,77 +966,79 @@ const FreelancerDashboard = () => {
           Client Email: {project.client?.email || "N/A"}
         </p>
 
-        {myBid ? (
-          myBid.status === "accepted" ? (
+        {project.status === "accepted" ? (
+          project.acceptedFreelancer === userId ? ( // Check if the logged-in freelancer is the accepted one
             <span
               style={{
-                padding: "5px 30px",
-                backgroundColor: "#28A745",
-                color: "#FFFFFF",
+                padding: "10px 20px",
+                backgroundColor: "#28A745", // Green background
+                color: "#FFFFFF", // White text
                 borderRadius: "5px",
                 fontWeight: "bold",
+                display: "inline-block",
+                textAlign: "center",
               }}
             >
               Accepted
             </span>
-          ) : (
-            <>
-              <button
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#007BFF",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
-                onClick={() => {
-                  setSelectedProject(project);
-                  setBidAmount(myBid.amount); // Pre-fill the bid amount
-                  setShowBidModal(true);
-                }}
-              >
-                Update Bid
-              </button>
-              <button
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#DC3545",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
-                      method: "DELETE",
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    });
+          ) : null // Do not show the project for other freelancers
+        ) : myBid ? (
+          <>
+            <button
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#007BFF",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginRight: "10px",
+              }}
+              onClick={() => {
+                setSelectedProject(project);
+                setBidAmount(myBid.amount); // Pre-fill the bid amount
+                setShowBidModal(true);
+              }}
+            >
+              Update Bid
+            </button>
+            <button
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#DC3545",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={async () => {
+                try {
+                  const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
+                    method: "DELETE",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  });
 
-                    if (response.ok) {
-                      alert("Bid deleted successfully.");
-                      setMyBids((prevBids) => {
-                        const updatedBids = { ...prevBids };
-                        delete updatedBids[project._id];
-                        return updatedBids;
-                      });
-                    } else {
-                      alert("Failed to delete bid.");
-                    }
-                  } catch (error) {
-                    console.error("Error deleting bid:", error);
-                    alert("An error occurred while deleting the bid.");
+                  if (response.ok) {
+                    alert("Bid deleted successfully.");
+                    setMyBids((prevBids) => {
+                      const updatedBids = { ...prevBids };
+                      delete updatedBids[project._id];
+                      return updatedBids;
+                    });
+                  } else {
+                    alert("Failed to delete bid.");
                   }
-                }}
-              >
-                Delete Bid
-              </button>
-            </>
-          )
+                } catch (error) {
+                  console.error("Error deleting bid:", error);
+                  alert("An error occurred while deleting the bid.");
+                }
+              }}
+            >
+              Delete Bid
+            </button>
+          </>
         ) : (
           <button
             style={{
