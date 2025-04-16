@@ -327,8 +327,7 @@ const FreelancerDashboard = () => {
 
       if (response.ok) {
         alert("Project rejected successfully.");
-        fetchProjects(); // Refresh the projects list
-        fetchHireOffers(); // Refresh the list of pending offers
+        window.location.reload(); // Reload the page
       } else {
         const data = await response.json();
         alert(data.error || "Failed to reject the project.");
@@ -385,8 +384,7 @@ const FreelancerDashboard = () => {
   
       if (response.ok) {
         alert("Bid accepted successfully! Now, work on this project maintaining the deadline.");
-        fetchProjects(); // Refresh the projects list
-        fetchSelectedBids(); // Refresh the selected bids
+        window.location.reload(); // Reload the page
       } else {
         const data = await response.json();
         alert(data.error || "Failed to accept bid.");
@@ -408,8 +406,7 @@ const FreelancerDashboard = () => {
   
       if (response.ok) {
         alert("Bid rejected successfully.");
-        fetchProjects(); // Refresh the projects list
-        fetchSelectedBids(); // Refresh the selected bids
+        window.location.reload(); // Reload the page
       } else {
         const data = await response.json();
         alert(data.error || "Failed to reject bid.");
@@ -477,16 +474,16 @@ const FreelancerDashboard = () => {
 
       const data = await response.json();
 
-      // Filter projects based on the freelancer's role
-      const filteredProjects = data.filter((project) => {
-        // If the project is accepted, only show it to the accepted freelancer
-        if (project.status === "accepted") {
-          return project.acceptedFreelancer === userId; // Show only if the logged-in freelancer is the accepted one
-        }
-        return true; // Show all other projects
-      });
+      // Separate accepted projects and other projects
+      const acceptedProjects = data.filter(
+        (project) => project.status === "accepted" && project.acceptedFreelancer === userId
+      );
+      const otherProjects = data.filter(
+        (project) => !(project.status === "accepted" && project.acceptedFreelancer === userId)
+      );
 
-      setProjects(filteredProjects);
+      // Combine accepted projects on top and other projects below
+      setProjects([...acceptedProjects, ...otherProjects]);
     } catch (err) {
       setError(err.message);
     } finally {
