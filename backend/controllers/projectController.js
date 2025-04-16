@@ -318,9 +318,9 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
     }
 
     // Check if the project status is not "accepted"
-    if (project.status === "accepted") {
+    if (project.status !== "pending") {
       return res.status(400).json({
-        error: "This project cannot be deleted because its status is 'accepted'.",
+        error: "This project cannot be deleted because its status is not 'pending'.",
       });
     }
 
