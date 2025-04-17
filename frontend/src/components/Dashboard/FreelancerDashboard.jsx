@@ -30,11 +30,43 @@ const FreelancerDashboard = () => {
   const [selectedBids, setSelectedBids] = useState([]); // Add state for selected bids
   const [showActivityHistory, setShowActivityHistory] = useState(false); // Add state for activity history
   const [activityLogs, setActivityLogs] = useState([]); // Add state for activity logs
+  const [learningSearchQuery, setLearningSearchQuery] = useState("");
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
   const token = location.state?.token || localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
+
+  // Define the learningMaterials array first
+const learningMaterials = [
+  {
+    id: 1,
+    title: "React Documentation",
+    description: "Learn React from the official documentation.",
+    link: "https://reactjs.org/docs/getting-started.html",
+  },
+  {
+    id: 2,
+    title: "JavaScript Info",
+    description: "A comprehensive guide to modern JavaScript.",
+    link: "https://javascript.info/",
+  },
+  {
+    id: 3,
+    title: "MDN Web Docs",
+    description: "Explore web development resources from MDN.",
+    link: "https://developer.mozilla.org/en-US/",
+  },
+  {
+    id: 4,
+    title: "FreeCodeCamp",
+    description: "Learn to code for free with FreeCodeCamp.",
+    link: "https://www.freecodecamp.org/",
+  },
+];
+
+// Then initialize the state
+const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learningMaterials);
 
   useEffect(() => {
     document.title = "Freelance Forge - Freelancer Dashboard";
@@ -520,6 +552,19 @@ const FreelancerDashboard = () => {
     }
   };
 
+
+  const handleSearchLearningMaterials = (query) => {
+    setLearningSearchQuery(query);
+  
+    const filtered = learningMaterials.filter(
+      (material) =>
+        material.title.toLowerCase().includes(query.toLowerCase()) ||
+        material.description.toLowerCase().includes(query.toLowerCase())
+    );
+  
+    setFilteredLearningMaterials(filtered);
+  };
+
   return (
     <div
       style={{
@@ -858,94 +903,42 @@ const FreelancerDashboard = () => {
               color: "#FFFFFF",
             }}
           >
-            <li
-              style={{
-                marginBottom: "20px",
-                padding: "15px",
-                backgroundColor: "#333333",
-                borderRadius: "10px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>React Documentation</h3>
-              <p style={{ marginBottom: "10px" }}>
-                Learn React from the official documentation.
-              </p>
-              <a
-                href="https://reactjs.org/docs/getting-started.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#007BFF", textDecoration: "none" }}
-              >
-                Visit React Docs
-              </a>
-            </li>
-            <li
-              style={{
-                marginBottom: "20px",
-                padding: "15px",
-                backgroundColor: "#333333",
-                borderRadius: "10px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>JavaScript Info</h3>
-              <p style={{ marginBottom: "10px" }}>
-                A comprehensive guide to modern JavaScript.
-              </p>
-              <a
-                href="https://javascript.info/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#007BFF", textDecoration: "none" }}
-              >
-                Visit JavaScript Info
-              </a>
-            </li>
-            <li
-              style={{
-                marginBottom: "20px",
-                padding: "15px",
-                backgroundColor: "#333333",
-                borderRadius: "10px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>MDN Web Docs</h3>
-              <p style={{ marginBottom: "10px" }}>
-                Explore web development resources from MDN.
-              </p>
-              <a
-                href="https://developer.mozilla.org/en-US/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#007BFF", textDecoration: "none" }}
-              >
-                Visit MDN Web Docs
-              </a>
-            </li>
-            <li
-              style={{
-                marginBottom: "20px",
-                padding: "15px",
-                backgroundColor: "#333333",
-                borderRadius: "10px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-              }}
-            >
-              <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>FreeCodeCamp</h3>
-              <p style={{ marginBottom: "10px" }}>
-                Learn to code for free with FreeCodeCamp.
-              </p>
-              <a
-                href="https://www.freecodecamp.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#007BFF", textDecoration: "none" }}
-              >
-                Visit FreeCodeCamp
-              </a>
-            </li>
+            <div style={{ marginBottom: "20px" }}>
+              <input
+                type="text"
+                placeholder="Search learning materials"
+                value={learningSearchQuery}
+                onChange={(e) => handleSearchLearningMaterials(e.target.value)}
+                style={{ padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc" }}
+              />
+            </div>
+            {filteredLearningMaterials.length > 0 ? (
+    filteredLearningMaterials.map((material) => (
+      <li
+        key={material.id}
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          backgroundColor: "#333333",
+          borderRadius: "10px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>{material.title}</h3>
+        <p style={{ marginBottom: "10px" }}>{material.description}</p>
+        <a
+          href={material.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#007BFF", textDecoration: "none" }}
+        >
+          Visit
+        </a>
+      </li>
+    ))
+  ) : (
+    <p style={{ textAlign: "center", color: "#FFD700" }}>No learning materials found.</p>
+  )}
           </ul>
         )}
       </div>
