@@ -31,6 +31,8 @@ const FreelancerDashboard = () => {
   const [showActivityHistory, setShowActivityHistory] = useState(false); // Add state for activity history
   const [activityLogs, setActivityLogs] = useState([]); // Add state for activity logs
   const [learningSearchQuery, setLearningSearchQuery] = useState("");
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
@@ -565,6 +567,21 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
     setFilteredLearningMaterials(filtered);
   };
 
+  const handleSearchProjects = (query) => {
+    setProjectSearchQuery(query);
+  
+    const filtered = projects.filter(
+      (project) =>
+        project.title.toLowerCase().includes(query.toLowerCase()) ||
+        project.budget.toString().includes(query) ||
+        new Date(project.deadline).toLocaleDateString().includes(query) ||
+        (project.client?.email &&
+          project.client.email.toLowerCase().includes(query.toLowerCase()))
+    );
+  
+    setFilteredProjects(filtered);
+  };
+
   return (
     <div
       style={{
@@ -942,7 +959,28 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
           </ul>
         )}
       </div>
-
+  <div
+  style={{
+    marginBottom: "20px",
+    padding: "20px",
+    backgroundColor: "#444444",
+    borderRadius: "10px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  }}
+>
+  <input
+    type="text"
+    placeholder="Search projects using title, budget, deadline, or freelancer email"
+    value={projectSearchQuery}
+    onChange={(e) => handleSearchProjects(e.target.value)}
+    style={{
+      padding: "10px",
+      width: "100%",
+      borderRadius: "5px",
+      border: "1px solid #ccc",
+    }}
+  />
+</div>
       {/* Projects Section */}
       <div
         style={{
@@ -960,11 +998,11 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
           <p style={{ textAlign: "center" }}>Loading projects...</p>
         ) : error ? (
           <p style={{ textAlign: "center", color: "red" }}>{error}</p>
-        ) : projects.length === 0 ? (
+         ) : (projectSearchQuery ? filteredProjects : projects).length === 0 ? (
           <p style={{ textAlign: "center" }}>No projects available.</p>
         ) : (
           <ul style={{ listStyleType: "none", padding: 0, fontSize: "18px" }}>
-{projects.map((project) => {
+{(projectSearchQuery ? filteredProjects : projects).map((project) => {
   const myBid = myBids[project._id]; // Get the bid for this project
 
   return (
