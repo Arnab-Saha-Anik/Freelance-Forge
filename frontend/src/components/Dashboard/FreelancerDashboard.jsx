@@ -51,42 +51,15 @@ const FreelancerDashboard = () => {
   const [learningSearchQuery, setLearningSearchQuery] = useState("");
   const [projectSearchQuery, setProjectSearchQuery] = useState("");
   const [filteredProjects, setFilteredProjects] = useState([]);
+  const [learningMaterials, setLearningMaterials] = useState([]); // State for learning materials
+  const [filteredLearningMaterials, setFilteredLearningMaterials] = useState([]); // State for filtered materials
   const navigate = useNavigate(); 
   const location = useLocation(); 
 
   const token = location.state?.token || localStorage.getItem("token");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
 
-  // Define the learningMaterials array first
-const learningMaterials = [
-  {
-    id: 1,
-    title: "React Documentation",
-    description: "Learn React from the official documentation.",
-    link: "https://reactjs.org/docs/getting-started.html",
-  },
-  {
-    id: 2,
-    title: "JavaScript Info",
-    description: "A comprehensive guide to modern JavaScript.",
-    link: "https://javascript.info/",
-  },
-  {
-    id: 3,
-    title: "MDN Web Docs",
-    description: "Explore web development resources from MDN.",
-    link: "https://developer.mozilla.org/en-US/",
-  },
-  {
-    id: 4,
-    title: "FreeCodeCamp",
-    description: "Learn to code for free with FreeCodeCamp.",
-    link: "https://www.freecodecamp.org/",
-  },
-];
-
-// Then initialize the state
-const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learningMaterials);
+  // Then initialize the state
 
   useEffect(() => {
     document.title = "Freelance Forge - Freelancer Dashboard";
@@ -600,6 +573,31 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
     setFilteredProjects(filtered);
   };
 
+  const fetchLearningMaterials = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:5000/learning-materials", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Pass the token if required
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setLearningMaterials(data); // Update the state with fetched materials
+        setFilteredLearningMaterials(data); // Initialize filtered materials
+      } else {
+        console.error("Failed to fetch learning materials.");
+      }
+    } catch (err) {
+      console.error("Error fetching learning materials:", err);
+    }
+  }, [token]); // Add 'token' as a dependency
+  
+  // Fetch learning materials when the component loads
+  useEffect(() => {
+    fetchLearningMaterials();
+  }, [fetchLearningMaterials]); // Add fetchLearningMaterials to the dependency array
+
   return (
     <div style={styles.container}>
       {/* Display the user's name */}
@@ -787,7 +785,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
             {filteredLearningMaterials.length > 0 ? (
     filteredLearningMaterials.map((material) => (
       <li
-        key={material.id}
+        key={material._id}
         style={{marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
         }}
       >
