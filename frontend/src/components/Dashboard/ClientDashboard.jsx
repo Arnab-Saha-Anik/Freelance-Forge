@@ -47,6 +47,10 @@ const ClientDashboard = () => {
   const [showActivityHistory, setShowActivityHistory] = useState(false); // State to control the activity history modal
   const [showCompletionModal, setShowCompletionModal] = useState(false); // State to control the modal visibility
   const [completionPercentage, setCompletionPercentage] = useState(0); // State to store the completion percentage
+  const [searchQuery, setSearchQuery] = useState(""); // Search query
+  const [filteredProjects, setFilteredProjects] = useState([]); // Filtered projects
+  const [freelancerSearchQuery, setFreelancerSearchQuery] = useState(""); // Search query for freelancers
+  const [filteredFreelancers, setFilteredFreelancers] = useState([]); // Filtered freelancers
 
   const token = localStorage.getItem("clientToken");
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
@@ -590,9 +594,65 @@ const ClientDashboard = () => {
     setShowCompletionModal(true); // Show the modal
   };
 
+  const handleSearch = useCallback((query) => {
+    setSearchQuery(query);
+  
+    // Filter projects based on the search query
+    const filtered = projects.filter((project) => {
+      const queryLower = query.toLowerCase();
+      return (
+        project.title.toLowerCase().includes(queryLower) ||
+        project.description.toLowerCase().includes(queryLower) ||
+        project.budget.toString().includes(queryLower) ||
+        new Date(project.deadline).toLocaleDateString().includes(queryLower)
+      );
+    });
+  
+    setFilteredProjects(filtered);
+  }, [projects]); // Dependency array for useCallback
+
+  // Fetch projects when "Show My Projects" is toggled
+  useEffect(() => {
+    if (showProjects) {
+      fetchProjects();
+    }
+  }, [showProjects, fetchProjects]);
+
+  // Update filtered projects when the projects list changes
+  useEffect(() => {
+    handleSearch(searchQuery); // Reapply the search filter
+  }, [projects, handleSearch, searchQuery]);
+
   useEffect(() => {
     document.title = "Freelance Forge - Client Dashboard"; 
   }, []);
+
+  // Function to handle freelancer search input changes
+  const handleFreelancerSearch = useCallback((query) => {
+    setFreelancerSearchQuery(query);
+  
+    // Filter freelancers based on the search query
+    const filtered = freelancers.filter((freelancer) => {
+      const queryLower = query.toLowerCase();
+      return (
+        (freelancer.name && freelancer.name.toLowerCase().includes(queryLower)) ||
+        (freelancer.email && freelancer.email.toLowerCase().includes(queryLower)) ||
+        (freelancer.profile?.[0]?.skills &&
+          freelancer.profile[0].skills.join(", ").toLowerCase().includes(queryLower)) ||
+        (freelancer.profile?.[0]?.portfolio &&
+          freelancer.profile[0].portfolio.toLowerCase().includes(queryLower)) ||
+        (freelancer.profile?.[0]?.experience &&
+          freelancer.profile[0].experience.toLowerCase().includes(queryLower))
+      );
+    });
+  
+    setFilteredFreelancers(filtered);
+  }, [freelancers]); // Dependency array for useCallback
+
+  // Update filtered freelancers when the freelancers list changes
+  useEffect(() => {
+    handleFreelancerSearch(freelancerSearchQuery); // Reapply the search filter
+  }, [freelancers, freelancerSearchQuery, handleFreelancerSearch]); // Include all dependencies
 
   return (
     <div
@@ -994,10 +1054,27 @@ const ClientDashboard = () => {
         </button>
         {showProjects && (
           <div>
+            {/* Search Bar */}
+            <div style={{ marginBottom: "20px" }}>
+              <input
+                type="text"
+                placeholder="Search projects by title, budget, deadline, or description"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                style={{
+                  padding: "10px",
+                  width: "100%",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
             {loadingProjects ? (
               <p>Loading projects...</p>
-            ) : projects.length > 0 ? (
-              projects.map((project) => (
+            ) : filteredProjects.length > 0 ? (
+              filteredProjects.map((project) => (
                 <div
                   key={project._id}
                   style={{
@@ -1189,10 +1266,29 @@ const ClientDashboard = () => {
       {/* Display freelancers */}
       <div>
         <h2 style={{ color: "#000000" }}>Freelancers</h2>
+
+        {/* Search Bar for Freelancers */}
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            placeholder="Search freelancers by name, email, skills, portfolio, or experience"
+            value={freelancerSearchQuery}
+            onChange={(e) => handleFreelancerSearch(e.target.value)}
+            style={{
+              padding: "10px",
+              width: "100%",
+              borderRadius: "5px",
+              border: "1px solid #ddd",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Display Freelancers */}
         {loadingFreelancers ? (
           <p>Loading freelancers...</p>
-        ) : freelancers.length > 0 ? (
-          freelancers.map((freelancer) => (
+        ) : filteredFreelancers.length > 0 ? (
+          filteredFreelancers.map((freelancer) => (
             <div
               key={freelancer._id}
               style={{
