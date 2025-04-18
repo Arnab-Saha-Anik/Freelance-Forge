@@ -4,52 +4,53 @@ import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [learningMaterials, setLearningMaterials] = useState([]);
+  const [newMaterial, setNewMaterial] = useState({ title: "", description: "", link: "" });
+  const [showAddMaterialForm, setShowAddMaterialForm] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [showLearningMaterials, setShowLearningMaterials] = useState(false); // Toggle learning materials
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const alertShown = useRef(false); 
+  const alertShown = useRef(false);
 
-  
   useEffect(() => {
     if (!token) {
       if (!alertShown.current) {
         alert("Unauthorized access. Please log in as an admin.");
-        alertShown.current = true; 
+        alertShown.current = true;
       }
       navigate("/admin-login");
     } else {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   }, [token, navigate]);
 
   useEffect(() => {
-    document.title = "Freelance Forge - Admin Dashboard"; 
+    document.title = "Freelance Forge - Admin Dashboard";
   }, []);
 
-  
   const handleLogout = () => {
-    localStorage.removeItem("token"); 
+    localStorage.removeItem("token");
     alert("You have been logged out.");
-    navigate("/admin-login"); 
+    navigate("/admin-login");
   };
 
-  
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
       const response = await fetch("http://localhost:5000/users", {
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
       });
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.map(({ _id, name, email, role }) => ({ _id, name, email, role }))); 
+        setUsers(data.map(({ _id, name, email, role }) => ({ _id, name, email, role })));
       } else {
         const errorData = await response.json();
         console.error("Error fetching users:", errorData);
@@ -63,22 +64,26 @@ const AdminDashboard = () => {
     }
   };
 
-  
   const fetchProjects = async () => {
     setLoadingProjects(true);
     try {
-      const response = await fetch("http://localhost:5000/projects");
+      const response = await fetch("http://localhost:5000/projects", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setProjects(
-          data.map(({ _id, title, description, budget, deadline }) => ({
+          data.map(({ _id, title, description, budget, deadline, client }) => ({
             _id,
             title,
             description,
             budget,
             deadline,
+            clientEmail: client?.email || "N/A", // Include client's email
           }))
-        ); 
+        );
       } else {
         alert("Failed to fetch projects.");
       }
@@ -90,9 +95,8 @@ const AdminDashboard = () => {
     }
   };
 
-  
   const handleDeleteUser = async (userId) => {
-    console.log("Deleting user with ID:", userId); 
+    console.log("Deleting user with ID:", userId);
 
     if (!userId) {
       console.error("User ID is undefined.");
@@ -109,15 +113,15 @@ const AdminDashboard = () => {
           },
         });
 
-        console.log("Response status:", response.status); 
+        console.log("Response status:", response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log("Response data:", data); 
+          console.log("Response data:", data);
           alert(data.message || "User deleted successfully.");
           setUsers(users.filter((user) => user._id !== userId));
         } else {
           const errorData = await response.json();
-          console.error("Error response data:", errorData); 
+          console.error("Error response data:", errorData);
           alert(errorData.message || "Failed to delete user.");
         }
       } catch (err) {
@@ -127,9 +131,8 @@ const AdminDashboard = () => {
     }
   };
 
-  
   const handleDeleteProject = async (projectId) => {
-    console.log("Deleting project with ID:", projectId); 
+    console.log("Deleting project with ID:", projectId);
 
     if (!projectId) {
       console.error("Project ID is undefined.");
@@ -144,21 +147,93 @@ const AdminDashboard = () => {
         });
         if (response.ok) {
           alert("Project deleted successfully.");
-          setProjects(projects.filter((project) => project._id !== projectId)); 
+          setProjects(projects.filter((project) => project._id !== projectId));
         } else {
-          const errorData = await response.json(); 
-          console.error("Error deleting project:", errorData); 
+          const errorData = await response.json();
+          console.error("Error deleting project:", errorData);
           alert(errorData.message || "Failed to delete project.");
         }
       } catch (err) {
-        console.error("Error deleting project:", err); 
+        console.error("Error deleting project:", err);
         alert("An error occurred while deleting the project.");
       }
     }
   };
 
+  const fetchLearningMaterials = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/learning-materials", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setLearningMaterials(data); // Update the state with fetched materials
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to fetch learning materials.");
+      }
+    } catch (err) {
+      console.error("Error fetching learning materials:", err);
+      alert("An error occurred while fetching learning materials.");
+    }
+  };
+
+  const handleAddMaterial = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:5000/learning-materials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+        },
+        body: JSON.stringify(newMaterial),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message || "Learning material added successfully.");
+        setNewMaterial({ title: "", description: "", link: "" }); // Reset form
+        setShowAddMaterialForm(false); // Hide form
+        fetchLearningMaterials(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to add learning material.");
+      }
+    } catch (err) {
+      console.error("Error adding learning material:", err);
+      alert("An error occurred while adding the learning material.");
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId) => {
+    if (window.confirm("Are you sure you want to delete this learning material?")) {
+      try {
+        const response = await fetch(`http://localhost:5000/learning-materials/${materialId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          alert("Learning material deleted successfully.");
+          setLearningMaterials(learningMaterials.filter((material) => material._id !== materialId));
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || "Failed to delete learning material.");
+        }
+      } catch (err) {
+        console.error("Error deleting learning material:", err);
+        alert("An error occurred while deleting the learning material.");
+      }
+    }
+  };
+
   if (isLoading) {
-    
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         <h2>Loading...</h2>
@@ -174,7 +249,7 @@ const AdminDashboard = () => {
         style={{
           position: "absolute",
           top: "20px",
-          right: "20px", 
+          right: "20px",
           padding: "10px 20px",
           backgroundColor: "#DC3545",
           color: "#FFFFFF",
@@ -188,6 +263,65 @@ const AdminDashboard = () => {
       </button>
 
       <h2 style={{ marginBottom: "50px", fontSize: "28px" }}>Admin Dashboard</h2>
+
+      {/* Add New Learning Materials Button */}
+      <button
+        onClick={() => setShowAddMaterialForm(!showAddMaterialForm)}
+        style={{
+          padding: "15px 30px",
+          backgroundColor: "#FFC107",
+          color: "#000000",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          fontSize: "18px",
+          marginBottom: "20px",
+        }}
+      >
+        {showAddMaterialForm ? "Close Form" : "Add New Learning Materials"}
+      </button>
+
+      {/* Add Learning Material Form */}
+      {showAddMaterialForm && (
+        <form onSubmit={handleAddMaterial} style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            placeholder="Title"
+            value={newMaterial.title}
+            onChange={(e) => setNewMaterial({ ...newMaterial, title: e.target.value })}
+            required
+            style={{ padding: "10px", marginBottom: "10px", width: "100%" }}
+          />
+          <textarea
+            placeholder="Description"
+            value={newMaterial.description}
+            onChange={(e) => setNewMaterial({ ...newMaterial, description: e.target.value })}
+            required
+            style={{ padding: "10px", marginBottom: "10px", width: "100%" }}
+          />
+          <input
+            type="url"
+            placeholder="Link"
+            value={newMaterial.link}
+            onChange={(e) => setNewMaterial({ ...newMaterial, link: e.target.value })}
+            required
+            style={{ padding: "10px", marginBottom: "10px", width: "100%" }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#28A745",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Submit
+          </button>
+        </form>
+      )}
 
       {/* Fetch Users and Fetch Projects Buttons */}
       <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "40px" }}>
@@ -225,6 +359,25 @@ const AdminDashboard = () => {
           }}
         >
           {loadingProjects ? "Loading Projects..." : `Fetch Projects ${showProjects ? "▲" : "▼"}`}
+        </button>
+
+        {/* Fetch Learning Materials Button */}
+        <button
+          onClick={() => {
+            setShowLearningMaterials(!showLearningMaterials);
+            if (!showLearningMaterials && learningMaterials.length === 0) fetchLearningMaterials();
+          }}
+          style={{
+            padding: "15px 30px",
+            backgroundColor: "#17A2B8",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "18px",
+          }}
+        >
+          {showLearningMaterials ? "Hide Learning Materials ▲" : "Fetch Learning Materials ▼"}
         </button>
       </div>
 
@@ -281,6 +434,7 @@ const AdminDashboard = () => {
                 <th style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "16px" }}>Description</th>
                 <th style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "16px" }}>Budget</th>
                 <th style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "16px" }}>Deadline</th>
+                <th style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "16px" }}>Client Email</th>
                 <th style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "16px" }}>Actions</th>
               </tr>
             </thead>
@@ -293,6 +447,7 @@ const AdminDashboard = () => {
                   <td style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "14px" }}>
                     {new Date(project.deadline).toLocaleDateString()}
                   </td>
+                  <td style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "14px" }}>{project.clientEmail}</td>
                   <td style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "14px" }}>
                     <button
                       onClick={() => handleDeleteProject(project._id)}
@@ -313,6 +468,48 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Learning Materials Table */}
+      {showLearningMaterials && learningMaterials.length > 0 && (
+        <div style={{ marginTop: "20px" }}>
+          <h3 style={{ fontSize: "24px", marginBottom: "20px" }}>Learning Materials</h3>
+          <ul style={{ listStyleType: "none", padding: 0 }}>
+            {learningMaterials.map((material) => (
+              <li
+                key={material._id}
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#f9f9f9",
+                  borderRadius: "5px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <h4>{material.title}</h4>
+                <p>{material.description}</p>
+                <a href={material.link} target="_blank" rel="noopener noreferrer">
+                  Visit
+                </a>
+                <div style={{ marginTop: "10px" }}>
+                  <button
+                    onClick={() => handleDeleteMaterial(material._id)}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#DC3545",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

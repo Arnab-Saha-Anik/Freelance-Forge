@@ -7,21 +7,37 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Freelance Forge - Admin Login"; 
+    document.title = "Freelance Forge - Admin Login";
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    
-    if (email === "asaa@gmail.com" && password === "1234") {
-      
-      const token = btoa(JSON.stringify({ email, role: "admin" }));
-      localStorage.setItem("token", token); 
-      alert("Login successful!");
-      navigate("/admin-dashboard"); 
-    } else {
-      alert("Invalid email or password.");
+    try {
+      const response = await fetch("http://localhost:5000/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, role: "admin" }), // Send email, password, and role
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.role.toLowerCase() === "admin") {
+          localStorage.setItem("token", data.token); // Save the token in localStorage
+          alert("Login successful!");
+          navigate("/admin-dashboard"); // Redirect to the admin dashboard
+        } else {
+          alert("Access denied. You are not an admin.");
+        }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Invalid email or password.");
+      }
+    } catch (err) {
+      console.error("Error during login:", err);
+      alert("An error occurred while logging in.");
     }
   };
 
