@@ -48,10 +48,10 @@ const ClientDashboard = () => {
   const [showCompletionModal, setShowCompletionModal] = useState(false); // State to control the modal visibility
   const [completionPercentage, setCompletionPercentage] = useState(0); // State to store the completion percentage
 
-  const token = localStorage.getItem("token"); 
+  const token = localStorage.getItem("clientToken");
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
   const navigate = useNavigate();
-
+ 
   
   useEffect(() => {
     if (token) {
@@ -119,7 +119,7 @@ const ClientDashboard = () => {
     };
 
     fetchAccountInfo();
-  }, [token]);
+  }, [token, navigate, loggedInClientId]);
 
   
   const fetchProjects = useCallback(async () => {

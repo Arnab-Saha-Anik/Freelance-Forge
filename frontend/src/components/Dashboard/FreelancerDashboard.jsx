@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { handleGlobalLogout } from "../../utils/logout";
 
 const styles = {
@@ -54,9 +54,8 @@ const FreelancerDashboard = () => {
   const [learningMaterials, setLearningMaterials] = useState([]); // State for learning materials
   const [filteredLearningMaterials, setFilteredLearningMaterials] = useState([]); // State for filtered materials
   const navigate = useNavigate(); 
-  const location = useLocation(); 
-
-  const token = location.state?.token || localStorage.getItem("token");
+ 
+  const token = localStorage.getItem("freelancerToken");
   const userId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
 
   // Then initialize the state
@@ -879,46 +878,46 @@ const FreelancerDashboard = () => {
         ) : null
       ) : myBid ? (
         <>
-          <button
-            style={styles.bidButton}
-            onClick={() => {
-              setSelectedProject(project);
-              setBidAmount(myBid.amount); // Pre-fill the bid amount
-              setShowBidModal(true);
-            }}
-          >
-            Update Bid
-          </button>
-          <button
-            style={styles.rejectButton}
-            onClick={async () => {
-              try {
-                const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
-                  method: "DELETE",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                });
+  <button
+    style={{ ...styles.bidButton, marginRight: "10px" }} // Add marginRight for spacing
+    onClick={() => {
+      setSelectedProject(project);
+      setBidAmount(myBid.amount); // Pre-fill the bid amount
+      setShowBidModal(true);
+    }}
+  >
+    Update Bid
+  </button>
+  <button
+    style={styles.rejectButton}
+    onClick={async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-                if (response.ok) {
-                  alert("Bid deleted successfully.");
-                  setMyBids((prevBids) => {
-                    const updatedBids = { ...prevBids };
-                    delete updatedBids[project._id];
-                    return updatedBids;
-                  });
-                } else {
-                  alert("Failed to delete bid.");
-                }
-              } catch (error) {
-                console.error("Error deleting bid:", error);
-                alert("An error occurred while deleting the bid.");
-              }
-            }}
-          >
-            Delete Bid
-          </button>
-        </>
+        if (response.ok) {
+          alert("Bid deleted successfully.");
+          setMyBids((prevBids) => {
+            const updatedBids = { ...prevBids };
+            delete updatedBids[project._id];
+            return updatedBids;
+          });
+        } else {
+          alert("Failed to delete bid.");
+        }
+      } catch (error) {
+        console.error("Error deleting bid:", error);
+        alert("An error occurred while deleting the bid.");
+      }
+    }}
+  >
+    Delete Bid
+  </button>
+</>
       ) : (
         <button
           style={styles.bidButton}
@@ -960,20 +959,21 @@ const FreelancerDashboard = () => {
               />
             </div>
             <div>
-              <button
-                type="submit"
-                style={styles.bidButton}
-              >
-                Submit Bid
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowBidModal(false)}
-                style={styles.rejectButton}
-              >
-                Cancel
-              </button>
-            </div>
+  <button
+    type="submit"
+    style={{ ...styles.bidButton, marginRight: "10px" }} // Add marginRight for spacing
+  >
+    Submit Bid
+  </button>
+  <button
+    type="button"
+    onClick={() => setShowBidModal(false)}
+    style={styles.rejectButton}
+  >
+    Cancel
+  </button>
+</div>
+
           </form>
         </div>
       )}

@@ -54,8 +54,10 @@ const Login = () => {
       localStorage.setItem("token", response.data.token);
 
       if (backendRole.toLowerCase() === "freelancer") {
-        navigate("/freelancer-dashboard", { state: { token: response.data.token } });
+        localStorage.setItem("freelancerToken", response.data.token);
+        navigate("/freelancer-dashboard");
       } else if (backendRole.toLowerCase() === "client") {
+        localStorage.setItem("clientToken", response.data.token);
         navigate("/client-dashboard");
       }
     } catch (err) {
