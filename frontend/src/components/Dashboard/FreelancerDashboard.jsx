@@ -926,7 +926,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                 placeholder="Search learning materials"
                 value={learningSearchQuery}
                 onChange={(e) => handleSearchLearningMaterials(e.target.value)}
-                style={{ padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc" }}
+                style={{ padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
               />
             </div>
             {filteredLearningMaterials.length > 0 ? (
@@ -978,6 +978,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       width: "100%",
       borderRadius: "5px",
       border: "1px solid #ccc",
+      boxSizing: "border-box",
     }}
   />
 </div>
