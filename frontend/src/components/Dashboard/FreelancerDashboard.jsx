@@ -2,6 +2,24 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { handleGlobalLogout } from "../../utils/logout";
 
+const styles = {
+  container: { backgroundColor: "#593D3D", color: "#FFFFFF", minHeight: "100vh", padding: "20px", fontFamily: "Arial, sans-serif" },
+  header: { textAlign: "center", marginBottom: "20px" },
+  dropdownButton: { backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", padding: "10px 20px", borderRadius: "5px", cursor: "pointer", fontSize: "18px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", transition: "background-color 0.3s ease" },
+  dropdownMenu: { position: "absolute", top: "100%", right: "0", backgroundColor: "#444444", color: "#FFFFFF", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", padding: "15px", minWidth: "250px" },
+  dropdownItem: { backgroundColor: "transparent", border: "none", color: "#FFD700", textDecoration: "underline", cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: 0, display: "block", textAlign: "left", width: "100%" },
+  notificationButton: { backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", padding: "10px 20px", borderRadius: "5px", cursor: "pointer", fontSize: "18px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", transition: "background-color 0.3s ease" },
+  notificationDropdown: { position: "absolute", top: "50px", right: "0", backgroundColor: "#FFFFFF", border: "1px solid #ddd", borderRadius: "5px", padding: "10px", width: "300px", zIndex: 1000 },
+  learningMaterialsContainer: { marginBottom: "20px", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" },
+  learningMaterialsButton: { display: "block", margin: "0 auto", padding: "10px 20px", backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer", fontSize: "16px", fontWeight: "bold", transition: "background-color 0.3s" },
+  inputField: { padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" },
+  projectContainer: { marginTop: "40px", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" },
+  projectItem: { marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)" },
+  bidButton: { padding: "10px 20px", backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer" },
+  rejectButton: { padding: "10px 20px", backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer" },
+  acceptButton: { padding: "10px 20px", backgroundColor: "#28A745", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer" },
+};
+
 const FreelancerDashboard = () => {
   const [showBidModal, setShowBidModal] = useState(false); 
   const [selectedProject, setSelectedProject] = useState(null); 
@@ -583,18 +601,10 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "#593D3D",
-        color: "#FFFFFF",
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <div style={styles.container}>
       {/* Display the user's name */}
       
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Welcome, {userName}</h1>
+      <h1 style={styles.header}>Welcome, {userName}</h1>
       {loadingProfile ? (
         <p style={{ textAlign: "center", fontSize: "18px", color: "#FFD700" }}>
           Checking profile existence...
@@ -607,28 +617,12 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
 
       {/* My Account Dropdown */}
       <div
-        style={{
-          position: "absolute",
-          top: "20px",
-          right: "20px",
+        style={{position: "absolute", top: "20px", right: "20px",
         }}
       >
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          style={{
-            backgroundColor: "#007BFF",
-            color: "#FFFFFF",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "18px",
-            fontWeight: "bold",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-            transition: "background-color 0.3s ease",
-          }}
+          style={styles.dropdownButton}
           onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
         >
@@ -636,19 +630,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
         </button>
 
         {dropdownOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              right: "0",
-              backgroundColor: "#444444",
-              color: "#FFFFFF",
-              borderRadius: "10px",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-              padding: "15px",
-              minWidth: "250px",
-            }}
-          >
+          <div style={styles.dropdownMenu}>
             <ul style={{ listStyleType: "none", margin: 0, padding: 0 }}>
               <li style={{ marginBottom: "10px" }}>
                 <span style={{ color: "#FFD700", fontWeight: "bold" }}>Earnings:</span> $
@@ -665,19 +647,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
               <li style={{ marginTop: "20px", borderTop: "1px solid #FFD700", paddingTop: "10px" }}>
                 <button
                   onClick={() => navigate("/freelancer-dashboard/profile", { state: { token } })}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    color: "#FFD700",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    padding: 0,
-                    display: "block",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
+                  style={styles.dropdownItem}
                 >
                   Profile Settings
                 </button>
@@ -688,19 +658,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                     setShowHireOffers(!showHireOffers);
                     if (!showHireOffers) fetchHireOffers();
                   }}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    color: "#FFD700",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    padding: 0,
-                    display: "block",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
+                  style={styles.dropdownItem}
                 >
                   Hire Offers
                 </button>
@@ -711,19 +669,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                     setShowSelectedBids(!showSelectedBids);
                     if (!showSelectedBids) fetchSelectedBids(); // Fetch selected bids when toggling
                   }}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    color: "#FFD700",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    padding: 0,
-                    display: "block",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
+                  style={styles.dropdownItem}
                 >
                   Bids Selected
                 </button>
@@ -734,19 +680,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                     setShowActivityHistory(!showActivityHistory);
                     if (!showActivityHistory) fetchActivityLogs(); // Fetch activity logs when toggling
                   }}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    color: "#FFD700",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    padding: 0,
-                    display: "block",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
+                  style={styles.dropdownItem}
                 >
                   Activity History
                 </button>
@@ -754,18 +688,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
               <li style={{ marginTop: "10px" }}>
                 <button
                   onClick={handleLogout}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    color: "#FF0000",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    padding: 0,
-                    display: "block",
-                    textAlign: "left",
-                    width: "100%",
+                  style={{backgroundColor: "transparent", border: "none", color: "#FF0000", textDecoration: "underline", cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: 0, display: "block", textAlign: "left", width: "100%",
                   }}
                 >
                   Logout
@@ -779,31 +702,13 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
 
       {/* Notifications Section */}
       <div
-        style={{
-          position: "absolute",
-          top: "20px",
-          right: "200px", // Adjusted to place it beside "My Account"
-          display: "flex",
-          gap: "10px",
+        style={{position: "absolute", top: "20px", right: "200px", display: "flex", gap: "10px",
         }}
       >
         {/* Notification Button */}
         <button
           onClick={() => setShowNotifications(!showNotifications)}
-          style={{
-            backgroundColor: "#007BFF",
-            color: "#FFFFFF",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "18px",
-            fontWeight: "bold",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-            transition: "background-color 0.3s ease",
-          }}
+          style={styles.notificationButton}
           onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
         >
@@ -812,44 +717,19 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
 
         {/* Notifications Dropdown */}
         {showNotifications && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50px",
-              right: "0",
-              backgroundColor: "#FFFFFF",
-              border: "1px solid #ddd",
-              borderRadius: "5px",
-              padding: "10px",
-              width: "300px",
-              zIndex: 1000,
-            }}
-          >
+          <div style={styles.notificationDropdown}>
             {notifications.length > 0 ? (
               notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  style={{
-                    padding: "10px",
-                    borderBottom: "1px solid #ddd",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    color: "#000000",
+                  style={{padding: "10px", borderBottom: "1px solid #ddd", display: "flex", justifyContent: "space-between", alignItems: "center", color: "#000000",
                   }}
                 >
                   <p style={{ margin: 0 }}>{notification.message}</p>
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       onClick={() => handleDeleteNotification(notification._id)}
-                      style={{
-                        backgroundColor: "#DC3545",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        padding: "5px 10px",
-                        fontSize: "12px",
+                      style={{backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer", padding: "5px 10px", fontSize: "12px",
                       }}
                     >
                       Delete
@@ -872,31 +752,11 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       {/* Bid Modal */}
 
       {/* Learning Materials Section */}
-      <div
-        style={{
-          marginBottom: "20px",
-          padding: "20px",
-          backgroundColor: "#444444",
-          borderRadius: "10px",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-        }}
-      >
+      <div style={styles.learningMaterialsContainer}>
         <h2 style={{ textAlign: "center", marginBottom: "10px" }}>Want to Learn Something New?</h2>
         <button
           onClick={() => setShowLearningMaterials(!showLearningMaterials)}
-          style={{
-            display: "block",
-            margin: "0 auto",
-            padding: "10px 20px",
-            backgroundColor: "#007BFF",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "bold",
-            transition: "background-color 0.3s",
-          }}
+          style={styles.learningMaterialsButton}
           onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
         >
@@ -912,12 +772,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
         </button>
         {showLearningMaterials && (
           <ul
-            style={{
-              marginTop: "20px",
-              listStyleType: "none",
-              padding: 0,
-              fontSize: "16px",
-              color: "#FFFFFF",
+            style={{marginTop: "20px", listStyleType: "none", padding: 0, fontSize: "16px", color: "#FFFFFF",
             }}
           >
             <div style={{ marginBottom: "20px" }}>
@@ -926,19 +781,14 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                 placeholder="Search learning materials"
                 value={learningSearchQuery}
                 onChange={(e) => handleSearchLearningMaterials(e.target.value)}
-                style={{ padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc", boxSizing: "border-box" }}
+                style={styles.inputField}
               />
             </div>
             {filteredLearningMaterials.length > 0 ? (
     filteredLearningMaterials.map((material) => (
       <li
         key={material.id}
-        style={{
-          marginBottom: "20px",
-          padding: "15px",
-          backgroundColor: "#333333",
-          borderRadius: "10px",
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+        style={{marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
         }}
       >
         <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>{material.title}</h3>
@@ -960,12 +810,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
         )}
       </div>
   <div
-  style={{
-    marginBottom: "20px",
-    padding: "20px",
-    backgroundColor: "#444444",
-    borderRadius: "10px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  style={{marginBottom: "20px", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   }}
 >
   <input
@@ -973,26 +818,11 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
     placeholder="Search projects using title, budget, deadline, or freelancer email"
     value={projectSearchQuery}
     onChange={(e) => handleSearchProjects(e.target.value)}
-    style={{
-      padding: "10px",
-      width: "100%",
-      borderRadius: "5px",
-      border: "1px solid #ccc",
-      boxSizing: "border-box",
-    }}
+    style={styles.inputField}
   />
 </div>
       {/* Projects Section */}
-      <div
-        style={{
-          marginTop: "40px",
-          padding: "20px",
-          backgroundColor: "#444444",
-          borderRadius: "10px",
-          color: "#FFFFFF",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-        }}
-      >
+      <div style={styles.projectContainer}>
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Available Projects</h2>
 
         {loading ? (
@@ -1009,13 +839,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
   return (
     <li
       key={project._id}
-      style={{
-        marginBottom: "20px",
-        padding: "15px",
-        backgroundColor: "#333333",
-        borderRadius: "10px",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-      }}
+      style={styles.projectItem}
     >
       <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>Title: {project.title}</h3>
       <p style={{ marginBottom: "10px" }}>Description: {project.description}</p>
@@ -1031,15 +855,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
         project.acceptedFreelancer === userId ? ( // Check if the logged-in freelancer is the accepted one
           <>
             <span
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#28A745", // Green background
-                color: "#FFFFFF", // White text
-                borderRadius: "5px",
-                fontWeight: "bold",
-                display: "inline-block",
-                textAlign: "center",
-                marginRight: "10px",
+              style={{padding: "10px 20px", backgroundColor: "#28A745", color: "#FFFFFF", borderRadius: "5px", fontWeight: "bold", display: "inline-block", textAlign: "center", marginRight: "10px",
               }}
             >
               Accepted
@@ -1048,14 +864,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
               Current Completion: {project.completedpercentage || 0}%
             </p>
             <button
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#007BFF",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
+              style={styles.bidButton}
               onClick={() => {
                 const percentage = prompt(
                   `Enter the project completion percentage (0-100):`,
@@ -1073,15 +882,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       ) : myBid ? (
         <>
           <button
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#007BFF",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              marginRight: "10px",
-            }}
+            style={styles.bidButton}
             onClick={() => {
               setSelectedProject(project);
               setBidAmount(myBid.amount); // Pre-fill the bid amount
@@ -1091,14 +892,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
             Update Bid
           </button>
           <button
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#DC3545",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
+            style={styles.rejectButton}
             onClick={async () => {
               try {
                 const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
@@ -1129,14 +923,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
         </>
       ) : (
         <button
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#007BFF",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
+          style={styles.bidButton}
           onClick={() => {
             setSelectedProject(project);
             setShowBidModal(true);
@@ -1155,17 +942,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       {showBidModal && (
         <div
           style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            textAlign: "center",
-            width: "400px", 
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, textAlign: "center", width: "400px", 
           }}
         >
           {/* Display the project name */}
@@ -1179,11 +956,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
                 placeholder="Enter your bid amount"
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  borderRadius: "5px",
-                  border: "1px solid #ccc",
+                style={{padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ccc",
                 }}
                 required
               />
@@ -1191,29 +964,14 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
             <div>
               <button
                 type="submit"
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#007BFF",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  marginRight: "10px",
-                }}
+                style={styles.bidButton}
               >
                 Submit Bid
               </button>
               <button
                 type="button"
                 onClick={() => setShowBidModal(false)}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#FF0000",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
+                style={styles.rejectButton}
               >
                 Cancel
               </button>
@@ -1226,33 +984,13 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       {showHireOffers && (
         <div
           style={{
-            position: "absolute",
-            top: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "20px",
-            backgroundColor: "#444444",
-            borderRadius: "10px",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "80%",
+            position: "absolute", top: "100px", left: "50%", transform: "translateX(-50%)", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "80%",
           }}
         >
           {/* Close Button */}
           <button
             onClick={() => setShowHireOffers(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#FF0000",
-              borderRadius: "50%",
-              border: "none",
-              color: "#FFFFFF",
-              fontSize: "20px",
-              fontWeight: "bold",
-              cursor: "pointer",
+            style={{position: "absolute", top: "10px", right: "10px", backgroundColor: "#FF0000", borderRadius: "50%", border: "none", color: "#FFFFFF", fontSize: "20px", fontWeight: "bold", cursor: "pointer",
             }}
           >
             ✖
@@ -1269,12 +1007,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
               return (
                 <div
                   key={offer._id}
-                  style={{
-                    marginBottom: "20px",
-                    padding: "15px",
-                    backgroundColor: "#333333",
-                    borderRadius: "10px",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  style={{marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                   }}
                 >
                   <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
@@ -1299,27 +1032,13 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       onClick={() => handleAcceptOffer(offer._id)}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#28A745",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
+                      style={styles.acceptButton}
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleRejectOffer(offer._id)}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#DC3545",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
+                      style={styles.rejectButton}
                     >
                       Reject
                     </button>
@@ -1339,32 +1058,12 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       {showSelectedBids && (
         <div
           style={{
-            position: "absolute",
-            top: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "20px",
-            backgroundColor: "#444444",
-            borderRadius: "10px",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "80%",
+            position: "absolute", top: "100px", left: "50%", transform: "translateX(-50%)", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "80%",
           }}
         >
           <button
             onClick={() => setShowSelectedBids(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#FF0000",
-              borderRadius: "50%",
-              border: "none",
-              color: "#FFFFFF",
-              fontSize: "20px",
-              fontWeight: "bold",
-              cursor: "pointer",
+            style={{position: "absolute", top: "10px", right: "10px", backgroundColor: "#FF0000", borderRadius: "50%", border: "none", color: "#FFFFFF", fontSize: "20px", fontWeight: "bold", cursor: "pointer",
             }}
           >
             ✖
@@ -1375,12 +1074,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
             selectedBids.map((bid) => (
               <div
                 key={bid.bidId}
-                style={{
-                  marginBottom: "20px",
-                  padding: "15px",
-                  backgroundColor: "#333333",
-                  borderRadius: "10px",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                style={{marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                 }}
               >
                 <h3 style={{ marginBottom: "10px", color: "#FFD700" }}>
@@ -1407,12 +1101,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                 <div style={{ display: "flex", gap: "10px" }}>
                   {bid.status === "accepted" ? (
                     <span
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#28A745",
-                        color: "#FFFFFF",
-                        borderRadius: "5px",
-                        fontWeight: "bold",
+                      style={{padding: "10px 20px", backgroundColor: "#28A745", color: "#FFFFFF", borderRadius: "5px", fontWeight: "bold",
                       }}
                     >
                       Accepted
@@ -1421,27 +1110,13 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
                     <>
                       <button
                         onClick={() => handleAcceptBid(bid.bidId)}
-                        style={{
-                          padding: "10px 20px",
-                          backgroundColor: "#007BFF",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
+                        style={styles.bidButton}
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleRejectBid(bid.bidId)}
-                        style={{
-                          padding: "10px 20px",
-                          backgroundColor: "#DC3545",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
+                        style={styles.rejectButton}
                       >
                         Reject
                       </button>
@@ -1460,32 +1135,12 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       {showActivityHistory && (
   <div
     style={{
-      position: "absolute",
-      top: "100px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      padding: "20px",
-      backgroundColor: "#444444",
-      borderRadius: "10px",
-      color: "#FFFFFF",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-      zIndex: 1000,
-      width: "80%",
+      position: "absolute", top: "100px", left: "50%", transform: "translateX(-50%)", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "80%",
     }}
   >
     <button
       onClick={() => setShowActivityHistory(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        backgroundColor: "#FF0000",
-        borderRadius: "50%",
-        border: "none",
-        color: "#FFFFFF",
-        fontSize: "20px",
-        fontWeight: "bold",
-        cursor: "pointer",
+      style={{position: "absolute", top: "10px", right: "10px", backgroundColor: "#FF0000", borderRadius: "50%", border: "none", color: "#FFFFFF", fontSize: "20px", fontWeight: "bold", cursor: "pointer",
       }}
     >
       ✖
@@ -1496,11 +1151,7 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
       activityLogs.map((log, index) => (
         <div
           key={index}
-          style={{
-            marginBottom: "10px",
-            padding: "10px",
-            backgroundColor: "#333333",
-            borderRadius: "5px",
+          style={{marginBottom: "10px", padding: "10px", backgroundColor: "#333333", borderRadius: "5px",
           }}
         >
           <p>{log.action}</p>
@@ -1521,29 +1172,13 @@ const [filteredLearningMaterials, setFilteredLearningMaterials] = useState(learn
 const Popup = ({ message, onClose }) => {
   return (
     <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "#FFFFFF",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-        zIndex: 1000,
-        textAlign: "center",
+      style={{position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, textAlign: "center",
       }}
     >
       <p style={{ marginBottom: "20px", color: "#333333" }}>{message}</p>
       <button
         onClick={onClose}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#007BFF",
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
+        style={{padding: "10px 20px", backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer",
         }}
       >
         OK
