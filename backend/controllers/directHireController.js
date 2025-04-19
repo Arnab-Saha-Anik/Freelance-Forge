@@ -19,7 +19,9 @@ router.post("/", verifyToken, async (req, res) => {
     if (!project) {
       return res.status(404).json({ error: "Project not found." });
     }
-
+    if (project.escrowStatus !== "funded") {
+      return res.status(400).json({ error: "Escrow must be funded before creating a direct hire." });
+    }
     // Check project status
     if (project.status === "accepted") {
       return res.status(400).json({
