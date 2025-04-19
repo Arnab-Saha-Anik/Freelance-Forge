@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 const ClientDashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -17,14 +20,14 @@ const ClientDashboard = () => {
     name: "",
   });
   const [originalAccountInfo, setOriginalAccountInfo] = useState({});
-  const [username, setUsername] = useState("Loading..."); 
+  const [username, setUsername] = useState("Loading...");
   const [showProjects, setShowProjects] = useState(false);
   const [showPostProject, setShowPostProject] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingFreelancers, setLoadingFreelancers] = useState(false);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
-  const [popupMessage, setPopupMessage] = useState(""); 
-  const [popupType, setPopupType] = useState(""); 
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState("");
   const [deleteAccountInfo, setDeleteAccountInfo] = useState({
     email: "",
     currentPassword: "",
@@ -40,23 +43,24 @@ const ClientDashboard = () => {
   const [selectedFreelancerId, setSelectedFreelancerId] = useState(null);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [bids, setBids] = useState([]); // State to store bids
-  const [showBidsModal, setShowBidsModal] = useState(false); // State to control the modal
-  const [selectedProjectTitle, setSelectedProjectTitle] = useState(""); // State to store the project title
-  const [activityLogs, setActivityLogs] = useState([]); // State to store activity logs
-  const [showActivityHistory, setShowActivityHistory] = useState(false); // State to control the activity history modal
-  const [showCompletionModal, setShowCompletionModal] = useState(false); // State to control the modal visibility
-  const [completionPercentage, setCompletionPercentage] = useState(0); // State to store the completion percentage
-  const [searchQuery, setSearchQuery] = useState(""); // Search query
-  const [filteredProjects, setFilteredProjects] = useState([]); // Filtered projects
-  const [freelancerSearchQuery, setFreelancerSearchQuery] = useState(""); // Search query for freelancers
-  const [filteredFreelancers, setFilteredFreelancers] = useState([]); // Filtered freelancers
+  const [bids, setBids] = useState([]);
+  const [showBidsModal, setShowBidsModal] = useState(false);
+  const [selectedProjectTitle, setSelectedProjectTitle] = useState("");
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [showActivityHistory, setShowActivityHistory] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [freelancerSearchQuery, setFreelancerSearchQuery] = useState("");
+  const [filteredFreelancers, setFilteredFreelancers] = useState([]);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [amount, setAmount] = useState(0);
 
   const token = localStorage.getItem("clientToken");
-  const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null; 
+  const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
   const navigate = useNavigate();
- 
-  
+
   useEffect(() => {
     if (token) {
       const decodedToken = JSON.parse(atob(token.split(".")[1]));
@@ -64,7 +68,6 @@ const ClientDashboard = () => {
     }
   }, [token]);
 
-  
   const checkUserExists = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:5000/users/check/${loggedInClientId}`, {
@@ -74,18 +77,16 @@ const ClientDashboard = () => {
       });
 
       if (!response.ok) {
-        
-        localStorage.removeItem("token"); 
-        navigate("/login"); 
+        localStorage.removeItem("token");
+        navigate("/login");
       }
     } catch (err) {
       console.error("Error checking user existence:", err);
-      localStorage.removeItem("token"); 
-      navigate("/login"); 
+      localStorage.removeItem("token");
+      navigate("/login");
     }
   }, [loggedInClientId, token, navigate]);
 
-  
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -93,10 +94,9 @@ const ClientDashboard = () => {
     }
 
     const interval = setInterval(checkUserExists, 1000);
-    return () => clearInterval(interval); 
+    return () => clearInterval(interval);
   }, [checkUserExists, token, navigate]);
 
-  
   useEffect(() => {
     const fetchAccountInfo = async () => {
       try {
@@ -125,19 +125,18 @@ const ClientDashboard = () => {
     fetchAccountInfo();
   }, [token, navigate, loggedInClientId]);
 
-  
   const fetchProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
       const response = await fetch("http://localhost:5000/projects/client/projects", {
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setProjects(data); 
+        setProjects(data);
       } else {
         console.error("Failed to fetch projects");
       }
@@ -158,7 +157,7 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setProjects(data); // Store projects in state
+        setProjects(data);
       } else {
         console.error("Failed to fetch projects for direct hire.");
       }
@@ -172,7 +171,7 @@ const ClientDashboard = () => {
     try {
       const response = await fetch("http://localhost:5000/users/allfreelancers");
       const data = await response.json();
-      console.log("Freelancers fetched:", data); // Debugging
+      console.log("Freelancers fetched:", data);
       setFreelancers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching freelancers:", error);
@@ -198,7 +197,7 @@ const ClientDashboard = () => {
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  }, [token]); // Add 'token' as a dependency
+  }, [token]);
 
   const markNotificationsAsRead = async () => {
     try {
@@ -210,7 +209,7 @@ const ClientDashboard = () => {
       });
 
       if (response.ok) {
-        fetchNotifications(); // Refresh notifications
+        fetchNotifications();
       } else {
         console.error("Failed to mark notifications as read.");
       }
@@ -219,12 +218,10 @@ const ClientDashboard = () => {
     }
   };
 
-  
   useEffect(() => {
     fetchFreelancers();
   }, [fetchFreelancers]);
 
-  
   useEffect(() => {
     if (showProjects) {
       fetchProjects();
@@ -233,13 +230,12 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]); // Include 'fetchNotifications' in the dependency array
+  }, [fetchNotifications]);
 
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that the deadline is not in the past
-    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
     if (newProject.deadline < today) {
       alert("The deadline cannot be a date in the past. Please select a valid date.");
       return;
@@ -257,7 +253,7 @@ const ClientDashboard = () => {
           description: newProject.description,
           budget: newProject.budget,
           deadline: newProject.deadline,
-          client: loggedInClientId, 
+          client: loggedInClientId,
         }),
       });
 
@@ -288,7 +284,6 @@ const ClientDashboard = () => {
   const handleAccountUpdate = async (e) => {
     e.preventDefault();
 
-    
     if (
       accountInfo.name === originalAccountInfo.name &&
       !accountInfo.newPassword &&
@@ -299,14 +294,12 @@ const ClientDashboard = () => {
       return;
     }
 
-    
     if (!accountInfo.currentPassword) {
       setPopupMessage("Please provide your current password.");
       setPopupType("error");
       return;
     }
 
-    
     if (accountInfo.newPassword !== accountInfo.confirmNewPassword) {
       setPopupMessage("New password and confirm password do not match.");
       setPopupType("error");
@@ -318,7 +311,7 @@ const ClientDashboard = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: accountInfo.name,
@@ -340,7 +333,6 @@ const ClientDashboard = () => {
           confirmNewPassword: "",
         }));
 
-        
         const userResponse = await fetch(`http://localhost:5000/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -349,7 +341,7 @@ const ClientDashboard = () => {
 
         if (userResponse.ok) {
           const updatedUser = await userResponse.json();
-          setUsername(updatedUser.name); 
+          setUsername(updatedUser.name);
         }
       } else {
         const data = await response.json();
@@ -366,13 +358,11 @@ const ClientDashboard = () => {
   const handleDeleteAccount = async (e) => {
     e.preventDefault();
 
-    // Ensure email and password are provided
     if (!deleteAccountInfo.email || !deleteAccountInfo.currentPassword) {
       alert("Please provide your email and current password.");
       return;
     }
 
-    // Confirm deletion
     const confirmDelete = window.confirm(
       "Are you sure you want to delete your account? This action cannot be undone."
     );
@@ -386,7 +376,7 @@ const ClientDashboard = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: deleteAccountInfo.email,
@@ -396,9 +386,9 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         alert("Account deleted successfully. Taking you to the login page.");
-        localStorage.removeItem("token"); // Clear the token
-        setDeleteAccountInfo({ email: "", currentPassword: "" }); // Reset the delete account state
-        window.location.href = "/login"; // Redirect to login page
+        localStorage.removeItem("token");
+        setDeleteAccountInfo({ email: "", currentPassword: "" });
+        window.location.href = "/login";
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete account.");
@@ -428,7 +418,7 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         alert("Project deleted successfully.");
-        fetchProjects(); // Refresh the project list
+        fetchProjects();
       } else {
         const data = await response.json();
         alert(data.error || "Failed to delete the project.");
@@ -449,7 +439,7 @@ const ClientDashboard = () => {
       });
 
       if (response.ok) {
-        setNotifications(notifications.filter((n) => n._id !== notificationId)); // Remove the deleted notification from state
+        setNotifications(notifications.filter((n) => n._id !== notificationId));
       } else {
         console.error("Failed to delete notification.");
       }
@@ -466,20 +456,19 @@ const ClientDashboard = () => {
       !accountInfo.confirmNewPassword) ||
     accountInfo.newPassword !== accountInfo.confirmNewPassword;
 
-  
   const closePopup = () => {
     setPopupMessage("");
     setPopupType("");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Clear the token
-    setDeleteAccountInfo({ email: "", currentPassword: "" }); // Reset the delete account state
-    window.location.href = "/login"; // Redirect to login page
+    localStorage.removeItem("token");
+    setDeleteAccountInfo({ email: "", currentPassword: "" });
+    window.location.href = "/login";
   };
 
   const handleDirectHireClick = async (freelancerId) => {
-    await fetchProjectsForDirectHire(); // Fetch projects for direct hire
+    await fetchProjectsForDirectHire();
     setSelectedFreelancerId(freelancerId);
     setShowDirectHireModal(true);
   };
@@ -497,11 +486,11 @@ const ClientDashboard = () => {
           projectId,
         }),
       });
-  
+
       if (response.ok) {
         alert("Freelancer has been offered to hire successfully!");
         setShowDirectHireModal(false);
-        setSelectedProjectId(null); // Reset selected project
+        setSelectedProjectId(null);
       } else {
         const data = await response.json();
         alert(data.error || "Failed to hire freelancer.");
@@ -516,15 +505,15 @@ const ClientDashboard = () => {
     try {
       const response = await fetch(`http://localhost:5000/bids/${projectId}`, {
         headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-        setBids(data); // Store the fetched bids in state
-        setSelectedProjectTitle(projectTitle); // Set the project title
-        setShowBidsModal(true); // Show the modal
+        setBids(data);
+        setSelectedProjectTitle(projectTitle);
+        setShowBidsModal(true);
       } else {
         console.error("Failed to fetch bids for the project.");
       }
@@ -534,15 +523,14 @@ const ClientDashboard = () => {
   };
 
   const handleSelectBid = async (bidId) => {
-    // Show a confirmation alert
     const confirmSelect = window.confirm(
       "Once you select, you cannot cancel it. Are you sure you want to proceed?"
     );
-  
+
     if (!confirmSelect) {
-      return; // Exit the function if the user cancels
+      return;
     }
-  
+
     try {
       const response = await fetch(`http://localhost:5000/bids/select/${bidId}`, {
         method: "PUT",
@@ -550,11 +538,11 @@ const ClientDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         alert("Bid selected successfully!");
-        setShowBidsModal(false); // Close the modal after selecting a bid
-        fetchProjects(); // Refresh the projects list
+        setShowBidsModal(false);
+        fetchProjects();
       } else {
         console.error("Failed to select bid.");
       }
@@ -562,7 +550,7 @@ const ClientDashboard = () => {
       console.error("Error selecting bid:", error);
     }
   };
-  
+
   const closeBidsModal = () => {
     setShowBidsModal(false);
     setBids([]);
@@ -576,10 +564,10 @@ const ClientDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-        setActivityLogs(data); // Store the fetched activity logs in state
+        setActivityLogs(data);
       } else {
         console.error("Failed to fetch activity logs.");
       }
@@ -589,92 +577,108 @@ const ClientDashboard = () => {
   };
 
   const handleViewCompletion = (percentage, title) => {
-    setCompletionPercentage(percentage || 0); // Set the completion percentage
-    setSelectedProjectTitle(title); // Set the project title
-    setShowCompletionModal(true); // Show the modal
+    setCompletionPercentage(percentage || 0);
+    setSelectedProjectTitle(title);
+    setShowCompletionModal(true);
   };
 
-  const handleSearch = useCallback((query) => {
-    setSearchQuery(query);
-  
-    // Filter projects based on the search query
-    const filtered = projects.filter((project) => {
-      const queryLower = query.toLowerCase();
-      return (
-        project.title.toLowerCase().includes(queryLower) ||
-        project.description.toLowerCase().includes(queryLower) ||
-        project.budget.toString().includes(queryLower) ||
-        new Date(project.deadline).toLocaleDateString().includes(queryLower)
-      );
-    });
-  
-    setFilteredProjects(filtered);
-  }, [projects]); // Dependency array for useCallback
+  const handleSearch = useCallback(
+    (query) => {
+      setSearchQuery(query);
 
-  // Fetch projects when "Show My Projects" is toggled
+      const filtered = projects.filter((project) => {
+        const queryLower = query.toLowerCase();
+        return (
+          project.title.toLowerCase().includes(queryLower) ||
+          project.description.toLowerCase().includes(queryLower) ||
+          project.budget.toString().includes(queryLower) ||
+          new Date(project.deadline).toLocaleDateString().includes(queryLower)
+        );
+      });
+
+      setFilteredProjects(filtered);
+    },
+    [projects]
+  );
+
   useEffect(() => {
     if (showProjects) {
       fetchProjects();
     }
   }, [showProjects, fetchProjects]);
 
-  // Update filtered projects when the projects list changes
   useEffect(() => {
-    handleSearch(searchQuery); // Reapply the search filter
+    handleSearch(searchQuery);
   }, [projects, handleSearch, searchQuery]);
 
   useEffect(() => {
-    document.title = "Freelance Forge - Client Dashboard"; 
+    document.title = "Freelance Forge - Client Dashboard";
   }, []);
 
-  // Function to handle freelancer search input changes
-  const handleFreelancerSearch = useCallback((query) => {
-    setFreelancerSearchQuery(query);
-  
-    // Filter freelancers based on the search query
-    const filtered = freelancers.filter((freelancer) => {
-      const queryLower = query.toLowerCase();
-      return (
-        (freelancer.name && freelancer.name.toLowerCase().includes(queryLower)) ||
-        (freelancer.email && freelancer.email.toLowerCase().includes(queryLower)) ||
-        (freelancer.profile?.[0]?.skills &&
-          freelancer.profile[0].skills.join(", ").toLowerCase().includes(queryLower)) ||
-        (freelancer.profile?.[0]?.portfolio &&
-          freelancer.profile[0].portfolio.toLowerCase().includes(queryLower)) ||
-        (freelancer.profile?.[0]?.experience &&
-          freelancer.profile[0].experience.toLowerCase().includes(queryLower))
-      );
-    });
-  
-    setFilteredFreelancers(filtered);
-  }, [freelancers]); // Dependency array for useCallback
+  const handleFreelancerSearch = useCallback(
+    (query) => {
+      setFreelancerSearchQuery(query);
 
-  // Update filtered freelancers when the freelancers list changes
+      const filtered = freelancers.filter((freelancer) => {
+        const queryLower = query.toLowerCase();
+        return (
+          (freelancer.name && freelancer.name.toLowerCase().includes(queryLower)) ||
+          (freelancer.email && freelancer.email.toLowerCase().includes(queryLower)) ||
+          (freelancer.profile?.[0]?.skills &&
+            freelancer.profile[0].skills.join(", ").toLowerCase().includes(queryLower)) ||
+          (freelancer.profile?.[0]?.portfolio &&
+            freelancer.profile[0].portfolio.toLowerCase().includes(queryLower)) ||
+          (freelancer.profile?.[0]?.experience &&
+            freelancer.profile[0].experience.toLowerCase().includes(queryLower))
+        );
+      });
+
+      setFilteredFreelancers(filtered);
+    },
+    [freelancers]
+  );
+
   useEffect(() => {
-    handleFreelancerSearch(freelancerSearchQuery); // Reapply the search filter
-  }, [freelancers, freelancerSearchQuery, handleFreelancerSearch]); // Include all dependencies
+    handleFreelancerSearch(freelancerSearchQuery);
+  }, [freelancers, freelancerSearchQuery, handleFreelancerSearch]);
 
-  const handleFundEscrow = async (projectId) => {
+  const handleFundEscrow = (projectId, projectAmount) => {
+    setSelectedProjectId(projectId);
+    setAmount(projectAmount);
+    setShowPaymentForm(true);
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5000/projects/escrow/fund/${projectId}`, {
-        method: "PUT",
+      const stripe = await stripePromise;
+
+      // Call backend to create a payment intent
+      const response = await fetch(`http://localhost:5000/payments/create-payment-intent`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
         },
-        body: JSON.stringify({ amount: 1000 }), // Replace 1000 with the actual amount
+        body: JSON.stringify({ projectId: selectedProjectId, amount }),
       });
 
+      const data = await response.json();
+      console.log("Backend response:", data);
+
       if (response.ok) {
-        alert("Escrow funded successfully!");
-        window.location.reload(); // Reload the page to reflect changes
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        console.log("Stripe redirect result:", result);
+
+        if (result.error) {
+          alert(result.error.message);
+        }
       } else {
-        const data = await response.json();
-        alert(data.error || "Failed to fund escrow.");
+        alert(data.error || "Failed to initiate payment.");
       }
     } catch (error) {
-      console.error("Error funding escrow:", error);
-      alert("An error occurred while funding escrow.");
+      console.error("Error processing payment:", error);
     }
   };
 
@@ -684,13 +688,12 @@ const ClientDashboard = () => {
         padding: "20px",
         textAlign: "center",
         backgroundColor: "#723456",
-        color: "#FFFFFF", 
-        minHeight: "100vh", 
+        color: "#FFFFFF",
+        minHeight: "100vh",
       }}
     >
       <h1>Welcome, {username}</h1>
 
-      {/* Popup Message */}
       {popupMessage && (
         <div
           style={{
@@ -720,15 +723,14 @@ const ClientDashboard = () => {
           </button>
         </div>
       )}
-      {/* My Account and Notifications Dropdown in Top-Right Corner */}
+
       <div style={{ position: "absolute", top: "20px", right: "40px", display: "flex", gap: "20px" }}>
-        {/* Notifications Button */}
         <div>
           <button
             onClick={() => {
               setShowNotifications(!showNotifications);
               if (!showNotifications) {
-                markNotificationsAsRead(); // Mark notifications as read when opened
+                markNotificationsAsRead();
               }
             }}
             style={{
@@ -749,7 +751,7 @@ const ClientDashboard = () => {
                 position: "absolute",
                 top: "50px",
                 right: "0",
-                backgroundColor: "#FFFFFF", // White background
+                backgroundColor: "#FFFFFF",
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 padding: "10px",
@@ -772,7 +774,7 @@ const ClientDashboard = () => {
                     <p
                       style={{
                         margin: 0,
-                        color: "#000000", // Change text color to black
+                        color: "#000000",
                       }}
                     >
                       {notification.message}
@@ -780,7 +782,7 @@ const ClientDashboard = () => {
                     <button
                       onClick={() => handleDeleteNotification(notification._id)}
                       style={{
-                        backgroundColor: "#DC3545", // Red
+                        backgroundColor: "#DC3545",
                         color: "#FFFFFF",
                         border: "none",
                         borderRadius: "5px",
@@ -794,7 +796,7 @@ const ClientDashboard = () => {
                   </div>
                 ))
               ) : (
-                <p style={{ textAlign: "center", color: "#555555" /* Dark gray for no notifications */ }}>
+                <p style={{ textAlign: "center", color: "#555555" }}>
                   You do not have any notifications.
                 </p>
               )}
@@ -802,13 +804,12 @@ const ClientDashboard = () => {
           )}
         </div>
 
-        {/* My Account Button */}
         <div>
           <button
             onClick={() => setShowAccountDropdown(!showAccountDropdown)}
             style={{
               padding: "10px",
-              backgroundColor: "#28A745", // Green
+              backgroundColor: "#28A745",
               color: "#FFFFFF",
               border: "none",
               borderRadius: "5px",
@@ -837,7 +838,7 @@ const ClientDashboard = () => {
                   name="name"
                   placeholder="Name"
                   value={accountInfo.name}
-                  onChange={handleAccountInfoChange} 
+                  onChange={handleAccountInfoChange}
                   style={{
                     padding: "10px",
                     marginBottom: "10px",
@@ -850,7 +851,7 @@ const ClientDashboard = () => {
                   name="currentPassword"
                   placeholder="Current Password"
                   value={accountInfo.currentPassword}
-                  onChange={handleAccountInfoChange} 
+                  onChange={handleAccountInfoChange}
                   style={{
                     padding: "10px",
                     marginBottom: "10px",
@@ -863,7 +864,7 @@ const ClientDashboard = () => {
                   name="newPassword"
                   placeholder="New Password"
                   value={accountInfo.newPassword}
-                  onChange={handleAccountInfoChange} 
+                  onChange={handleAccountInfoChange}
                   style={{
                     padding: "10px",
                     marginBottom: "10px",
@@ -947,21 +948,20 @@ const ClientDashboard = () => {
                 </button>
               </form>
 
-              {/* Activity History Button */}
               <div style={{ marginTop: "20px", textAlign: "center" }}>
                 <button
                   onClick={() => {
                     setShowActivityHistory(!showActivityHistory);
-                    if (!showActivityHistory) fetchActivityLogs(); // Fetch activity logs when toggling
+                    if (!showActivityHistory) fetchActivityLogs();
                   }}
                   style={{
                     padding: "10px",
-                    backgroundColor: "#FFC107", // Yellow
-                    color: "#000000", // Black text
+                    backgroundColor: "#FFC107",
+                    color: "#000000",
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",
-                    width: "100%", // Match the width of other buttons
+                    width: "100%",
                     fontWeight: "bold",
                   }}
                 >
@@ -969,17 +969,16 @@ const ClientDashboard = () => {
                 </button>
               </div>
 
-              {/* Logout Button */}
               <div style={{ marginTop: "20px", textAlign: "center" }}>
                 <button
                   onClick={handleLogout}
                   style={{
                     padding: "10px",
-                    backgroundColor: "#007BFF", // Blue
+                    backgroundColor: "#007BFF",
                     color: "white",
                     border: "none",
                     cursor: "pointer",
-                    width: "100%", // Match the width of other buttons
+                    width: "100%",
                   }}
                 >
                   Logout
@@ -989,15 +988,14 @@ const ClientDashboard = () => {
           )}
         </div>
       </div>
-      
-      {/* Dropdown to Post a Project */}
+
       <div>
         <button
           onClick={() => setShowPostProject(!showPostProject)}
           style={{
             padding: "10px",
             marginBottom: "20px",
-            backgroundColor: "#28A745", // Green
+            backgroundColor: "#28A745",
             color: "#FFFFFF",
             border: "none",
             borderRadius: "5px",
@@ -1059,15 +1057,14 @@ const ClientDashboard = () => {
         )}
       </div>
 
-      {/* Button to See My Projects */}
       <div>
         <button
           onClick={() => setShowProjects(!showProjects)}
           style={{
             padding: "10px",
             marginBottom: "20px",
-            backgroundColor: "#FFC107", 
-            color: "#000000", 
+            backgroundColor: "#FFC107",
+            color: "#000000",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
@@ -1078,7 +1075,6 @@ const ClientDashboard = () => {
         </button>
         {showProjects && (
           <div>
-            {/* Search Bar */}
             <div style={{ marginBottom: "20px" }}>
               <input
                 type="text"
@@ -1107,7 +1103,7 @@ const ClientDashboard = () => {
                     margin: "10px",
                     backgroundColor: "#FFFFFF",
                     color: "#000000",
-                    position: "relative", // Add relative positioning for the button
+                    position: "relative",
                   }}
                 >
                   <h3>{project.title}</h3>
@@ -1118,12 +1114,11 @@ const ClientDashboard = () => {
 
 
                   {project.status === "accepted" ? (
-                    // Show the "View Project Completion Percentage" button for accepted projects
                     <button
                       onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
                       style={{
                         padding: "10px",
-                        backgroundColor: "#007BFF", // Blue
+                        backgroundColor: "#007BFF",
                         color: "#FFFFFF",
                         border: "none",
                         borderRadius: "5px",
@@ -1138,8 +1133,7 @@ const ClientDashboard = () => {
                       onSubmit={async (e) => {
                         e.preventDefault();
 
-                        // Validate that the deadline is not in the past
-                        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+                        const today = new Date().toISOString().split("T")[0];
                         if (editProject.deadline < today) {
                           alert("The deadline cannot be a date in the past. Please select a valid date.");
                           return;
@@ -1164,7 +1158,7 @@ const ClientDashboard = () => {
                           if (response.ok) {
                             alert("Project updated successfully!");
                             setEditProject({ id: null, budget: "", deadline: "" });
-                            fetchProjects(); // Refresh the projects list
+                            fetchProjects();
                           } else {
                             const data = await response.json();
                             alert(data.error || "Failed to update project.");
@@ -1199,7 +1193,7 @@ const ClientDashboard = () => {
                         type="submit"
                         style={{
                           padding: "5px 10px",
-                          backgroundColor: "#28A745", // Green
+                          backgroundColor: "#28A745",
                           color: "#FFFFFF",
                           border: "none",
                           borderRadius: "5px",
@@ -1214,7 +1208,7 @@ const ClientDashboard = () => {
                         onClick={() => setEditProject({ id: null, budget: "", deadline: "" })}
                         style={{
                           padding: "5px 10px",
-                          backgroundColor: "#DC3545", // Red
+                          backgroundColor: "#DC3545",
                           color: "#FFFFFF",
                           border: "none",
                           borderRadius: "5px",
@@ -1233,12 +1227,12 @@ const ClientDashboard = () => {
                           setEditProject({
                             id: project._id,
                             budget: project.budget,
-                            deadline: project.deadline.split("T")[0], // Format date for input
+                            deadline: project.deadline.split("T")[0],
                           })
                         }
                         style={{
                           padding: "5px 10px",
-                          backgroundColor: "#FFC107", // Yellow
+                          backgroundColor: "#FFC107",
                           color: "#000000",
                           border: "none",
                           borderRadius: "5px",
@@ -1253,7 +1247,7 @@ const ClientDashboard = () => {
                         onClick={() => handleDeleteProject(project._id)}
                         style={{
                           padding: "5px 10px",
-                          backgroundColor: "#DC3545", // Red
+                          backgroundColor: "#DC3545",
                           color: "#FFFFFF",
                           border: "none",
                           borderRadius: "5px",
@@ -1266,8 +1260,8 @@ const ClientDashboard = () => {
                       <button
                         onClick={() => fetchBidsForProject(project._id, project.title)}
                         style={{
-                          padding: "5px 10px", // Reduced height
-                          backgroundColor: "#007BFF", // Blue
+                          padding: "5px 10px",
+                          backgroundColor: "#007BFF",
                           color: "#FFFFFF",
                           border: "none",
                           borderRadius: "5px",
@@ -1279,20 +1273,19 @@ const ClientDashboard = () => {
                       >
                         View Bids
                       </button>
-                      {/* Add Fund Escrow Button */}
-                  {project.escrowStatus !== "Funded" && (
+                      {project.escrowStatus === "Not Funded" && (
                     <button
-                      onClick={() => handleFundEscrow(project._id)}
+                      onClick={() => handleFundEscrow(project._id, project.budget)}
                       style={{
-                        padding: "5px 10px", // Reduced height
-                          backgroundColor: "#E82FFF", // Purple
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginLeft: "10px",
-                          textAlign: "center",
+                        padding: "5px 10px",
+                        backgroundColor: "#E82FFF",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        marginLeft: "10px",
+                        textAlign: "center",
                       }}
                     >
                       Fund Escrow
@@ -1309,11 +1302,9 @@ const ClientDashboard = () => {
         )}
       </div>
 
-      {/* Display freelancers */}
       <div>
         <h2 style={{ color: "#000000" }}>Freelancers</h2>
 
-        {/* Search Bar for Freelancers */}
         <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
@@ -1330,7 +1321,6 @@ const ClientDashboard = () => {
           />
         </div>
 
-        {/* Display Freelancers */}
         {loadingFreelancers ? (
           <p>Loading freelancers...</p>
         ) : filteredFreelancers.length > 0 ? (
@@ -1401,7 +1391,7 @@ const ClientDashboard = () => {
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             zIndex: 1000,
             width: "400px",
-            color: "#000000", // Ensure text color is black
+            color: "#000000",
           }}
         >
           <h3>Select a Project to Hire</h3>
@@ -1446,7 +1436,7 @@ const ClientDashboard = () => {
                     key={project._id}
                     onClick={() => {
                       setSelectedProjectId(project._id);
-                      setIsDropdownOpen(false); // Close the dropdown after selection
+                      setIsDropdownOpen(false);
                     }}
                     style={{
                       padding: "10px",
@@ -1481,7 +1471,7 @@ const ClientDashboard = () => {
             style={{
               marginTop: "10px",
               padding: "10px",
-              backgroundColor: "#28A745", // Green
+              backgroundColor: "#28A745",
               color: "#FFFFFF",
               border: "none",
               borderRadius: "5px",
@@ -1496,7 +1486,7 @@ const ClientDashboard = () => {
             style={{
               marginTop: "10px",
               padding: "10px",
-              backgroundColor: "#DC3545", // Red
+              backgroundColor: "#DC3545",
               color: "#FFFFFF",
               border: "none",
               borderRadius: "5px",
@@ -1524,7 +1514,7 @@ const ClientDashboard = () => {
             width: "600px",
             maxHeight: "80vh",
             overflowY: "auto",
-            color: "#000000", // Black text
+            color: "#000000",
           }}
         >
           <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
@@ -1553,7 +1543,7 @@ const ClientDashboard = () => {
                   onClick={() => handleSelectBid(bid._id)}
                   style={{
                     padding: "10px",
-                    backgroundColor: "#28A745", // Green
+                    backgroundColor: "#28A745",
                     color: "#FFFFFF",
                     border: "none",
                     borderRadius: "5px",
@@ -1575,7 +1565,7 @@ const ClientDashboard = () => {
             style={{
               marginTop: "20px",
               padding: "10px",
-              backgroundColor: "#DC3545", // Red
+              backgroundColor: "#DC3545",
               color: "#FFFFFF",
               border: "none",
               borderRadius: "5px",
@@ -1587,102 +1577,149 @@ const ClientDashboard = () => {
           </button>
         </div>
       )}
-      <div style={{ marginTop: "20px", textAlign: "center" }}>
-</div>
-{showActivityHistory && (
-  <div
-    style={{
-      position: "absolute",
-      top: "100px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      padding: "20px",
-      backgroundColor: "#444444",
-      borderRadius: "10px",
-      color: "#FFFFFF",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-      zIndex: 1000,
-      width: "80%",
-    }}
-  >
-    <button
-      onClick={() => setShowActivityHistory(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        backgroundColor: "#FF0000",
-        borderRadius: "50%",
-        border: "none",
-        color: "#FFFFFF",
-        fontSize: "20px",
-        fontWeight: "bold",
-        cursor: "pointer",
-      }}
-    >
-      ✖
-    </button>
 
-    <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Activity History</h2>
-    {activityLogs.length > 0 ? (
-      activityLogs.map((log, index) => (
+      <div style={{ marginTop: "20px", textAlign: "center" }}></div>
+      {showActivityHistory && (
         <div
-          key={index}
           style={{
-            marginBottom: "10px",
-            padding: "10px",
-            backgroundColor: "#333333",
-            borderRadius: "5px",
+            position: "absolute",
+            top: "100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "80%",
           }}
         >
-          <p>{log.action}</p>
-          <p style={{ fontSize: "12px", color: "#AAAAAA" }}>
-            {new Date(log.timestamp).toLocaleString()}
-          </p>
-        </div>
-      ))
-    ) : (
-      <p style={{ textAlign: "center", color: "#FFD700" }}>No activity found.</p>
-    )}
-  </div>
-)}
+          <button
+            onClick={() => setShowActivityHistory(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              backgroundColor: "#FF0000",
+              borderRadius: "50%",
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: "20px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            ✖
+          </button>
 
-{showCompletionModal && (
-  <div
-    style={{
-      position: "fixed",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      backgroundColor: "#FFFFFF",
-      padding: "20px",
-      borderRadius: "10px",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-      zIndex: 1000,
-      textAlign: "center",
-    }}
-  >
-    {/* Display the project title */}
-    <h3 style={{ color: "#000000", marginBottom: "10px" }}>{selectedProjectTitle}</h3>
-    {/* Display the project completion percentage */}
-    <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p>
-    <button
-      onClick={() => setShowCompletionModal(false)} // Close the modal
-      style={{
-        padding: "10px 20px",
-        backgroundColor: "#007BFF",
-        color: "#FFFFFF",
-        border: "none",
-        borderRadius: "5px",
-        cursor: "pointer",
-        fontWeight: "bold",
-        marginTop: "10px",
-      }}
-    >
-      OK
-    </button>
-  </div>
-)}
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Activity History</h2>
+          {activityLogs.length > 0 ? (
+            activityLogs.map((log, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "10px",
+                  padding: "10px",
+                  backgroundColor: "#333333",
+                  borderRadius: "5px",
+                }}
+              >
+                <p>{log.action}</p>
+                <p style={{ fontSize: "12px", color: "#AAAAAA" }}>
+                  {new Date(log.timestamp).toLocaleString()}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#FFD700" }}>No activity found.</p>
+          )}
+        </div>
+      )}
+
+      {showCompletionModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            textAlign: "center",
+          }}
+        >
+          <h3 style={{ color: "#000000", marginBottom: "10px" }}>{selectedProjectTitle}</h3>
+          <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p>
+          <button
+            onClick={() => setShowCompletionModal(false)}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#007BFF",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              marginTop: "10px",
+            }}
+          >
+            OK
+          </button>
+        </div>
+      )}
+
+      {showPaymentForm && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            color: "#000000",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+          }}
+        >
+          <h3>Complete Payment</h3>
+          <form onSubmit={handlePaymentSubmit}>
+            <p>Amount: ${amount}</p>
+            <button
+              type="submit"
+              style={{
+                padding: "10px",
+                backgroundColor: "#007BFF",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              Pay Now
+            </button>
+          </form>
+          <button
+            onClick={() => setShowPaymentForm(false)}
+            style={{
+              marginTop: "10px",
+              padding: "10px",
+              backgroundColor: "#DC3545",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -169,7 +169,7 @@ router.put("/select/:bidId", verifyToken, async (req, res) => {
 
     // Update the project status to "selected"
     const projectId = bid.projectId._id;
-    if (projectId.escrowStatus !== "funded") {
+    if (projectId.escrowStatus !== "Funded") {
       return res.status(400).json({ error: "Escrow must be funded before selecting a bid." });
     }
     await Project.findByIdAndUpdate(projectId, { status: "selected" });
