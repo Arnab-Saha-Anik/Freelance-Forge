@@ -654,6 +654,30 @@ const ClientDashboard = () => {
     handleFreelancerSearch(freelancerSearchQuery); // Reapply the search filter
   }, [freelancers, freelancerSearchQuery, handleFreelancerSearch]); // Include all dependencies
 
+  const handleFundEscrow = async (projectId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/escrow/fund/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+        },
+        body: JSON.stringify({ amount: 1000 }), // Replace 1000 with the actual amount
+      });
+
+      if (response.ok) {
+        alert("Escrow funded successfully!");
+        window.location.reload(); // Reload the page to reflect changes
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to fund escrow.");
+      }
+    } catch (error) {
+      console.error("Error funding escrow:", error);
+      alert("An error occurred while funding escrow.");
+    }
+  };
+
   return (
     <div
       style={{
@@ -1081,14 +1105,17 @@ const ClientDashboard = () => {
                     border: "1px solid #ddd",
                     padding: "10px",
                     margin: "10px",
-                    backgroundColor: "#FFFFFF", 
-                    color: "#000000", 
+                    backgroundColor: "#FFFFFF",
+                    color: "#000000",
+                    position: "relative", // Add relative positioning for the button
                   }}
                 >
                   <h3>{project.title}</h3>
                   <p>{project.description}</p>
                   <p>Budget: ${project.budget}</p>
                   <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
+                  <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
+
 
                   {project.status === "accepted" ? (
                     // Show the "View Project Completion Percentage" button for accepted projects
@@ -1252,6 +1279,25 @@ const ClientDashboard = () => {
                       >
                         View Bids
                       </button>
+                      {/* Add Fund Escrow Button */}
+                  {project.escrowStatus !== "Funded" && (
+                    <button
+                      onClick={() => handleFundEscrow(project._id)}
+                      style={{
+                        padding: "5px 10px", // Reduced height
+                          backgroundColor: "#E82FFF", // Purple
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          marginLeft: "10px",
+                          textAlign: "center",
+                      }}
+                    >
+                      Fund Escrow
+                    </button>
+                  )}
                     </>
                   )}
                 </div>

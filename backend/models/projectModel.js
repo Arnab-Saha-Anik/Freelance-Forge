@@ -10,7 +10,14 @@ const projectSchema = new mongoose.Schema({
   acceptedFreelancer: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Added field to store accepted freelancer
   acceptedmoney: { type: Number }, // Added field to store accepted money
   completedpercentage: { type: Number, default: 0 }, // Added field to store completed percentage
-});
+  amount: { type: Number }, // Remove `required: true`
+  escrowStatus: { 
+    type: String, 
+    enum: ["Not Funded", "Funded", "Released", "Refunded"], // Ensure correct casing
+    default: "Not Funded" 
+  },
+  paymentIntentId: { type: String },
+}, { timestamps: true });
 
 
 projectSchema.index({ client: 1, title: 1 }, { unique: true });

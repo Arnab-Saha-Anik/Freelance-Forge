@@ -418,4 +418,105 @@ router.put("/update-completion/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+// Route to fund escrow for a project
+router.put("/escrow/fund/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const { amount } = req.body;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to fund this project." });
+    }
+
+    if (project.escrowStatus === "Funded") {
+      return res.status(400).json({ error: "Escrow has already been funded for this project." });
+    }
+
+    // Ensure `amount` is provided
+    if (!amount) {
+      return res.status(400).json({ error: "Amount is required to fund escrow." });
+    }
+
+    // Update the project's escrow status
+    project.escrowStatus = "Funded"; // Use the correct casing
+    project.amount = amount; // Set the amount
+    await project.save();
+
+    res.status(200).json({ message: "Escrow funded successfully.", project });
+  } catch (error) {
+    console.error("Error funding escrow:", error);
+    res.status(500).json({ error: "Failed to fund escrow." });
+  }
+});
+
+// Route to release escrow for a project
+router.post("/escrow/release/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to release escrow for this project." });
+    }
+
+    if (project.escrowStatus !== "funded") {
+      return res.status(400).json({ error: "Escrow has not been funded or has already been released." });
+    }
+
+    // Simulate fund transfer to the freelancer
+    // Here, you would integrate with a payment gateway to transfer the funds.
+
+    project.escrowStatus = "released";
+    await project.save();
+
+    res.status(200).json({ message: "Escrow released successfully.", project });
+  } catch (error) {
+    console.error("Error releasing escrow:", error);
+    res.status(500).json({ error: "Failed to release escrow." });
+  }
+});
+
+// Route to refund escrow for a project
+router.post("/escrow/refund/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to refund escrow for this project." });
+    }
+
+    if (project.escrowStatus !== "funded") {
+      return res.status(400).json({ error: "Escrow has not been funded or has already been refunded." });
+    }
+
+    // Simulate refund to the client
+    // Here, you would integrate with a payment gateway to process the refund.
+
+    project.escrowStatus = "refunded";
+    await project.save();
+
+    res.status(200).json({ message: "Escrow refunded successfully.", project });
+  } catch (error) {
+    console.error("Error refunding escrow:", error);
+    res.status(500).json({ error: "Failed to refund escrow." });
+  }
+});
+
 module.exports = router;
