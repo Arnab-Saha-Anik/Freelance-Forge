@@ -167,23 +167,32 @@ router.put("/select/:bidId", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Bid not found" });
     }
 
-    // Update the project status to "selected"
-    const projectId = bid.projectId._id;
-    if (projectId.escrowStatus !== "Funded") {
+    // Fetch the project document
+    const project = await Project.findById(bid.projectId._id);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Check if escrow is funded
+    if (project.escrowStatus !== "Funded") {
       return res.status(400).json({ error: "Escrow must be funded before selecting a bid." });
     }
-    await Project.findByIdAndUpdate(projectId, { status: "selected" });
+
+    // Update the project status to "selected"
+    project.status = "selected";
+    await project.save();
 
     // Notify the freelancer
     await Notification.create({
       user: bid.freelancerId._id,
-      message: `Your bid of $${bid.amount} for the project "${bid.projectId.title}" has been selected.`,
+      message: `Your bid of $${bid.amount} for the project "${project.title}" has been selected.`,
     });
 
     // Log the activity for the client
     await Activity.create({
-      userId: bid.projectId.client,
-      action: `You selected the bid of $${bid.amount} for the project "${bid.projectId.title}" to the freelancer (${bid.freelancerId.email}).`,
+      userId: project.client,
+      action: `You selected the bid of $${bid.amount} for the project "${project.title}" to the freelancer (${bid.freelancerId.email}).`,
     });
 
     res.status(200).json({ message: "Bid selected successfully.", bid });

@@ -42,31 +42,21 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.CLIENT_URL}/client-dashboard`, // Redirect to client dashboard
+      success_url: `${process.env.CLIENT_URL}/client-dashboard`,
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
+      metadata: {
+        projectId,
+        clientId: client._id.toString(),
+        amount: amount.toString(),
+      },
     });
+    
 
     if (!session || !session.id) {
       throw new Error("Failed to create Stripe session. Session or session ID is undefined.");
     }
 
     // Save the payment record in the database
-    const payment = new Payment({
-      project: project._id, // Use the project ID from the database
-      client: client._id, // Use the client ID from the database
-      amount,
-      status: "Succeeded", // Initial status
-      paymentIntentId: session.id, // Use the session ID as the payment intent ID
-    });
-    await payment.save();
-
-    project.escrowStatus = "Funded";
-    await project.save();
-
-    Activity.create({
-      userId: client._id,
-      action: `Payment of $${amount} for project ID: ${projectId} has been funded in the Escrow System.`,
-    });
 
 
     res.status(200).json({ sessionId: session.id });
@@ -86,23 +76,43 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
 
-      console.log("Checkout session completed:", session);
+      const projectId = session.metadata.projectId;
+      const clientId = session.metadata.clientId;
+      const amount = parseFloat(session.metadata.amount);
 
-      // Find the payment record by session ID
-      const payment = await Payment.findOne({ paymentIntentId: session.id });
-      if (!payment) {
-        console.error("Payment record not found for session ID:", session.id);
-        return res.status(404).send("Payment record not found");
+      const project = await Project.findById(projectId);
+      const client = await User.findById(clientId);
+
+      if (!project || !client) {
+        return res.status(404).send("Project or client not found.");
       }
 
-      res.status(200).send("Webhook handled successfully");
-    } else {
-      res.status(400).send("Unhandled event type");
+      const payment = new Payment({
+        project: project._id,
+        client: client._id,
+        amount,
+        status: "Succeeded",
+        paymentIntentId: session.id,
+      });
+      await payment.save();
+
+      project.escrowStatus = "Funded";
+      await project.save();
+
+      await Activity.create({
+        userId: client._id,
+        action: `Payment of $${amount} for project ID: ${projectId} has been funded in the Escrow System.`,
+      });
+
+      return res.status(200).send("Webhook handled successfully");
     }
+
+    res.status(400).send("Unhandled event type");
   } catch (error) {
-    console.error("Error handling webhook:", error);
-    res.status(400).send(`Webhook Error: ${error.message}`);
+    console.error("❌ Webhook Error:", error.message);
+    return res.status(400).send(`Webhook Error: ${error.message}`);
   }
 });
+
 
 module.exports = router;

@@ -17,8 +17,10 @@ const projectSchema = new mongoose.Schema({
     default: "Not Funded" 
   },
   paymentIntentId: { type: String },
+  completionUrl: { type: String, default: "" }, // URL of the completed project
+  approvalStatus: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }, // Approval status
+  rejectionComment: { type: String, default: null },
 }, { timestamps: true });
-
 
 projectSchema.index({ client: 1, title: 1 }, { unique: true });
 

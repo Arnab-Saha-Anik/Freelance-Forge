@@ -418,6 +418,90 @@ router.put("/update-completion/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+// Route to submit project completion URL
+router.put("/submit-completion/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const { completionUrl } = req.body;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.acceptedFreelancer.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to submit this project." });
+    }
+
+    project.completionUrl = completionUrl;
+    project.approvalStatus = "Pending";
+    await project.save();
+
+    res.status(200).json({ message: "Project completion URL submitted successfully.", project });
+  } catch (error) {
+    console.error("Error submitting project completion URL:", error);
+    res.status(500).json({ error: "Failed to submit project completion URL." });
+  }
+});
+
+// Route to approve project completion
+router.put("/approve-completion/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.client.toString() !== req.user.id) {
+      return res.status(403).json({ error: "You are not authorized to approve this project." });
+    }
+
+    project.approvalStatus = "Approved";
+    await project.save();
+
+    res.status(200).json({ message: "Project approved successfully.", project });
+  } catch (error) {
+    console.error("Error approving project:", error);
+    res.status(500).json({ error: "Failed to approve project." });
+  }
+});
+
+// Route to reject project approval
+router.put("/reject-approval/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+  const { comments, completedpercentage, completionUrl } = req.body;
+
+  console.log("Reject Approval Request:", { projectId, comments, completedpercentage, completionUrl });
+
+  try {
+    const project = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        approvalStatus: "Rejected",
+        rejectionComment: comments,
+        completedpercentage: completedpercentage || 0,
+        completionUrl: null,
+      },
+      { new: true }
+    );
+
+    if (!project) {
+      console.error("Project not found:", projectId);
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    console.log("Updated Project:", project);
+    res.json({ message: "Approval rejected successfully", project });
+  } catch (error) {
+    console.error("Error rejecting approval:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Route to fund escrow for a project
 router.put("/escrow/fund/:projectId", verifyToken, async (req, res) => {
   const { projectId } = req.params;

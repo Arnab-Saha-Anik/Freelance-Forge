@@ -544,6 +544,29 @@ const FreelancerDashboard = () => {
     }
   };
 
+  const handleSubmitCompletionUrl = async (projectId, url) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/submit-completion/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("freelancerToken")}`,
+        },
+        body: JSON.stringify({ completionUrl: url }),
+      });
+  
+      if (response.ok) {
+        alert("Project completion URL submitted successfully!");
+        fetchProjects(); // Refresh the project list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to submit project completion URL.");
+      }
+    } catch (error) {
+      console.error("Error submitting project completion URL:", error);
+      alert("An error occurred while submitting the project completion URL.");
+    }
+  };
 
   const handleSearchLearningMaterials = (query) => {
     setLearningSearchQuery(query);
@@ -830,7 +853,7 @@ const FreelancerDashboard = () => {
           <p style={{ textAlign: "center" }}>No projects available.</p>
         ) : (
           <ul style={{ listStyleType: "none", padding: 0, fontSize: "18px" }}>
-{(projectSearchQuery ? filteredProjects : projects).map((project) => {
+{projects.map((project) => {
   const myBid = myBids[project._id]; // Get the bid for this project
 
   return (
@@ -848,11 +871,29 @@ const FreelancerDashboard = () => {
         Client Email: {project.client?.email || "N/A"}
       </p>
 
-      {project.status === "accepted" ? (
-        project.acceptedFreelancer === userId ? ( // Check if the logged-in freelancer is the accepted one
+      {project.approvalStatus === "Rejected" ? (
+        <div>
+          <p style={{ color: "#DC3545", fontWeight: "bold" }}>Approval Rejected</p>
+          <p style={{ color: "#FFD700" }}>
+            <strong>Rejection Comment:</strong> {project.rejectionComment || "No comment provided"}
+          </p>
+          <p style={{ fontWeight: "bold", color: "#FFD700" }}>
+            Current Completion: {project.completedpercentage || 0}%
+          </p>
+        </div>
+      ) : project.status === "accepted" ? (
+        project.acceptedFreelancer === userId ? (
           <>
             <span
-              style={{padding: "10px 20px", backgroundColor: "#28A745", color: "#FFFFFF", borderRadius: "5px", fontWeight: "bold", display: "inline-block", textAlign: "center", marginRight: "10px",
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#28A745",
+                color: "#FFFFFF",
+                borderRadius: "5px",
+                fontWeight: "bold",
+                display: "inline-block",
+                textAlign: "center",
+                marginRight: "10px",
               }}
             >
               Accepted
@@ -860,64 +901,93 @@ const FreelancerDashboard = () => {
             <p style={{ marginBottom: "10px", fontWeight: "bold", color: "#FFD700" }}>
               Current Completion: {project.completedpercentage || 0}%
             </p>
-            <button
-              style={styles.bidButton}
-              onClick={() => {
-                const percentage = prompt(
-                  `Enter the project completion percentage (0-100):`,
-                  project.completedpercentage || 0 // Pre-fill with the current percentage
-                );
-                if (percentage !== null) {
-                  updateCompletionPercentage(project._id, percentage);
-                }
-              }}
-            >
-              Update Completion
-            </button>
+            {project.completedpercentage === 100 && !project.completionUrl && (
+              <button
+                onClick={() => {
+                  const url = prompt("Enter the URL of the completed project:");
+                  if (url) {
+                    handleSubmitCompletionUrl(project._id, url);
+                  }
+                }}
+                style={{
+                  padding: "10px",
+                  backgroundColor: "#28A745",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                Share the URL of the Completed Project
+              </button>
+            )}
+
+            {project.completionUrl && project.approvalStatus === "Pending" && (
+              <p style={{ color: "#FFC107", fontWeight: "bold" }}>Waiting for Client's Approval</p>
+            )}
+
+            {project.approvalStatus === "Approved" ? (
+              <p style={{ color: "#28A745", fontWeight: "bold" }}>Project Approved</p>
+            ) : (
+              <button
+                style={styles.bidButton}
+                onClick={() => {
+                  const percentage = prompt(
+                    `Enter the project completion percentage (0-100):`,
+                    project.completedpercentage || 0
+                  );
+                  if (percentage !== null) {
+                    updateCompletionPercentage(project._id, percentage);
+                  }
+                }}
+              >
+                Update Completion
+              </button>
+            )}
           </>
         ) : null
       ) : myBid ? (
         <>
-  <button
-    style={{ ...styles.bidButton, marginRight: "10px" }} // Add marginRight for spacing
-    onClick={() => {
-      setSelectedProject(project);
-      setBidAmount(myBid.amount); // Pre-fill the bid amount
-      setShowBidModal(true);
-    }}
-  >
-    Update Bid
-  </button>
-  <button
-    style={styles.rejectButton}
-    onClick={async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+          <button
+            style={{ ...styles.bidButton, marginRight: "10px" }}
+            onClick={() => {
+              setSelectedProject(project);
+              setBidAmount(myBid.amount); // Pre-fill the bid amount
+              setShowBidModal(true);
+            }}
+          >
+            Update Bid
+          </button>
+          <button
+            style={styles.rejectButton}
+            onClick={async () => {
+              try {
+                const response = await fetch(`http://localhost:5000/bids/${myBid._id}`, {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
 
-        if (response.ok) {
-          alert("Bid deleted successfully.");
-          setMyBids((prevBids) => {
-            const updatedBids = { ...prevBids };
-            delete updatedBids[project._id];
-            return updatedBids;
-          });
-        } else {
-          alert("Failed to delete bid.");
-        }
-      } catch (error) {
-        console.error("Error deleting bid:", error);
-        alert("An error occurred while deleting the bid.");
-      }
-    }}
-  >
-    Delete Bid
-  </button>
-</>
+                if (response.ok) {
+                  alert("Bid deleted successfully.");
+                  setMyBids((prevBids) => {
+                    const updatedBids = { ...prevBids };
+                    delete updatedBids[project._id];
+                    return updatedBids;
+                  });
+                } else {
+                  alert("Failed to delete bid.");
+                }
+              } catch (error) {
+                console.error("Error deleting bid:", error);
+                alert("An error occurred while deleting the bid.");
+              }
+            }}
+          >
+            Delete Bid
+          </button>
+        </>
       ) : (
         <button
           style={styles.bidButton}

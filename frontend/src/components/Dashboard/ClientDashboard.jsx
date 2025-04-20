@@ -541,10 +541,10 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         alert("Bid selected successfully!");
-        setShowBidsModal(false);
-        fetchProjects();
+        fetchProjects(); // Refresh the project list
       } else {
-        console.error("Failed to select bid.");
+        const data = await response.json();
+        alert(data.error || "Failed to select bid.");
       }
     } catch (error) {
       console.error("Error selecting bid:", error);
@@ -679,6 +679,80 @@ const ClientDashboard = () => {
       }
     } catch (error) {
       console.error("Error processing payment:", error);
+    }
+  };
+
+  const handleApproveProject = async (projectId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/approve-completion/${projectId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Project approved successfully!");
+        fetchProjects(); // Refresh the project list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to approve project.");
+      }
+    } catch (error) {
+      console.error("Error approving project:", error);
+      alert("An error occurred while approving the project.");
+    }
+  };
+
+  const handleRejectApproval = async (projectId, comments) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/reject-approval/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+        },
+        body: JSON.stringify({ comments, completedpercentage: 0, completionUrl: null }),
+      });
+
+      if (response.ok) {
+        alert("Project approval rejected successfully!");
+        fetchProjects(); // Refresh the project list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to reject project approval.");
+      }
+    } catch (error) {
+      console.error("Error rejecting project approval:", error);
+      alert("An error occurred while rejecting the project approval.");
+    }
+  };
+
+  const handleEditProjectSubmit = async (updatedProject) => {
+    try {
+      const response = await fetch(`http://localhost:5000/projects/client/update/${updatedProject.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          budget: updatedProject.budget,
+          deadline: updatedProject.deadline,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Project updated successfully!");
+        setEditProject({ id: null, budget: "", deadline: "" });
+        fetchProjects(); // Refresh the project list
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to update project.");
+      }
+    } catch (error) {
+      console.error("Error updating project:", error);
+      alert("An error occurred while updating the project.");
     }
   };
 
@@ -1106,14 +1180,71 @@ const ClientDashboard = () => {
                     position: "relative",
                   }}
                 >
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <p>Budget: ${project.budget}</p>
-                  <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
-                  <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
-
-
-                  {project.status === "accepted" ? (
+                  <div>
+                      <h3>{project.title}</h3>
+                      <p>{project.description}</p>
+                      <p>Budget: ${project.budget}</p>
+                      <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
+                      <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
+                    </div>
+                  {project.approvalStatus === "Approved" ? (
+                    <div>
+                      <p>
+                        <strong>Completion URL:</strong>{" "}
+                        <a href={project.completionUrl} target="_blank" rel="noopener noreferrer">
+                          View Project
+                        </a>
+                      </p>
+                      <p style={{ color: "#28A745", fontWeight: "bold" }}>Approved</p>
+                    </div>
+                  ) : project.status === "accepted" &&
+                    project.escrowStatus === "Funded" &&
+                    project.completedpercentage === 100 &&
+                    project.completionUrl ? (
+                    <div>
+                      <p>
+                        <strong>Completion URL:</strong>{" "}
+                        <a href={project.completionUrl} target="_blank" rel="noopener noreferrer">
+                          View Project
+                        </a>
+                      </p>
+                      <button
+                        onClick={() => handleApproveProject(project._id)}
+                        style={{
+                          padding: "10px",
+                          backgroundColor: "#28A745",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                          marginRight: "10px",
+                        }}
+                      >
+                        Approve Project
+                      </button>
+                      <button
+                        onClick={() => {
+                          const comments = prompt("Enter your comments for rejection:");
+                          if (comments) {
+                            handleRejectApproval(project._id, comments);
+                            handleViewCompletion(project.completedpercentage, project.title);
+                          }
+                        }}
+                        style={{
+                          padding: "10px",
+                          backgroundColor: "#DC3545",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Reject Approval
+                      </button>
+                    </div>
+                  ) : project.status === "accepted" && project.escrowStatus === "Funded" ? (
                     <button
                       onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
                       style={{
@@ -1128,100 +1259,8 @@ const ClientDashboard = () => {
                     >
                       View Project Completion Percentage
                     </button>
-                  ) : editProject.id === project._id ? (
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-
-                        const today = new Date().toISOString().split("T")[0];
-                        if (editProject.deadline < today) {
-                          alert("The deadline cannot be a date in the past. Please select a valid date.");
-                          return;
-                        }
-
-                        try {
-                          const response = await fetch(
-                            `http://localhost:5000/projects/client/update/${editProject.id}`,
-                            {
-                              method: "PUT",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({
-                                budget: editProject.budget,
-                                deadline: editProject.deadline,
-                              }),
-                            }
-                          );
-
-                          if (response.ok) {
-                            alert("Project updated successfully!");
-                            setEditProject({ id: null, budget: "", deadline: "" });
-                            fetchProjects();
-                          } else {
-                            const data = await response.json();
-                            alert(data.error || "Failed to update project.");
-                          }
-                        } catch (error) {
-                          console.error("Error updating project:", error);
-                          alert("An error occurred while updating the project.");
-                        }
-                      }}
-                    >
-                      <input
-                        type="number"
-                        placeholder="New Budget"
-                        value={editProject.budget}
-                        onChange={(e) =>
-                          setEditProject({ ...editProject, budget: e.target.value })
-                        }
-                        required
-                        style={{ padding: "5px", marginRight: "10px" }}
-                      />
-                      <input
-                        type="date"
-                        placeholder="New Deadline"
-                        value={editProject.deadline}
-                        onChange={(e) =>
-                          setEditProject({ ...editProject, deadline: e.target.value })
-                        }
-                        required
-                        style={{ padding: "5px", marginRight: "10px" }}
-                      />
-                      <button
-                        type="submit"
-                        style={{
-                          padding: "5px 10px",
-                          backgroundColor: "#28A745",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditProject({ id: null, budget: "", deadline: "" })}
-                        style={{
-                          padding: "5px 10px",
-                          backgroundColor: "#DC3545",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginLeft: "10px",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </form>
                   ) : (
-                    <>
+                    <div>
                       <button
                         onClick={() =>
                           setEditProject({
@@ -1253,6 +1292,7 @@ const ClientDashboard = () => {
                           borderRadius: "5px",
                           cursor: "pointer",
                           fontWeight: "bold",
+                          marginRight: "10px",
                         }}
                       >
                         Delete Project
@@ -1267,31 +1307,28 @@ const ClientDashboard = () => {
                           borderRadius: "5px",
                           cursor: "pointer",
                           fontWeight: "bold",
-                          marginLeft: "10px",
-                          textAlign: "center",
                         }}
                       >
                         View Bids
                       </button>
-                      {project.escrowStatus === "Not Funded" && (
-                    <button
-                      onClick={() => handleFundEscrow(project._id, project.budget)}
-                      style={{
-                        padding: "5px 10px",
-                        backgroundColor: "#E82FFF",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                        marginLeft: "10px",
-                        textAlign: "center",
-                      }}
-                    >
-                      Fund Escrow
-                    </button>
-                  )}
-                    </>
+                      {project.escrowStatus !== "Funded" && (
+                        <button
+                          onClick={() => handleFundEscrow(project._id, project.budget)}
+                          style={{
+                            padding: "5px 10px",
+                            backgroundColor: "#E82FFF",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginLeft: "10px",
+                          }}
+                        >
+                          Fund Escrow
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))
@@ -1301,6 +1338,33 @@ const ClientDashboard = () => {
           </div>
         )}
       </div>
+
+      {editProject.id && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleEditProjectSubmit(editProject);
+          }}
+        >
+          <input
+            type="number"
+            value={editProject.budget}
+            onChange={(e) =>
+              setEditProject((prev) => ({ ...prev, budget: e.target.value }))
+            }
+            placeholder="Budget"
+          />
+          <input
+            type="date"
+            value={editProject.deadline}
+            onChange={(e) =>
+              setEditProject((prev) => ({ ...prev, deadline: e.target.value }))
+            }
+            placeholder="Deadline"
+          />
+          <button type="submit">Save Changes</button>
+        </form>
+      )}
 
       <div>
         <h2 style={{ color: "#000000" }}>Freelancers</h2>
