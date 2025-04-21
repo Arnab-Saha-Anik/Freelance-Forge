@@ -1181,13 +1181,13 @@ const ClientDashboard = () => {
                   }}
                 >
                   <div>
-                      <h3>{project.title}</h3>
-                      <p>{project.description}</p>
-                      <p>Budget: ${project.budget}</p>
-                      <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
-                      <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
-                    </div>
-                  {project.approvalStatus === "Approved" ? (
+                    <h3>{project.title}</h3>
+                    <p>{project.description}</p>
+                    <p>Budget: ${project.budget}</p>
+                    <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
+                    <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
+                  </div>
+                  {project.approvalStatus === "Approved" &&(
                     <div>
                       <p>
                         <strong>Completion URL:</strong>{" "}
@@ -1196,8 +1196,65 @@ const ClientDashboard = () => {
                         </a>
                       </p>
                       <p style={{ color: "#28A745", fontWeight: "bold" }}>Approved</p>
+
+                      {/* Check claimStatus */}
+                      {project.claimStatus === "Claimed" ? (
+                        <button
+                          disabled
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#28A745",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "not-allowed",
+                            marginTop: "10px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Claimed
+                        </button>
+                      ) : project.budget - project.acceptedmoney > 0 ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`http://localhost:5000/payments/claim-remaining/${project._id}`, {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+                                },
+                              });
+
+                              const data = await response.json();
+
+                              if (response.ok) {
+                                // Redirect to Stripe Checkout
+                                window.location.href = data.url;
+                              } else {
+                                alert(data.error || "Failed to claim the remaining budget.");
+                              }
+                            } catch (error) {
+                              console.error("Error claiming remaining budget:", error);
+                              alert("An error occurred while claiming the remaining budget.");
+                            }
+                          }}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#007BFF",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            marginTop: "10px",
+                          }}
+                        >
+                          Claim Remaining Budget (${project.budget - project.acceptedmoney})
+                        </button>
+                      ) : null}
                     </div>
-                  ) : project.status === "accepted" &&
+                  )}
+                  {project.status === "accepted" &&
                     project.escrowStatus === "Funded" &&
                     project.completedpercentage === 100 &&
                     project.completionUrl ? (

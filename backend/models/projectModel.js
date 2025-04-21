@@ -20,6 +20,8 @@ const projectSchema = new mongoose.Schema({
   completionUrl: { type: String, default: "" }, // URL of the completed project
   approvalStatus: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }, // Approval status
   rejectionComment: { type: String, default: null },
+  claimStatus: { type: String, enum: ["Pending", "Claimed"], default: "Pending" }, // Claim status
+  
 }, { timestamps: true });
 
 projectSchema.index({ client: 1, title: 1 }, { unique: true });

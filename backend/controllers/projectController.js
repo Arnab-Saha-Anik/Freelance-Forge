@@ -475,8 +475,6 @@ router.put("/reject-approval/:projectId", async (req, res) => {
   const { projectId } = req.params;
   const { comments, completedpercentage, completionUrl } = req.body;
 
-  console.log("Reject Approval Request:", { projectId, comments, completedpercentage, completionUrl });
-
   try {
     const project = await Project.findByIdAndUpdate(
       projectId,

@@ -872,16 +872,64 @@ const FreelancerDashboard = () => {
       </p>
 
       {project.approvalStatus === "Rejected" ? (
-        <div>
-          <p style={{ color: "#DC3545", fontWeight: "bold" }}>Approval Rejected</p>
-          <p style={{ color: "#FFD700" }}>
-            <strong>Rejection Comment:</strong> {project.rejectionComment || "No comment provided"}
-          </p>
-          <p style={{ fontWeight: "bold", color: "#FFD700" }}>
-            Current Completion: {project.completedpercentage || 0}%
-          </p>
-        </div>
-      ) : project.status === "accepted" ? (
+  <div>
+    <p style={{ color: "#DC3545", fontWeight: "bold" }}>Approval Rejected</p>
+    <p style={{ color: "#FFD700" }}>
+      <strong>Rejection Comment:</strong> {project.rejectionComment || "No comment provided"}
+    </p>
+    <p style={{ fontWeight: "bold", color: "#FFD700" }}>
+      Current Completion: {project.completedpercentage || 0}%
+    </p>
+
+    {/* Button to update completion percentage */}
+    <button
+      onClick={() => {
+        const percentage = prompt(
+          `Enter the updated project completion percentage (0-100):`,
+          project.completedpercentage || 0
+        );
+        if (percentage !== null) {
+          updateCompletionPercentage(project._id, percentage);
+        }
+      }}
+      style={{
+        padding: "10px",
+        backgroundColor: "#007BFF",
+        color: "#FFFFFF",
+        border: "none",
+        borderRadius: "5px",
+        cursor: "pointer",
+        marginTop: "10px",
+        marginRight: "10px", // Add spacing below this button
+      }}
+    >
+      Update Completion Percentage
+    </button>
+
+    {/* Show URL update button if completion percentage is 100% */}
+    {project.completedpercentage === 100 && (
+      <button
+        onClick={() => {
+          const url = prompt("Enter the URL of the completed project:");
+          if (url) {
+            handleSubmitCompletionUrl(project._id, url);
+          }
+        }}
+        style={{
+          padding: "10px",
+          backgroundColor: "#28A745",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginTop: "10px", // Add spacing above this button
+        }}
+      >
+        Share the URL of the Completed Project
+      </button>
+    )}
+  </div>
+) : project.status === "accepted" ? (
         project.acceptedFreelancer === userId ? (
           <>
             <span
@@ -916,6 +964,7 @@ const FreelancerDashboard = () => {
                   border: "none",
                   borderRadius: "5px",
                   cursor: "pointer",
+                  marginRight: "10px",
                 }}
               >
                 Share the URL of the Completed Project
@@ -927,8 +976,67 @@ const FreelancerDashboard = () => {
             )}
 
             {project.approvalStatus === "Approved" ? (
-              <p style={{ color: "#28A745", fontWeight: "bold" }}>Project Approved</p>
-            ) : (
+  <div>
+    <p style={{ color: "#28A745", fontWeight: "bold" }}>Project Approved</p>
+    <p style={{ fontWeight: "bold", color: "#FFD700" }}>
+      Accepted Money: ${project.acceptedmoney || 0}
+    </p>
+
+    {/* Check payment status */}
+    {project.escrowStatus === "Released" ? (
+      <span
+        style={{
+          padding: "10px",
+          backgroundColor: "#28A745",
+          color: "#FFFFFF",
+          borderRadius: "5px",
+          fontWeight: "bold",
+          display: "inline-block",
+          marginTop: "10px",
+        }}
+      >
+        Claimed
+      </span>
+    ) : (
+      <button
+        onClick={async () => {
+          try {
+            const response = await fetch(`http://localhost:5000/payments/claim-money/${project._id}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("freelancerToken")}`,
+              },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              // Redirect to Stripe Checkout
+              window.location.href = data.url;
+            } else {
+              alert(data.error || "Failed to claim money.");
+            }
+          } catch (error) {
+            console.error("Error claiming money:", error);
+            alert("An error occurred while claiming money.");
+          }
+        }}
+        style={{
+          padding: "10px",
+          backgroundColor: "#28A745",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginTop: "10px",
+        }}
+      >
+        Claim Money
+      </button>
+    )}
+  </div>
+) : (
               <button
                 style={styles.bidButton}
                 onClick={() => {

@@ -114,5 +114,131 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
   }
 });
 
+router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId).populate("client");
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.approvalStatus !== "Approved") {
+      return res.status(400).json({ error: "Project is not approved for claiming money." });
+    }
+
+    if (project.escrowStatus !== "Funded") {
+      return res.status(400).json({ error: "Escrow is not funded for this project." });
+    }
+
+    // Validate acceptedmoney
+    if (!project.acceptedmoney || isNaN(project.acceptedmoney)) {
+      return res.status(400).json({ error: "Invalid accepted money amount." });
+    }
+
+    // Generate a Stripe Checkout session for the freelancer to claim money
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Claim Money for Project: ${project.title}`,
+            },
+            unit_amount: Math.round(project.acceptedmoney * 100), // Convert to cents and ensure it's an integer
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.CLIENT_URL}/freelancer-dashboard`,
+      cancel_url: `${process.env.CLIENT_URL}/cancel`,
+    });
+
+    // Find and update the existing payment document
+    const payment = await Payment.findOneAndUpdate(
+      { project: project._id }, // Find payment by project ID
+      {
+        client: project.client._id,
+        freelancer: project.acceptedFreelancer, // Use the ObjectId directly
+        amount: project.acceptedmoney,
+        paymentIntentId: session.id,
+      },
+      { new: true, upsert: true } // Create a new document if it doesn't exist
+    );
+
+    // Update the project status
+    project.escrowStatus = "Released";
+    await project.save();
+
+    res.status(200).json({ url: session.url, payment });
+  } catch (error) {
+    console.error("Error claiming money:", error);
+    res.status(500).json({ error: "Failed to claim money." });
+  }
+});
+
+router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.approvalStatus !== "Approved") {
+      return res.status(400).json({ error: "Project is not approved for claiming the remaining budget." });
+    }
+
+    const remainingBudget = project.budget - project.acceptedmoney;
+
+    if (remainingBudget <= 0) {
+      return res.status(400).json({ error: "No remaining budget to claim." });
+    }
+
+    // Create a Stripe Checkout session for the remaining budget
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Claim Remaining Budget for Project: ${project.title}`,
+            },
+            unit_amount: Math.round(remainingBudget * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.CLIENT_URL}/client-dashboard`,
+      cancel_url: `${process.env.CLIENT_URL}/cancel`,
+    });
+
+    // Update the project's claimStatus to "Claimed"
+    project.claimStatus = "Claimed";
+    await project.save();
+
+    res.status(200).json({ url: session.url });
+  } catch (error) {
+    console.error("Error claiming remaining budget:", error);
+    res.status(500).json({ error: "Failed to claim the remaining budget." });
+  }
+});
+
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    const payments = await Payment.find({ client: req.user.id }).populate("project");
+    res.status(200).json(payments);
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    res.status(500).json({ error: "Failed to fetch payments." });
+  }
+});
 
 module.exports = router;
