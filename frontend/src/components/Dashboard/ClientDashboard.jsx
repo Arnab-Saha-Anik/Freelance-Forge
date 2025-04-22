@@ -1186,7 +1186,7 @@ const ClientDashboard = () => {
                             fontWeight: "bold",
                             display: "inline-block",
                             marginRight: "10px", // Added spacing
-                            textAlign: "center", // Center text
+                            height: "20px", // Match button height
                           }}
                         >
                           Claimed
