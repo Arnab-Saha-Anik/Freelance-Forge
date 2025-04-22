@@ -14,3 +14,5 @@ MONGO_URI=MONGO_URI=make it from mongodb atlas
 JWT_SECRET=your_jwt_secret
 
 STRIPE_SECRET_KEY=your_stripe_secret_key
+
+stripe listen --forward-to localhost:5000/payments/webhook

@@ -231,6 +231,53 @@ router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+router.post("/refund-escrow/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    // Find the project
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    if (project.escrowStatus !== "Funded") {
+      return res.status(400).json({ error: "Escrow is not funded for this project." });
+    }
+
+    // Create a Stripe Checkout session for the refund
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Refund Escrow for Project: ${project.title}`,
+            },
+            unit_amount: Math.round(project.budget * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.CLIENT_URL}/client-dashboard?refundSuccess=true`,
+      cancel_url: `${process.env.CLIENT_URL}/refundCancelled`,
+      metadata: {
+        projectId: project._id.toString(),
+      },
+    });
+    project.escrowStatus = "Not Funded";
+    await project.save();
+
+    res.status(200).json({ url: session.url });
+  } catch (error) {
+    console.error("Error processing refund escrow:", error);
+    res.status(500).json({ error: "Failed to process refund escrow." });
+  }
+});
+
 router.get("/", verifyToken, async (req, res) => {
   try {
     const payments = await Payment.find({ client: req.user.id }).populate("project");

@@ -226,9 +226,12 @@ router.put("/client/update", verifyToken, async (req, res) => {
     if (name && name !== user.name) {
       user.name = name;
     }
-
     
     await user.save();
+    await Activity.create({
+      userId: client,
+      action: `You have updated created your profile.`,
+    });
 
     res.json({ message: "Profile updated successfully", name: user.name });
   } catch (err) {
@@ -317,10 +320,10 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to delete this project" });
     }
 
-    // Check if the project status is not "accepted"
-    if (project.status !== "pending") {
+    // Check if the escrow is refunded
+    if (project.escrowStatus !== "Not Funded") {
       return res.status(400).json({
-        error: "This project cannot be deleted because its status is not 'pending'.",
+        error: "Refund your escrow money first to delete the project.",
       });
     }
 
@@ -492,8 +495,11 @@ router.put("/reject-approval/:projectId", async (req, res) => {
       return res.status(404).json({ error: "Project not found." });
     }
 
-    console.log("Updated Project:", project);
     res.json({ message: "Approval rejected successfully", project });
+    await Activity.create({
+      userId: client,
+      action: `You have rejected the project approval of title: "${title}".`,
+    });
   } catch (error) {
     console.error("Error rejecting approval:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -522,7 +528,7 @@ router.put("/escrow/fund/:projectId", verifyToken, async (req, res) => {
 
     // Verify payment intent
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (paymentIntent.status !== "succeeded") {
+    if (paymentIntent.status !== "Succeeded") {
       return res.status(400).json({ error: "Payment not completed." });
     }
 

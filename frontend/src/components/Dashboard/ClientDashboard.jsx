@@ -136,7 +136,19 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setProjects(data);
+
+        // Sort projects: Approved projects at the top
+        const sortedProjects = data.sort((a, b) => {
+          if (a.approvalStatus === "Approved" && b.approvalStatus !== "Approved") {
+            return -1; // a comes before b
+          }
+          if (a.approvalStatus !== "Approved" && b.approvalStatus === "Approved") {
+            return 1; // b comes before a
+          }
+          return 0; // no change in order
+        });
+
+        setProjects(sortedProjects);
       } else {
         console.error("Failed to fetch projects");
       }
@@ -445,6 +457,29 @@ const ClientDashboard = () => {
       }
     } catch (error) {
       console.error("Error deleting notification:", error);
+    }
+  };
+
+  const handleRefundEscrow = async (projectId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/payments/refund-escrow/${projectId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Redirect to Stripe Checkout session URL
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Failed to process refund.");
+      }
+    } catch (error) {
+      console.error("Error processing refund:", error);
+      alert("An error occurred while processing the refund.");
     }
   };
 
@@ -1470,38 +1505,7 @@ const ClientDashboard = () => {
                       </button>
                       <button
                         onClick={async () => {
-                          const confirmDelete = window.confirm(
-                            "Are you sure you want to delete this project? This action cannot be undone."
-                          );
-
-                          if (!confirmDelete) return;
-
-                          if (project.escrowStatus === "Funded") {
-                            try {
-                              const response = await fetch(
-                                `http://localhost:5000/payments/refund/${project._id}`,
-                                {
-                                  method: "POST",
-                                  headers: {
-                                    Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
-                                  },
-                                }
-                              );
-
-                              if (response.ok) {
-                                alert("Escrow refunded successfully!");
-                                fetchProjects();
-                              } else {
-                                const data = await response.json();
-                                alert(data.error || "Failed to refund escrow.");
-                              }
-                            } catch (error) {
-                              console.error("Error refunding escrow:", error);
-                              alert("An error occurred while refunding escrow.");
-                            }
-                          } else {
-                            handleDeleteProject(project._id);
-                          }
+                          {handleDeleteProject(project._id);}
                         }}
                         style={{
                           padding: "5px 10px",
@@ -1531,7 +1535,7 @@ const ClientDashboard = () => {
                       >
                         View Bids
                       </button>
-                      {project.escrowStatus !== "Funded" && (
+                      {project.escrowStatus === "Not Funded" ? (
                         <button
                           onClick={() => handleFundEscrow(project._id, project.budget)}
                           style={{
@@ -1546,7 +1550,22 @@ const ClientDashboard = () => {
                         >
                           Fund Escrow
                         </button>
-                      )}
+                      ) : project.escrowStatus === "Funded" && project.status === "pending" ? (
+                        <button
+                          onClick={() => handleRefundEscrow(project._id)}
+                          style={{
+                            padding: "5px 10px",
+                            backgroundColor: "#FFC107",
+                            color: "#000000",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Refund Escrow
+                        </button>
+                      ) : null}
                     </div>
                   );
                 }

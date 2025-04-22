@@ -498,12 +498,12 @@ const FreelancerDashboard = () => {
 
       const data = await response.json();
 
-      // Separate accepted projects and other projects
+      // Filter projects based on the freelancer's ID
       const acceptedProjects = data.filter(
         (project) => project.status === "accepted" && project.acceptedFreelancer === userId
       );
       const otherProjects = data.filter(
-        (project) => !(project.status === "accepted" && project.acceptedFreelancer === userId)
+        (project) => project.status !== "accepted"
       );
 
       // Combine accepted projects on top and other projects below
