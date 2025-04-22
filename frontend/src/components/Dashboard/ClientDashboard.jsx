@@ -1601,30 +1601,94 @@ const ClientDashboard = () => {
       </div>
 
       {editProject.id && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleEditProjectSubmit(editProject);
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "400px",
           }}
         >
-          <input
-            type="number"
-            value={editProject.budget}
-            onChange={(e) =>
-              setEditProject((prev) => ({ ...prev, budget: e.target.value }))
-            }
-            placeholder="Budget"
-          />
-          <input
-            type="date"
-            value={editProject.deadline}
-            onChange={(e) =>
-              setEditProject((prev) => ({ ...prev, deadline: e.target.value }))
-            }
-            placeholder="Deadline"
-          />
-          <button type="submit">Save Changes</button>
-        </form>
+          <h3 style={{ marginBottom: "20px", textAlign: "center" }}>Edit Project</h3>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEditProjectSubmit(editProject);
+            }}
+          >
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ display: "block", marginBottom: "5px" }}>Budget:</label>
+              <input
+                type="number"
+                value={editProject.budget}
+                onChange={(e) =>
+                  setEditProject((prev) => ({ ...prev, budget: e.target.value }))
+                }
+                placeholder="Budget"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ display: "block", marginBottom: "5px" }}>Deadline:</label>
+              <input
+                type="date"
+                value={editProject.deadline}
+                onChange={(e) =>
+                  setEditProject((prev) => ({ ...prev, deadline: e.target.value }))
+                }
+                placeholder="Deadline"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button
+                type="submit"
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#007BFF",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditProject({ id: null, budget: "", deadline: "" })}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#DC3545",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       <div>
