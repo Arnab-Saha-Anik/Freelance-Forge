@@ -125,10 +125,10 @@ router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
     }
 
     if (project.approvalStatus !== "Approved") {
-      return res.status(400).json({ error: "Project is not approved for claiming money." });
+      return res.status(400).json({ error: "Project is not accepted for claiming money." });
     }
 
-    if (project.escrowStatus !== "Funded") {
+    if (project.escrowStatus === "Not Funded") {
       return res.status(400).json({ error: "Escrow is not funded for this project." });
     }
 
@@ -190,8 +190,8 @@ router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Project not found." });
     }
 
-    if (project.approvalStatus !== "Approved") {
-      return res.status(400).json({ error: "Project is not approved for claiming the remaining budget." });
+    if (project.status !== "accepted") {
+      return res.status(400).json({ error: "Project is not approve for claiming the remaining budget." });
     }
 
     const remainingBudget = project.budget - project.acceptedmoney;

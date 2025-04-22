@@ -175,7 +175,7 @@ router.put("/select/:bidId", verifyToken, async (req, res) => {
     }
 
     // Check if escrow is funded
-    if (project.escrowStatus !== "Funded") {
+    if (project.escrowStatus === "Not Funded") {
       return res.status(400).json({ error: "Escrow must be funded before selecting a bid." });
     }
 

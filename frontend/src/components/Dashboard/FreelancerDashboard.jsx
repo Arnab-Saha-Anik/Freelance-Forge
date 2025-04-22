@@ -976,67 +976,88 @@ const FreelancerDashboard = () => {
             )}
 
             {project.approvalStatus === "Approved" ? (
-  <div>
-    <p style={{ color: "#28A745", fontWeight: "bold" }}>Project Approved</p>
-    <p style={{ fontWeight: "bold", color: "#FFD700" }}>
-      Accepted Money: ${project.acceptedmoney || 0}
-    </p>
+              <div>
+                <p style={{ color: "#28A745", fontWeight: "bold" }}>Project Approved</p>
+                <p
+                  style={{
+                    marginTop: "10px",
+                    marginBottom: "10px",
+                    color: "#007BFF",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Project URL:{" "}
+                  <a
+                    href={project.completionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#007BFF", textDecoration: "underline" }}
+                  >
+                    {project.completionUrl}
+                  </a>
+                </p>
+                <p style={{ fontWeight: "bold", color: "#FFD700" }}>
+                  Accepted Money: ${project.acceptedmoney || 0}
+                </p>
+                {project.escrowStatus === "Released" ? (
+                  <span
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "#28A745",
+                      color: "#FFFFFF",
+                      borderRadius: "5px",
+                      fontWeight: "bold",
+                      display: "inline-block",
+                      marginTop: "10px",
+                    }}
+                  >
+                    Claimed
+                  </span>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(
+                          `http://localhost:5000/payments/claim-money/${project._id}`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${localStorage.getItem(
+                                "freelancerToken"
+                              )}`,
+                            },
+                          }
+                        );
 
-    {/* Check payment status */}
-    {project.escrowStatus === "Released" ? (
-      <span
-        style={{
-          padding: "10px",
-          backgroundColor: "#28A745",
-          color: "#FFFFFF",
-          borderRadius: "5px",
-          fontWeight: "bold",
-          display: "inline-block",
-          marginTop: "10px",
-        }}
-      >
-        Claimed
-      </span>
-    ) : (
-      <button
-        onClick={async () => {
-          try {
-            const response = await fetch(`http://localhost:5000/payments/claim-money/${project._id}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("freelancerToken")}`,
-              },
-            });
+                        const data = await response.json();
 
-            const data = await response.json();
-
-            if (response.ok) {
-              // Redirect to Stripe Checkout
-              window.location.href = data.url;
-            } else {
-              alert(data.error || "Failed to claim money.");
-            }
-          } catch (error) {
-            console.error("Error claiming money:", error);
-            alert("An error occurred while claiming money.");
-          }
-        }}
-        style={{
-          padding: "10px",
-          backgroundColor: "#28A745",
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginTop: "10px",
-        }}
-      >
-        Claim Money
-      </button>
-    )}
-  </div>
-) : (
+                        if (response.ok) {
+                          // Redirect to Stripe Checkout
+                          window.location.href = data.url;
+                        } else {
+                          alert(data.error || "Failed to claim money.");
+                        }
+                      } catch (error) {
+                        console.error("Error claiming money:", error);
+                        alert("An error occurred while claiming money.");
+                      }
+                    }}
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "#28A745",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      marginTop: "10px",
+                    }}
+                  >
+                    Claim Money
+                  </button>
+                )}
+              </div>
+            ) : (
               <button
                 style={styles.bidButton}
                 onClick={() => {

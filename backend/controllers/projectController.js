@@ -516,7 +516,7 @@ router.put("/escrow/fund/:projectId", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to fund this project." });
     }
 
-    if (project.escrowStatus === "Funded") {
+    if (project.escrowStatus !== "Not Funded") {
       return res.status(400).json({ error: "Escrow has already been funded for this project." });
     }
 
@@ -553,7 +553,7 @@ router.post("/escrow/release/:projectId", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to release escrow for this project." });
     }
 
-    if (project.escrowStatus !== "funded") {
+    if (project.escrowStatus === "Not Funded") {
       return res.status(400).json({ error: "Escrow has not been funded or has already been released." });
     }
 

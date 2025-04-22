@@ -1168,63 +1168,43 @@ const ClientDashboard = () => {
             {loadingProjects ? (
               <p>Loading projects...</p>
             ) : filteredProjects.length > 0 ? (
-              filteredProjects.map((project) => (
-                <div
-                  key={project._id}
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: "10px",
-                    margin: "10px",
-                    backgroundColor: "#FFFFFF",
-                    color: "#000000",
-                    position: "relative",
-                  }}
-                >
-                  <div>
-                    <h3>{project.title}</h3>
-                    <p>{project.description}</p>
-                    <p>Budget: ${project.budget}</p>
-                    <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
-                    <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
-                  </div>
-                  {project.approvalStatus === "Approved" &&(
-                    <div>
-                      <p>
-                        <strong>Completion URL:</strong>{" "}
-                        <a href={project.completionUrl} target="_blank" rel="noopener noreferrer">
-                          View Project
-                        </a>
-                      </p>
-                      <p style={{ color: "#28A745", fontWeight: "bold" }}>Approved</p>
+              filteredProjects.map((project) => {
+                let actionContent;
 
-                      {/* Check claimStatus */}
-                      {project.claimStatus === "Claimed" ? (
-                        <button
-                          disabled
+                if (project.status === "accepted") {
+                  // Claim Remaining Budget
+                  const remainingBudget = project.budget - project.acceptedmoney;
+                  const claimButton =
+                    remainingBudget > 0 ? (
+                      project.claimStatus === "Claimed" ? (
+                        <div
                           style={{
-                            padding: "10px",
+                            padding: "10px 20px", // Match button padding
                             backgroundColor: "#28A745",
                             color: "#FFFFFF",
-                            border: "none",
                             borderRadius: "5px",
-                            cursor: "not-allowed",
-                            marginTop: "10px",
                             fontWeight: "bold",
+                            display: "inline-block",
+                            marginRight: "10px", // Added spacing
+                            textAlign: "center", // Center text
                           }}
                         >
                           Claimed
-                        </button>
-                      ) : project.budget - project.acceptedmoney > 0 ? (
+                        </div>
+                      ) : (
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch(`http://localhost:5000/payments/claim-remaining/${project._id}`, {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
-                                },
-                              });
+                              const response = await fetch(
+                                `http://localhost:5000/payments/claim-remaining/${project._id}`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+                                  },
+                                }
+                              );
 
                               const data = await response.json();
 
@@ -1247,76 +1227,225 @@ const ClientDashboard = () => {
                             borderRadius: "5px",
                             cursor: "pointer",
                             marginTop: "10px",
+                            marginRight: "10px", // Added spacing
                           }}
                         >
-                          Claim Remaining Budget (${project.budget - project.acceptedmoney})
+                          Claim Remaining Budget (${remainingBudget})
                         </button>
-                      ) : null}
-                    </div>
-                  )}
-                  {project.status === "accepted" &&
-                    project.escrowStatus === "Funded" &&
-                    project.completedpercentage === 100 &&
-                    project.completionUrl ? (
-                    <div>
-                      <p>
-                        <strong>Completion URL:</strong>{" "}
-                        <a href={project.completionUrl} target="_blank" rel="noopener noreferrer">
-                          View Project
-                        </a>
-                      </p>
-                      <button
-                        onClick={() => handleApproveProject(project._id)}
-                        style={{
-                          padding: "10px",
-                          backgroundColor: "#28A745",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginRight: "10px",
-                        }}
-                      >
-                        Approve Project
-                      </button>
-                      <button
-                        onClick={() => {
-                          const comments = prompt("Enter your comments for rejection:");
-                          if (comments) {
-                            handleRejectApproval(project._id, comments);
-                            handleViewCompletion(project.completedpercentage, project.title);
-                          }
-                        }}
-                        style={{
-                          padding: "10px",
-                          backgroundColor: "#DC3545",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Reject Approval
-                      </button>
-                    </div>
-                  ) : project.status === "accepted" && project.escrowStatus === "Funded" ? (
-                    <button
-                      onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
-                      style={{
-                        padding: "10px",
-                        backgroundColor: "#007BFF",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      View Project Completion Percentage
-                    </button>
-                  ) : (
+                      )
+                    ) : null;
+
+                  // Completion Percentage and URL Conditions
+                  if (project.completedpercentage !== 100 || !project.completionUrl) {
+                    actionContent = (
+                      <div>
+                        <button
+                          onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#007BFF",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginTop: "10px",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          View Completion Percentage
+                        </button>
+                        {claimButton}
+                      </div>
+                    );
+                  } else if (project.approvalStatus === "Approved") {
+                    const remainingBudget = project.budget - project.acceptedmoney;
+
+                    const claimButton =
+                      remainingBudget > 0 && project.claimStatus !== "Claimed" ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(
+                                `http://localhost:5000/payments/claim-remaining/${project._id}`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+                                  },
+                                }
+                              );
+
+                              const data = await response.json();
+
+                              if (response.ok) {
+                                // Redirect to Stripe Checkout
+                                window.location.href = data.url;
+                              } else {
+                                alert(data.error || "Failed to claim the remaining budget.");
+                              }
+                            } catch (error) {
+                              console.error("Error claiming remaining budget:", error);
+                              alert("An error occurred while claiming the remaining budget.");
+                            }
+                          }}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#007BFF",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            marginTop: "10px",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Claim Remaining Budget (${remainingBudget})
+                        </button>
+                      ) : null;
+
+                    actionContent = (
+                      <div>
+                        <p
+                          style={{
+                            marginTop: "10px",
+                            marginBottom: "10px",
+                            color: "#007BFF",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Project URL:{" "}
+                          <a
+                            href={project.completionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#007BFF", textDecoration: "underline" }}
+                          >
+                            {project.completionUrl}
+                          </a>
+                        </p>
+                        <div
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#28A745",
+                            color: "#FFFFFF",
+                            borderRadius: "5px",
+                            fontWeight: "bold",
+                            display: "inline-block",
+                            marginTop: "10px",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Approved
+                        </div>
+                        {claimButton}
+                      </div>
+                    );
+                  } else if (project.completedpercentage === 100 && project.completionUrl) {
+                    actionContent = (
+                      <div>
+                        <p
+                          style={{
+                            marginTop: "10px",
+                            marginBottom: "10px",
+                            color: "#007BFF",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Project URL:{" "}
+                          <a
+                            href={project.completionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#007BFF", textDecoration: "underline" }}
+                          >
+                            {project.completionUrl}
+                          </a>
+                        </p>
+                        <button
+                          onClick={() => handleApproveProject(project._id)}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#28A745",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Approve Project
+                        </button>
+                        <button
+                          onClick={() => {
+                            const comments = prompt("Enter your comments for rejection:");
+                            if (comments) {
+                              handleRejectApproval(project._id, comments);
+                            }
+                          }}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#DC3545",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Reject Approval
+                        </button>
+                        {claimButton}
+                      </div>
+                    );
+                  } else {
+                    actionContent = (
+                      <div>
+                        <button
+                          onClick={() => handleApproveProject(project._id)}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#28A745",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Approve Project
+                        </button>
+                        <button
+                          onClick={() => {
+                            const comments = prompt("Enter your comments for rejection:");
+                            if (comments) {
+                              handleRejectApproval(project._id, comments);
+                            }
+                          }}
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#DC3545",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            marginRight: "10px", // Added spacing
+                          }}
+                        >
+                          Reject Approval
+                        </button>
+                        {claimButton}
+                      </div>
+                    );
+                  }
+                } else {
+                  // Default Actions for Other Statuses
+                  actionContent = (
                     <div>
                       <button
                         onClick={() =>
@@ -1334,13 +1463,46 @@ const ClientDashboard = () => {
                           borderRadius: "5px",
                           cursor: "pointer",
                           fontWeight: "bold",
-                          marginRight: "10px",
+                          marginRight: "10px", // Added spacing
                         }}
                       >
                         Edit Project
                       </button>
                       <button
-                        onClick={() => handleDeleteProject(project._id)}
+                        onClick={async () => {
+                          const confirmDelete = window.confirm(
+                            "Are you sure you want to delete this project? This action cannot be undone."
+                          );
+
+                          if (!confirmDelete) return;
+
+                          if (project.escrowStatus === "Funded") {
+                            try {
+                              const response = await fetch(
+                                `http://localhost:5000/payments/refund/${project._id}`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
+                                  },
+                                }
+                              );
+
+                              if (response.ok) {
+                                alert("Escrow refunded successfully!");
+                                fetchProjects();
+                              } else {
+                                const data = await response.json();
+                                alert(data.error || "Failed to refund escrow.");
+                              }
+                            } catch (error) {
+                              console.error("Error refunding escrow:", error);
+                              alert("An error occurred while refunding escrow.");
+                            }
+                          } else {
+                            handleDeleteProject(project._id);
+                          }
+                        }}
                         style={{
                           padding: "5px 10px",
                           backgroundColor: "#DC3545",
@@ -1349,7 +1511,7 @@ const ClientDashboard = () => {
                           borderRadius: "5px",
                           cursor: "pointer",
                           fontWeight: "bold",
-                          marginRight: "10px",
+                          marginRight: "10px", // Added spacing
                         }}
                       >
                         Delete Project
@@ -1364,6 +1526,7 @@ const ClientDashboard = () => {
                           borderRadius: "5px",
                           cursor: "pointer",
                           fontWeight: "bold",
+                          marginRight: "10px", // Added spacing
                         }}
                       >
                         View Bids
@@ -1379,16 +1542,38 @@ const ClientDashboard = () => {
                             borderRadius: "5px",
                             cursor: "pointer",
                             fontWeight: "bold",
-                            marginLeft: "10px",
                           }}
                         >
                           Fund Escrow
                         </button>
                       )}
                     </div>
-                  )}
-                </div>
-              ))
+                  );
+                }
+
+                return (
+                  <div
+                    key={project._id}
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: "10px",
+                      margin: "10px",
+                      backgroundColor: "#FFFFFF",
+                      color: "#000000",
+                      position: "relative",
+                    }}
+                  >
+                    <div>
+                      <h3>{project.title}</h3>
+                      <p>{project.description}</p>
+                      <p>Budget: ${project.budget}</p>
+                      <p>Deadline: {new Date(project.deadline).toLocaleDateString()}</p>
+                      <p>Escrow Status: {project.escrowStatus || "Not Funded"}</p>
+                    </div>
+                    {actionContent}
+                  </div>
+                );
+              })
             ) : (
               <p>No projects found.</p>
             )}
