@@ -690,58 +690,49 @@ const FreelancerDashboard = () => {
     }
   
     const queryLower = query.toLowerCase().trim();
-    
-    // Check if search is for a rating (a number, decimal point, or decimal number)
-    if (/^(\d+|\d*\.\d*|\.)$/.test(queryLower)) {
-      const searchRating = queryLower === '.' ? 0 : parseFloat(queryLower) || 0;
+  
+    // Apply filtering to projects array directly
+    const filtered = projects.filter((project) => {
+      // Skip any null/undefined projects
+      if (!project) return false;
       
-      const filtered = projects.filter(project => {
-        // Get client rating
-        const clientId = project.client?._id || project.client;
-        const clientRating = parseFloat(clientAvgRatings[clientId] || 0);
-        
-        // When just a decimal point is entered, show results from 0 to 1
-        if (queryLower === '.') {
-          return clientRating >= 0 && clientRating < 1;
-        }
-        
-        // Integer rating search (e.g., "4")
-        else if (Number.isInteger(searchRating)) {
-          return clientRating >= searchRating && clientRating < (searchRating + 1);
-        } 
-        // Decimal rating search (e.g., "4.6")
-        else {
-          // Get precision to determine next increment
-          const parts = queryLower.split('.');
-          const precision = parts.length > 1 ? parts[1].length : 0;
-          
-          // Calculate next increment (e.g., 4.6 -> 4.7)
-          const multiplier = Math.pow(10, precision);
-          const nextIncrement = (Math.floor(searchRating * multiplier) + 1) / multiplier;
-          
-          return clientRating >= searchRating && clientRating < nextIncrement;
-        }
-      });
+      // Get client ID
+      let clientId = null;
+      if (project.client) {
+        clientId = typeof project.client === 'object' ? project.client._id : project.client;
+      }
       
-      setFilteredProjects(filtered);
-    } 
-    // Keep original search logic for non-rating searches
-    else {
-      const filtered = projects.filter(
-        (project) =>
-          project.title.toLowerCase().includes(queryLower) ||
-          project.budget.toString().includes(queryLower) ||
-          project.status?.toLowerCase().includes(queryLower) ||
-          project.approvalStatus?.toLowerCase().includes(queryLower) ||
-          new Date(project.deadline).toLocaleDateString().includes(queryLower) ||
-          (project.client?.email &&
-            project.client.email.toLowerCase().includes(queryLower)) ||
-          (project.client?.name &&
-            project.client.name.toLowerCase().includes(queryLower))
+      // Get client rating as string for text search
+      let ratingString = "0";
+      if (clientId && clientAvgRatings[clientId]) {
+        ratingString = clientAvgRatings[clientId].toString();
+      }
+      
+      // Get client email and name, with null checks
+      const clientEmail = project.client?.email ? project.client.email.toLowerCase() : "";
+      
+      // Format deadline as string, with null check
+      const deadlineString = project.deadline ? new Date(project.deadline).toLocaleDateString().toLowerCase() : "";
+      
+      // Add null checks for each property
+      const titleMatch = project.title ? project.title.toLowerCase().includes(queryLower) : false;
+      const descMatch = project.description ? project.description.toLowerCase().includes(queryLower) : false;
+      const budgetMatch = project.budget ? project.budget.toString().includes(queryLower) : false;
+      
+      // Check if any field contains the search query
+      return (
+        titleMatch || 
+        descMatch ||
+        budgetMatch ||
+        deadlineString.includes(queryLower) ||
+        clientEmail.includes(queryLower) ||
+        ratingString.includes(queryLower)
       );
-      
-      setFilteredProjects(filtered);
-    }
+    });
+    
+    // Update filtered projects state
+    setFilteredProjects(filtered);
+    console.log("Search results:", filtered.length, "projects found");
   };
 
   const fetchLearningMaterials = useCallback(async () => {
@@ -1089,22 +1080,20 @@ const FreelancerDashboard = () => {
           </ul>
         )}
       </div>
-  <div
-  style={{marginBottom: "20px", padding: "20px", backgroundColor: "#444444", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-  }}
->
-  <input
-    type="text"
-    placeholder="Search projects using title, budget, deadline, client's email or client's average rating"
-    value={projectSearchQuery}
-    onChange={(e) => handleSearchProjects(e.target.value)}
-    style={styles.inputField}
-  />
-</div>
       {/* Projects Section */}
       <div style={styles.projectContainer}>
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Available Projects</h2>
-
+        
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            placeholder="Search projects using title, budget, deadline, client's email or client's average rating"
+            value={projectSearchQuery}
+            onChange={(e) => handleSearchProjects(e.target.value)}
+            style={styles.inputField}
+          />
+        </div>
+      
         {loading ? (
           <p style={{ textAlign: "center" }}>Loading projects...</p>
         ) : error ? (
@@ -1113,8 +1102,9 @@ const FreelancerDashboard = () => {
           <p style={{ textAlign: "center" }}>No projects available.</p>
         ) : (
           <ul style={{ listStyleType: "none", padding: 0, fontSize: "18px" }}>
-{projects.map((project) => {
-  const myBid = myBids[project._id]; // Get the bid for this project
+            {(projectSearchQuery ? filteredProjects : projects).map((project) => {
+      const myBid = myBids[project._id]; // Get the bid for this project
+      
 
   return (
     <li
@@ -1893,17 +1883,8 @@ const FreelancerDashboard = () => {
   >
     <button
       onClick={() => setShowClientReviews(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        backgroundColor: "#FF0000",
-        borderRadius: "50%",
-        border: "none",
-        color: "#FFFFFF",
-        fontSize: "20px",
-        fontWeight: "bold",
-        cursor: "pointer",
+      style={{position: "absolute",top: "10px",right: "10px",backgroundColor: "#FF0000",borderRadius: "50%",border: "none",color: "#FFFFFF",fontSize: "20px",fontWeight: "bold",cursor: "pointer",
+
       }}
     >
       ✖
@@ -1938,12 +1919,8 @@ const FreelancerDashboard = () => {
         {selectedClientReviews.map((review) => (
           <div
             key={review._id}
-            style={{
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#333333",
-              borderRadius: "10px",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+            style={{marginBottom: "20px",padding: "15px",backgroundColor: "#333333",borderRadius: "10px",boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>

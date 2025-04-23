@@ -246,17 +246,8 @@ const AdminDashboard = () => {
       {/* Logout Button */}
       <button
         onClick={handleLogout}
-        style={{
-          position: "absolute",
-          top: "20px",
-          right: "20px",
-          padding: "10px 20px",
-          backgroundColor: "#DC3545",
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          fontSize: "16px",
+        style={{position: "absolute",top: "20px",right: "20px",padding: "10px 20px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "16px",
+
         }}
       >
         Logout
@@ -267,15 +258,8 @@ const AdminDashboard = () => {
       {/* Add New Learning Materials Button */}
       <button
         onClick={() => setShowAddMaterialForm(!showAddMaterialForm)}
-        style={{
-          padding: "15px 30px",
-          backgroundColor: "#FFC107",
-          color: "#000000",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          fontSize: "18px",
-          marginBottom: "20px",
+        style={{padding: "15px 30px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px", marginBottom: "20px",
+
         }}
       >
         {showAddMaterialForm ? "Close Form" : "Add New Learning Materials"}
@@ -309,13 +293,7 @@ const AdminDashboard = () => {
           />
           <button
             type="submit"
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#28A745",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
+            style={{padding: "10px 20px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "16px",
             }}
           >
             Submit
@@ -330,14 +308,7 @@ const AdminDashboard = () => {
             setShowUsers(!showUsers);
             if (!showUsers && users.length === 0) fetchUsers();
           }}
-          style={{
-            padding: "15px 30px",
-            backgroundColor: "#007BFF",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "18px",
+          style={{padding: "15px 30px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px",
           }}
         >
           {loadingUsers ? "Loading Users..." : `Fetch Users ${showUsers ? "▲" : "▼"}`}
@@ -348,14 +319,7 @@ const AdminDashboard = () => {
             setShowProjects(!showProjects);
             if (!showProjects && projects.length === 0) fetchProjects();
           }}
-          style={{
-            padding: "15px 30px",
-            backgroundColor: "#28A745",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "18px",
+          style={{padding: "15px 30px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px",
           }}
         >
           {loadingProjects ? "Loading Projects..." : `Fetch Projects ${showProjects ? "▲" : "▼"}`}
@@ -367,14 +331,7 @@ const AdminDashboard = () => {
             setShowLearningMaterials(!showLearningMaterials);
             if (!showLearningMaterials && learningMaterials.length === 0) fetchLearningMaterials();
           }}
-          style={{
-            padding: "15px 30px",
-            backgroundColor: "#17A2B8",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "18px",
+          style={{padding: "15px 30px",backgroundColor: "#17A2B8",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px",
           }}
         >
           {showLearningMaterials ? "Hide Learning Materials ▲" : "Fetch Learning Materials ▼"}
@@ -403,14 +360,8 @@ const AdminDashboard = () => {
                   <td style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "14px" }}>
                     <button
                       onClick={() => handleDeleteUser(user._id)}
-                      style={{
-                        padding: "5px 10px",
-                        backgroundColor: "#DC3545",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontSize: "14px",
+                      style={{padding: "5px 10px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "14px",
+
                       }}
                     >
                       Delete
@@ -451,14 +402,9 @@ const AdminDashboard = () => {
                   <td style={{ borderBottom: "1px solid #ddd", padding: "10px", fontSize: "14px" }}>
                     <button
                       onClick={() => handleDeleteProject(project._id)}
-                      style={{
-                        padding: "5px 10px",
-                        backgroundColor: "#DC3545",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontSize: "14px",
+                      style={{padding: "5px 10px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "14px",
+                        
+
                       }}
                     >
                       Delete
@@ -479,13 +425,8 @@ const AdminDashboard = () => {
             {learningMaterials.map((material) => (
               <li
                 key={material._id}
-                style={{
-                  marginBottom: "20px",
-                  padding: "15px",
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: "5px",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                }}
+                style={{marginBottom: "20px",padding: "15px",backgroundColor: "#f9f9f9",borderRadius: "5px",boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",}}
+
               >
                 <h4>{material.title}</h4>
                 <p>{material.description}</p>
@@ -495,13 +436,8 @@ const AdminDashboard = () => {
                 <div style={{ marginTop: "10px" }}>
                   <button
                     onClick={() => handleDeleteMaterial(material._id)}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#DC3545",
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
+                    style={{padding: "10px 20px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "14px",
+
                     }}
                   >
                     Delete
@@ -515,5 +451,4 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
 export default AdminDashboard;
