@@ -1893,17 +1893,8 @@ const FreelancerDashboard = () => {
   >
     <button
       onClick={() => setShowClientReviews(false)}
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        backgroundColor: "#FF0000",
-        borderRadius: "50%",
-        border: "none",
-        color: "#FFFFFF",
-        fontSize: "20px",
-        fontWeight: "bold",
-        cursor: "pointer",
+      style={{position: "absolute",top: "10px",right: "10px",backgroundColor: "#FF0000",borderRadius: "50%",border: "none",color: "#FFFFFF",fontSize: "20px",fontWeight: "bold",cursor: "pointer",
+
       }}
     >
       ✖
@@ -1938,12 +1929,8 @@ const FreelancerDashboard = () => {
         {selectedClientReviews.map((review) => (
           <div
             key={review._id}
-            style={{
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#333333",
-              borderRadius: "10px",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+            style={{marginBottom: "20px",padding: "15px",backgroundColor: "#333333",borderRadius: "10px",boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
