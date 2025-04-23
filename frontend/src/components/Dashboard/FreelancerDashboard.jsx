@@ -255,6 +255,13 @@ const FreelancerDashboard = () => {
       return;
     }
   
+    // Check if bid amount exceeds project budget
+    if (parseFloat(bidAmount) > selectedProject.budget) {
+      setPopupMessage(`Your bid amount (${bidAmount}) exceeds the project budget ($${selectedProject.budget}). Please enter a lower bid.`);
+      setShowPopup(true);
+      return;
+    }
+  
     try {
       const url = myBids[selectedProject._id]
         ? `http://localhost:5000/bids/${myBids[selectedProject._id]._id}` // Update existing bid

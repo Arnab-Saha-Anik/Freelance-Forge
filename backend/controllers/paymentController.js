@@ -12,8 +12,6 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
   const { projectId, amount } = req.body;
 
   try {
-
-
     // Fetch the project from the database
     const project = await Project.findById(projectId);
     if (!project) {
@@ -21,7 +19,7 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
     }
 
     // Fetch the client (user) from the database
-    const client = await User.findById(req.user.id); // Assuming `req.user.id` is populated by the middleware
+    const client = await User.findById(req.user.id);
     if (!client) {
       return res.status(404).json({ error: "Client not found" });
     }
@@ -48,17 +46,15 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
         projectId,
         clientId: client._id.toString(),
         amount: amount.toString(),
+        action: "create-payment-intent",
       },
     });
     
-
     if (!session || !session.id) {
       throw new Error("Failed to create Stripe session. Session or session ID is undefined.");
     }
 
-    // Save the payment record in the database
-
-
+    // Return session ID for client-side payment processing
     res.status(200).json({ sessionId: session.id });
   } catch (error) {
     console.error("Error creating Stripe session:", error);
@@ -77,32 +73,120 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
       const session = event.data.object;
 
       const projectId = session.metadata.projectId;
-      const clientId = session.metadata.clientId;
-      const amount = parseFloat(session.metadata.amount);
+      const action = session.metadata.action;
+      const amount = parseFloat(session.metadata.amount || "0");
 
+      // Find the project
       const project = await Project.findById(projectId);
-      const client = await User.findById(clientId);
-
-      if (!project || !client) {
-        return res.status(404).send("Project or client not found.");
+      if (!project) {
+        return res.status(404).send("Project not found.");
       }
 
-      const payment = new Payment({
-        project: project._id,
-        client: client._id,
-        amount,
-        status: "Succeeded",
-        paymentIntentId: session.id,
-      });
-      await payment.save();
+      // Handle different actions
+      switch (action) {
+        case "create-payment-intent":
+          {
+            const clientId = session.metadata.clientId;
+            const client = await User.findById(clientId);
+            
+            if (!client) {
+              return res.status(404).send("Client not found.");
+            }
+            
+            // Save payment intent to project
+            project.paymentIntentId = session.id;
+            project.escrowStatus = "Funded";
+            await project.save();
+            
+            // Create a new payment entry
+            const payment = new Payment({
+              project: project._id,
+              client: client._id,
+              amount,
+              status: "Succeeded",
+              paymentIntentId: session.id,
+            });
+            await payment.save();
+            
+            // Log activity
+            await Activity.create({
+              userId: client._id,
+              action: `Payment of $${amount} for project ID: ${projectId} has been funded in the Escrow System.`,
+            });
+          }
+          break;
 
-      project.escrowStatus = "Funded";
-      await project.save();
+        case "claim-money":
+          {
+            const freelancerId = session.metadata.freelancerId;
+            
+            // Update payment
+            const payment = await Payment.findOneAndUpdate(
+              { project: project._id },
+              {
+                client: project.client,
+                freelancer: project.acceptedFreelancer,
+                amount: project.acceptedmoney,
+                status: "Freelancer Paid",
+                paymentIntentId: project.paymentIntentId,
+              },
+              { new: true, upsert: true }
+            );
+            
+            // Update project
+            project.escrowStatus = "Released";
+            await project.save();
+            
+            // Log activity
+            await Activity.create({
+              userId: project.acceptedFreelancer,
+              action: `Freelancer has claimed money for project "${project.title}".`,
+            });
+          }
+          break;
 
-      await Activity.create({
-        userId: client._id,
-        action: `Payment of $${amount} for project ID: ${projectId} has been funded in the Escrow System.`,
-      });
+        case "claim-remaining":
+          {
+            const clientId = session.metadata.clientId;
+            
+            // Update project
+            project.claimStatus = "Claimed";
+            await project.save();
+            
+            // Log activity
+            await Activity.create({
+              userId: project.client,
+              action: `Remaining budget claimed for project "${project.title}".`,
+            });
+          }
+          break;
+
+        case "refund-escrow":
+          {
+            const clientId = session.metadata.clientId;
+            
+            // Update payment status
+            const payment = await Payment.findOneAndUpdate(
+              { project: project._id },
+              { status: "Failed" },
+              { new: true }
+            );
+            
+            // Update project
+            project.escrowStatus = "Not Funded";
+            await project.save();
+            
+            // Log activity
+            await Activity.create({
+              userId: project.client,
+              action: `Escrow refunded for project "${project.title}".`,
+            });
+          }
+          break;
+
+        default:
+          return res.status(400).send(`Unhandled action: ${action}`);
+      }
 
       return res.status(200).send("Webhook handled successfully");
     }
@@ -122,6 +206,11 @@ router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
 
     if (!project) {
       return res.status(404).json({ error: "Project not found." });
+    }
+
+    // Check for paymentIntentId
+    if (!project.paymentIntentId) {
+      return res.status(400).json({ error: "Payment intent not found for this project." });
     }
 
     if (project.approvalStatus !== "Approved") {
@@ -147,7 +236,7 @@ router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
             product_data: {
               name: `Claim Money for Project: ${project.title}`,
             },
-            unit_amount: Math.round(project.acceptedmoney * 100), // Convert to cents and ensure it's an integer
+            unit_amount: Math.round(project.acceptedmoney * 100),
           },
           quantity: 1,
         },
@@ -155,25 +244,16 @@ router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/freelancer-dashboard`,
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
+      metadata: {
+        projectId: project._id.toString(),
+        paymentIntentId: project.paymentIntentId,
+        freelancerId: project.acceptedFreelancer.toString(),
+        action: "claim-money",
+        amount: project.acceptedmoney.toString(),
+      },
     });
 
-    // Find and update the existing payment document
-    const payment = await Payment.findOneAndUpdate(
-      { project: project._id }, // Find payment by project ID
-      {
-        client: project.client._id,
-        freelancer: project.acceptedFreelancer, // Use the ObjectId directly
-        amount: project.acceptedmoney,
-        paymentIntentId: session.id,
-      },
-      { new: true, upsert: true } // Create a new document if it doesn't exist
-    );
-
-    // Update the project status
-    project.escrowStatus = "Released";
-    await project.save();
-
-    res.status(200).json({ url: session.url, payment });
+    res.status(200).json({ url: session.url });
   } catch (error) {
     console.error("Error claiming money:", error);
     res.status(500).json({ error: "Failed to claim money." });
@@ -190,8 +270,13 @@ router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Project not found." });
     }
 
+    // Check for paymentIntentId
+    if (!project.paymentIntentId) {
+      return res.status(400).json({ error: "Payment intent not found for this project." });
+    }
+
     if (project.status !== "accepted") {
-      return res.status(400).json({ error: "Project is not approve for claiming the remaining budget." });
+      return res.status(400).json({ error: "Project is not approved for claiming the remaining budget." });
     }
 
     const remainingBudget = project.budget - project.acceptedmoney;
@@ -218,11 +303,14 @@ router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/client-dashboard`,
       cancel_url: `${process.env.CLIENT_URL}/cancel`,
+      metadata: {
+        projectId: project._id.toString(),
+        paymentIntentId: project.paymentIntentId,
+        clientId: project.client.toString(),
+        action: "claim-remaining",
+        amount: remainingBudget.toString(),
+      },
     });
-
-    // Update the project's claimStatus to "Claimed"
-    project.claimStatus = "Claimed";
-    await project.save();
 
     res.status(200).json({ url: session.url });
   } catch (error) {
@@ -240,6 +328,11 @@ router.post("/refund-escrow/:projectId", verifyToken, async (req, res) => {
 
     if (!project) {
       return res.status(404).json({ error: "Project not found." });
+    }
+
+    // Check for paymentIntentId
+    if (!project.paymentIntentId) {
+      return res.status(400).json({ error: "Payment intent not found for this project." });
     }
 
     if (project.escrowStatus !== "Funded") {
@@ -266,11 +359,13 @@ router.post("/refund-escrow/:projectId", verifyToken, async (req, res) => {
       cancel_url: `${process.env.CLIENT_URL}/refundCancelled`,
       metadata: {
         projectId: project._id.toString(),
+        paymentIntentId: project.paymentIntentId,
+        clientId: project.client.toString(),
+        action: "refund-escrow",
+        amount: project.budget.toString(),
       },
     });
-    project.escrowStatus = "Not Funded";
-    await project.save();
-
+    
     res.status(200).json({ url: session.url });
   } catch (error) {
     console.error("Error processing refund escrow:", error);
