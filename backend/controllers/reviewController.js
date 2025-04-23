@@ -172,4 +172,25 @@ router.get("/check/:projectId", verifyToken, async (req, res) => {
   }
 });
 
+// Get average rating for a specific user
+router.get("/average/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    const reviews = await Review.find({ receiverId: userId });
+    
+    if (reviews.length === 0) {
+      return res.json({ averageRating: null });
+    }
+    
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+    
+    res.json({ averageRating });
+  } catch (error) {
+    console.error("Error fetching average rating:", error);
+    res.status(500).json({ error: "Failed to fetch average rating" });
+  }
+});
+
 module.exports = router;

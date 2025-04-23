@@ -194,14 +194,49 @@ const ClientDashboard = () => {
     try {
       const response = await fetch("http://localhost:5000/users/allfreelancers");
       const data = await response.json();
-      console.log("Freelancers fetched:", data);
-      setFreelancers(Array.isArray(data) ? data : []);
+      
+      // For each freelancer, fetch their reviews to get count and average
+      const freelancersWithReviewInfo = await Promise.all(
+        Array.isArray(data) ? data.map(async (freelancer) => {
+          try {
+            // Get reviews for this freelancer
+            const reviewsResponse = await fetch(`http://localhost:5000/reviews/received/${freelancer._id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            
+            if (reviewsResponse.ok) {
+              const reviewsData = await reviewsResponse.json();
+              // Calculate average if there are reviews
+              let avgRating = 0;
+              if (reviewsData.length > 0) {
+                const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
+                avgRating = totalRating / reviewsData.length;
+              }
+              
+              return {
+                ...freelancer,
+                reviewCount: reviewsData.length,
+                avgRating: avgRating ? avgRating.toFixed(1) : 0
+              };
+            }
+            return freelancer;
+          } catch (error) {
+            console.error("Error fetching freelancer review info:", error);
+            return freelancer;
+          }
+        }) : []
+      );
+      
+      setFreelancers(freelancersWithReviewInfo);
     } catch (error) {
       console.error("Error fetching freelancers:", error);
+      setFreelancers([]);
     } finally {
       setLoadingFreelancers(false);
     }
-  }, []);
+  }, [token]);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -1958,6 +1993,17 @@ const ClientDashboard = () => {
               <p style={{ color: "#000000" }}>
                 Experience: {freelancer.profile?.[0]?.experience || "Not Provided"}
               </p>
+              <p style={{ color: "#000000" }}>
+                Average Rating: {
+                  freelancer.avgRating > 0 ? (
+                    <span>
+                      <span style={{ color: "#FFD700" }}>{"★".repeat(Math.round(freelancer.avgRating))}</span>
+                      <span style={{ color: "#C0C0C0" }}>{"☆".repeat(5 - Math.round(freelancer.avgRating))}</span>
+                      <span style={{ marginLeft: "5px" }}>{freelancer.avgRating}/5</span>
+                    </span>
+                  ) : "No ratings yet"
+                }
+              </p>
               <div style={{ 
                 display: "flex", 
                 justifyContent: "center",
@@ -1990,7 +2036,7 @@ const ClientDashboard = () => {
                     fontWeight: "bold",
                   }}
                 >
-                  View Reviews {freelancer.profile?.[0]?.reviews ? `(${freelancer.profile[0].reviews}/5)` : ""}
+                  View Reviews {freelancer.reviewCount > 0 ? `(${freelancer.reviewCount})` : ""}
                 </button>
               </div>
             </div>
@@ -2418,7 +2464,7 @@ const ClientDashboard = () => {
                   </div>
                   <p style={{ marginBottom: "10px", fontSize: "16px" }}>"{review.comment}"</p>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "#AAAAAA", fontSize: "14px" }}>
-                    <p>From: {review.reviewerId?.name || review.reviewerId?.email || "Unknown"}</p>
+                    <p>From: {review.reviewerId?.email || "Unknown"}</p>
                     <p>{new Date(review.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
