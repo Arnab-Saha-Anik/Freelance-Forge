@@ -750,38 +750,18 @@ const ClientDashboard = () => {
     (query) => {
       setFreelancerSearchQuery(query);
 
+      if (!query.trim()) {
+        setFilteredFreelancers(freelancers);
+        return;
+      }
+
+      const queryLower = query.toLowerCase().trim();
+      
       const filtered = freelancers.filter((freelancer) => {
-        const queryLower = query.toLowerCase().trim();
+        // Convert rating to string for text-based comparison
+        const ratingString = freelancer.avgRating ? freelancer.avgRating.toString() : "0";
         
-        // Check if search is for a rating (a number, decimal point, or decimal number)
-        if (/^(\d+|\d*\.\d*|\.)$/.test(queryLower)) {
-          const searchRating = queryLower === '.' ? 0 : parseFloat(queryLower) || 0;
-          const freelancerRating = parseFloat(freelancer.avgRating);
-          
-          // When just a decimal point is entered, show results from 0 to 1
-          if (queryLower === '.') {
-            return freelancerRating >= 0 && freelancerRating < 1;
-          }
-          
-          // Integer rating search (e.g., "4")
-          else if (Number.isInteger(searchRating)) {
-            return freelancerRating >= searchRating && freelancerRating < (searchRating + 1);
-          } 
-          // Decimal rating search with or without leading digit (e.g., "4.6" or ".6")
-          else {
-            // Get the precision to determine the next increment (how many decimal places)
-            const parts = queryLower.split('.');
-            const precision = parts.length > 1 ? parts[1].length : 0;
-            
-            // Calculate the next increment value (e.g., 4.6 -> 4.7)
-            const multiplier = Math.pow(10, precision);
-            const nextIncrement = (Math.floor(searchRating * multiplier) + 1) / multiplier;
-            
-            return freelancerRating >= searchRating && freelancerRating < nextIncrement;
-          }
-        }
-        
-        // Regular search for other fields
+        // Search across all fields including rating as a string
         return (
           (freelancer.name && freelancer.name.toLowerCase().includes(queryLower)) ||
           (freelancer.email && freelancer.email.toLowerCase().includes(queryLower)) ||
@@ -790,7 +770,8 @@ const ClientDashboard = () => {
           (freelancer.profile?.[0]?.portfolio &&
             freelancer.profile[0].portfolio.toLowerCase().includes(queryLower)) ||
           (freelancer.profile?.[0]?.experience &&
-            freelancer.profile[0].experience.toLowerCase().includes(queryLower))
+            freelancer.profile[0].experience.toLowerCase().includes(queryLower)) ||
+          ratingString.includes(queryLower) // Search in rating as string
         );
       });
 
@@ -1974,7 +1955,7 @@ const ClientDashboard = () => {
         <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
-            placeholder="Search freelancers by name, email, skills, portfolio, or experience"
+            placeholder="Search freelancers by name, email, skills, portfolio, experience, or rating"
             value={freelancerSearchQuery}
             onChange={(e) => handleFreelancerSearch(e.target.value)}
             style={{
