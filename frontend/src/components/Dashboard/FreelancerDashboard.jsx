@@ -684,16 +684,64 @@ const FreelancerDashboard = () => {
   const handleSearchProjects = (query) => {
     setProjectSearchQuery(query);
   
-    const filtered = projects.filter(
-      (project) =>
-        project.title.toLowerCase().includes(query.toLowerCase()) ||
-        project.budget.toString().includes(query) ||
-        new Date(project.deadline).toLocaleDateString().includes(query) ||
-        (project.client?.email &&
-          project.client.email.toLowerCase().includes(query.toLowerCase()))
-    );
+    if (!query.trim()) {
+      setFilteredProjects(projects);
+      return;
+    }
   
-    setFilteredProjects(filtered);
+    const queryLower = query.toLowerCase().trim();
+    
+    // Check if search is for a rating (a number, decimal point, or decimal number)
+    if (/^(\d+|\d*\.\d*|\.)$/.test(queryLower)) {
+      const searchRating = queryLower === '.' ? 0 : parseFloat(queryLower) || 0;
+      
+      const filtered = projects.filter(project => {
+        // Get client rating
+        const clientId = project.client?._id || project.client;
+        const clientRating = parseFloat(clientAvgRatings[clientId] || 0);
+        
+        // When just a decimal point is entered, show results from 0 to 1
+        if (queryLower === '.') {
+          return clientRating >= 0 && clientRating < 1;
+        }
+        
+        // Integer rating search (e.g., "4")
+        else if (Number.isInteger(searchRating)) {
+          return clientRating >= searchRating && clientRating < (searchRating + 1);
+        } 
+        // Decimal rating search (e.g., "4.6")
+        else {
+          // Get precision to determine next increment
+          const parts = queryLower.split('.');
+          const precision = parts.length > 1 ? parts[1].length : 0;
+          
+          // Calculate next increment (e.g., 4.6 -> 4.7)
+          const multiplier = Math.pow(10, precision);
+          const nextIncrement = (Math.floor(searchRating * multiplier) + 1) / multiplier;
+          
+          return clientRating >= searchRating && clientRating < nextIncrement;
+        }
+      });
+      
+      setFilteredProjects(filtered);
+    } 
+    // Keep original search logic for non-rating searches
+    else {
+      const filtered = projects.filter(
+        (project) =>
+          project.title.toLowerCase().includes(queryLower) ||
+          project.budget.toString().includes(queryLower) ||
+          project.status?.toLowerCase().includes(queryLower) ||
+          project.approvalStatus?.toLowerCase().includes(queryLower) ||
+          new Date(project.deadline).toLocaleDateString().includes(queryLower) ||
+          (project.client?.email &&
+            project.client.email.toLowerCase().includes(queryLower)) ||
+          (project.client?.name &&
+            project.client.name.toLowerCase().includes(queryLower))
+      );
+      
+      setFilteredProjects(filtered);
+    }
   };
 
   const fetchLearningMaterials = useCallback(async () => {
@@ -1047,7 +1095,7 @@ const FreelancerDashboard = () => {
 >
   <input
     type="text"
-    placeholder="Search projects using title, budget, deadline, or freelancer email"
+    placeholder="Search projects using title, budget, deadline, client's email or client's average rating"
     value={projectSearchQuery}
     onChange={(e) => handleSearchProjects(e.target.value)}
     style={styles.inputField}
@@ -1084,7 +1132,7 @@ const FreelancerDashboard = () => {
       </p>
       {/* Add client rating display */}
       <p style={{ marginBottom: "10px" }}>
-        Average Rating: {
+        Client's Average Rating: {
           project.client && clientAvgRatings[project.client._id] > 0 ? (
             <span>
               <span style={{ color: "#FFD700" }}>{"★".repeat(Math.round(clientAvgRatings[project.client._id]))}</span>
