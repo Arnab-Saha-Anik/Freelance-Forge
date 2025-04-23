@@ -56,6 +56,13 @@ const ClientDashboard = () => {
   const [filteredFreelancers, setFilteredFreelancers] = useState([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [amount, setAmount] = useState(0);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedProjectForReview, setSelectedProjectForReview] = useState(null);
+  const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
+  const [hasReviewed, setHasReviewed] = useState({});
+  const [projectReviews, setProjectReviews] = useState({});
+  const [showMyReviews, setShowMyReviews] = useState(false);
+  const [myReviews, setMyReviews] = useState([]);
 
   const token = localStorage.getItem("clientToken");
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
@@ -210,6 +217,25 @@ const ClientDashboard = () => {
       console.error("Error fetching notifications:", error);
     }
   }, [token]);
+
+  const fetchMyReviews = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/reviews/received/${loggedInClientId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMyReviews(data);
+      } else {
+        console.error("Failed to fetch reviews");
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  }, [loggedInClientId, token]);
 
   const markNotificationsAsRead = async () => {
     try {
@@ -791,6 +817,79 @@ const ClientDashboard = () => {
     }
   };
 
+  const checkReviewStatus = useCallback(async (projectId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/reviews/check/${projectId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setHasReviewed((prev) => ({ ...prev, [projectId]: data.hasReviewed }));
+
+      // Fetch existing reviews for this project
+      const reviewsResponse = await fetch(`http://localhost:5000/reviews/project/${projectId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const reviewsData = await reviewsResponse.json();
+      setProjectReviews((prev) => ({ ...prev, [projectId]: reviewsData }));
+    } catch (error) {
+      console.error("Error checking review status:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const fetchReviewStatuses = async () => {
+      const approvedProjects = projects.filter((p) => p.approvalStatus === "Approved");
+      for (const project of approvedProjects) {
+        await checkReviewStatus(project._id);
+      }
+    };
+
+    if (projects.length > 0) {
+      fetchReviewStatuses();
+    }
+  }, [projects, checkReviewStatus]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedProjectForReview) return;
+
+    try {
+      const response = await fetch("http://localhost:5000/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectId: selectedProjectForReview._id,
+          receiverId: selectedProjectForReview.acceptedFreelancer,
+          rating: parseInt(reviewData.rating),
+          comment: reviewData.comment,
+        }),
+      });
+
+      if (response.ok) {
+        setPopupMessage("Review submitted successfully");
+        setPopupType("success");
+        setShowReviewModal(false);
+        setSelectedProjectForReview(null);
+        setReviewData({ rating: 5, comment: "" });
+
+        // Update review status
+        await checkReviewStatus(selectedProjectForReview._id);
+      } else {
+        const data = await response.json();
+        setPopupMessage(data.error || "Failed to submit review");
+        setPopupType("error");
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      setPopupMessage("Error submitting review");
+      setPopupType("error");
+    }
+  };
+
   return (
     <div
       style={{
@@ -1046,7 +1145,7 @@ const ClientDashboard = () => {
                   type="submit"
                   style={{
                     padding: "10px",
-                    backgroundColor: "#f44336",
+                    backgroundColor: "#F44336",
                     color: "white",
                     border: "none",
                     cursor: "pointer",
@@ -1077,13 +1176,34 @@ const ClientDashboard = () => {
                   Activity History
                 </button>
               </div>
-
+              <ul style={{ listStyleType: "none", padding: 0, marginTop: "20px" }}>
+                <li style={{ marginTop: "10px" }}>
+                  <button
+                    onClick={() => {
+                      setShowMyReviews(!showMyReviews);
+                      if (!showMyReviews) fetchMyReviews();
+                    }}
+                    style={{
+                      padding: "10px",
+                      backgroundColor: "#007BFF",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                      width: "100%",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    My Reviews
+                  </button>
+                </li>
+              </ul>
               <div style={{ marginTop: "20px", textAlign: "center" }}>
                 <button
                   onClick={handleLogout}
                   style={{
                     padding: "10px",
-                    backgroundColor: "#007BFF",
+                    backgroundColor: "#F44336",
                     color: "white",
                     border: "none",
                     cursor: "pointer",
@@ -1093,6 +1213,8 @@ const ClientDashboard = () => {
                   Logout
                 </button>
               </div>
+
+              
             </div>
           )}
         </div>
@@ -1375,6 +1497,61 @@ const ClientDashboard = () => {
                           Approved
                         </div>
                         {claimButton}
+                        <div style={{ marginTop: "10px" }}>
+                          {projectReviews[project._id]?.filter((review) =>
+                            review.receiverId?._id === loggedInClientId
+                          ).map((review) => (
+                            <div
+                              key={review._id}
+                              style={{
+                                padding: "10px",
+                                backgroundColor: "#f5f5f5",
+                                borderRadius: "5px",
+                                marginBottom: "5px",
+                                color: "#000000",
+                              }}
+                            >
+                              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <p>
+                                  <strong>Freelancer's review:</strong> {review.comment}
+                                </p>
+                                <p>Rating: {review.rating}/5 ⭐</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {!hasReviewed[project._id] ? (
+                          <button
+                            onClick={() => {
+                              setSelectedProjectForReview(project);
+                              setShowReviewModal(true);
+                            }}
+                            style={{
+                              padding: "10px",
+                              backgroundColor: "#FFC107",
+                              color: "#000000",
+                              border: "none",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                              marginTop: "10px",
+                            }}
+                          >
+                            Review Freelancer
+                          </button>
+                        ) : (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "10px",
+                              backgroundColor: "#E6E6E6",
+                              color: "#666666",
+                              borderRadius: "5px",
+                              marginTop: "10px",
+                            }}
+                          >
+                            Review Submitted
+                          </span>
+                        )}
                       </div>
                     );
                   } else if (project.completedpercentage === 100 && project.completionUrl) {
@@ -1505,7 +1682,7 @@ const ClientDashboard = () => {
                       </button>
                       <button
                         onClick={async () => {
-                          {handleDeleteProject(project._id);}
+                          handleDeleteProject(project._id);
                         }}
                         style={{
                           padding: "5px 10px",
@@ -2026,6 +2203,79 @@ const ClientDashboard = () => {
         </div>
       )}
 
+      {showMyReviews && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "80%",
+          }}
+        >
+          <button
+            onClick={() => setShowMyReviews(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              backgroundColor: "#FF0000",
+              borderRadius: "50%",
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: "20px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            ✖
+          </button>
+
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>My Reviews</h2>
+          {myReviews.length > 0 ? (
+            myReviews.map((review) => (
+              <div
+                key={review._id}
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#333333",
+                  borderRadius: "10px",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <h3 style={{ color: "#FFD700" }}>
+                    Project: {review.projectId?.title || "Unknown Project"}
+                  </h3>
+                  <div>
+                    <span style={{ fontSize: "20px", color: "#FFD700" }}>
+                      {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                    </span>
+                    <span style={{ marginLeft: "5px", color: "#FFD700" }}>{review.rating}/5</span>
+                  </div>
+                </div>
+                <p style={{ marginBottom: "10px", fontSize: "16px" }}>"{review.comment}"</p>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "#AAAAAA", fontSize: "14px" }}>
+                  <p>From: {review.reviewerId?.email || "Unknown"}</p>
+                  <p>{new Date(review.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px" }}>
+              You don't have any reviews yet.
+            </p>
+          )}
+        </div>
+      )}
+
       {showCompletionModal && (
         <div
           style={{
@@ -2107,6 +2357,105 @@ const ClientDashboard = () => {
           >
             Cancel
           </button>
+        </div>
+      )}
+
+      {showReviewModal && selectedProjectForReview && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFFFFF",
+            padding: "20px",
+            borderRadius: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "500px",
+            color: "#000000",
+          }}
+        >
+          <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
+            Review Freelancer for "{selectedProjectForReview.title}"
+          </h3>
+          <form onSubmit={handleReviewSubmit}>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+                Rating (1-5):
+              </label>
+              <select
+                value={reviewData.rating}
+                onChange={(e) => setReviewData({ ...reviewData, rating: e.target.value })}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                }}
+                required
+              >
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Very Good</option>
+                <option value="3">3 - Good</option>
+                <option value="2">2 - Fair</option>
+                <option value="1">1 - Poor</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+                Review Comment:
+              </label>
+              <textarea
+                value={reviewData.comment}
+                onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                placeholder="Share your experience working with this freelancer..."
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd",
+                  minHeight: "100px",
+                  resize: "vertical",
+                }}
+                required
+              />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button
+                type="submit"
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#28A745",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Submit Review
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setSelectedProjectForReview(null);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#DC3545",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

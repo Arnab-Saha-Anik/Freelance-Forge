@@ -11,6 +11,7 @@ const bidController = require("./controllers/bidController"); // Import the bid 
 const activityController = require("./controllers/activityController"); // Import the activity controller
 const learningMaterialController = require("./controllers/learningMaterialController"); // Import the learning material controller
 const paymentController = require("./controllers/paymentController"); // Import the payment controller
+const reviewRoutes = require("./controllers/reviewController"); // Import the review routes
 
 dotenv.config();
 
@@ -33,7 +34,7 @@ app.use("/bids", bidController); // Add the bid routes
 app.use("/activities", activityController); // Add the activity routes
 app.use("/learning-materials", learningMaterialController); // Add the learning materials routes
 app.use("/payments", paymentController); // Add the payment routes
-
+app.use("/reviews", reviewRoutes); // Add the review routes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
