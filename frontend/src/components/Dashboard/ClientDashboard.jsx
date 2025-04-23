@@ -971,39 +971,20 @@ const ClientDashboard = () => {
 
   return (
     <div
-      style={{
-        padding: "20px",
-        textAlign: "center",
-        backgroundColor: "#723456",
-        color: "#FFFFFF",
-        minHeight: "100vh",
+      style={{padding: "20px",textAlign: "center",backgroundColor: "#723456",color: "#FFFFFF",minHeight: "100vh",
       }}
     >
       <h1>Welcome, {username}</h1>
 
       {popupMessage && (
         <div
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            backgroundColor: popupType === "success" ? "#4CAF50" : "#f44336",
-            color: "white",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            zIndex: 1000,
+          style={{position: "fixed",top: "20px",right: "20px",backgroundColor: popupType === "success" ? "#4CAF50" : "#f44336",color: "white",padding: "10px 20px",borderRadius: "5px",zIndex: 1000,
           }}
         >
           {popupMessage}
           <button
             onClick={closePopup}
-            style={{
-              marginLeft: "10px",
-              backgroundColor: "transparent",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "16px",
+            style={{ marginLeft: "10px",backgroundColor: "transparent",border: "none",color: "white",cursor: "pointer",fontSize: "16px",
             }}
           >
             ✖
@@ -1020,62 +1001,32 @@ const ClientDashboard = () => {
                 markNotificationsAsRead();
               }
             }}
-            style={{
-              padding: "10px",
-              backgroundColor: "#007BFF",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "bold",
+            style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
             }}
           >
             Notifications
           </button>
           {showNotifications && (
             <div
-              style={{
-                position: "absolute",
-                top: "50px",
-                right: "0",
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                padding: "10px",
-                width: "300px",
-                zIndex: 1000,
+              style={{position: "absolute",top: "50px",right: "0",backgroundColor: "#FFFFFF",border: "1px solid #ddd",borderRadius: "5px",padding: "10px",width: "300px",zIndex: 1000,
               }}
             >
               {notifications.length > 0 ? (
                 notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    style={{
-                      padding: "10px",
-                      borderBottom: "1px solid #ddd",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                    style={{padding: "10px",borderBottom: "1px solid #ddd",display: "flex",justifyContent: "space-between",alignItems: "center",
                     }}
                   >
                     <p
-                      style={{
-                        margin: 0,
-                        color: "#000000",
+                      style={{margin: 0, color: "#000000",
                       }}
                     >
                       {notification.message}
                     </p>
                     <button
                       onClick={() => handleDeleteNotification(notification._id)}
-                      style={{
-                        backgroundColor: "#DC3545",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        padding: "5px 10px",
-                        fontSize: "12px",
+                      style={{backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",padding: "5px 10px",fontSize: "12px",
                       }}
                     >
                       Delete
@@ -1094,29 +1045,14 @@ const ClientDashboard = () => {
         <div>
           <button
             onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-            style={{
-              padding: "10px",
-              backgroundColor: "#28A745",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "bold",
+            style={{  padding: "10px", backgroundColor: "#28A745", color: "#FFFFFF", border: "none", borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
             }}
           >
             My Account
           </button>
           {showAccountDropdown && (
             <div
-              style={{
-                position: "absolute",
-                top: "50px",
-                right: "20px",
-                backgroundColor: "#f9f9f9",
-                border: "1px solid #ddd",
-                padding: "20px",
-                zIndex: 1000,
-                width: "300px",
+              style={{position: "absolute",top: "50px",right: "20px",backgroundColor: "#f9f9f9",border: "1px solid #ddd", padding: "20px",zIndex: 1000,width: "300px",
               }}
             >
               <form onSubmit={handleAccountUpdate}>
@@ -1126,11 +1062,7 @@ const ClientDashboard = () => {
                   placeholder="Name"
                   value={accountInfo.name}
                   onChange={handleAccountInfoChange}
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{padding: "10px", marginBottom: "10px",width: "100%",boxSizing: "border-box",
                   }}
                 />
                 <input
@@ -1139,11 +1071,7 @@ const ClientDashboard = () => {
                   placeholder="Current Password"
                   value={accountInfo.currentPassword}
                   onChange={handleAccountInfoChange}
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{padding: "10px",marginBottom: "10px",width: "100%", boxSizing: "border-box",
                   }}
                 />
                 <input
@@ -1152,11 +1080,7 @@ const ClientDashboard = () => {
                   placeholder="New Password"
                   value={accountInfo.newPassword}
                   onChange={handleAccountInfoChange}
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{ padding: "10px", marginBottom: "10px", width: "100%", boxSizing: "border-box",
                   }}
                 />
                 <input
@@ -1165,23 +1089,13 @@ const ClientDashboard = () => {
                   placeholder="Confirm New Password"
                   value={accountInfo.confirmNewPassword}
                   onChange={handleAccountInfoChange}
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{padding: "10px",marginBottom: "10px", width: "100%",boxSizing: "border-box",
                   }}
                 />
                 <button
                   type="submit"
                   disabled={isUpdateDisabled}
-                  style={{
-                    padding: "10px",
-                    backgroundColor: isUpdateDisabled ? "#ccc" : "#007BFF",
-                    color: "white",
-                    border: "none",
-                    cursor: isUpdateDisabled ? "not-allowed" : "pointer",
-                    width: "100%",
+                  style={{padding: "10px",backgroundColor: isUpdateDisabled ? "#ccc" : "#007BFF",color: "white",border: "none",cursor: isUpdateDisabled ? "not-allowed" : "pointer", width: "100%",
                   }}
                 >
                   Update Information
@@ -1197,11 +1111,7 @@ const ClientDashboard = () => {
                     setDeleteAccountInfo({ ...deleteAccountInfo, email: e.target.value })
                   }
                   required
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{padding: "10px",marginBottom: "10px",width: "100%",boxSizing: "border-box",
                   }}
                 />
                 <input
@@ -1213,22 +1123,12 @@ const ClientDashboard = () => {
                     setDeleteAccountInfo({ ...deleteAccountInfo, currentPassword: e.target.value })
                   }
                   required
-                  style={{
-                    padding: "10px",
-                    marginBottom: "10px",
-                    width: "100%",
-                    boxSizing: "border-box",
+                  style={{padding: "10px",marginBottom: "10px",width: "100%",boxSizing: "border-box",
                   }}
                 />
                 <button
                   type="submit"
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#F44336",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    width: "100%",
+                  style={{padding: "10px",backgroundColor: "#F44336",color: "white",border: "none",cursor: "pointer",width: "100%",
                   }}
                 >
                   Delete Account
@@ -1241,15 +1141,7 @@ const ClientDashboard = () => {
                     setShowActivityHistory(!showActivityHistory);
                     if (!showActivityHistory) fetchActivityLogs();
                   }}
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#FFC107",
-                    color: "#000000",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    width: "100%",
-                    fontWeight: "bold",
+                  style={{padding: "10px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer", width: "100%",fontWeight: "bold",
                   }}
                 >
                   Activity History
@@ -1262,15 +1154,7 @@ const ClientDashboard = () => {
                       setShowMyReviews(!showMyReviews);
                       if (!showMyReviews) fetchMyReviews();
                     }}
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "#007BFF",
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      width: "100%",
-                      fontWeight: "bold",
+                    style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",width: "100%",fontWeight: "bold",
                     }}
                   >
                     My Reviews
@@ -1280,13 +1164,7 @@ const ClientDashboard = () => {
               <div style={{ marginTop: "20px", textAlign: "center" }}>
                 <button
                   onClick={handleLogout}
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#F44336",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    width: "100%",
+                  style={{ padding: "10px", backgroundColor: "#F44336", color: "white", border: "none", cursor: "pointer", width: "100%",
                   }}
                 >
                   Logout
@@ -1302,15 +1180,7 @@ const ClientDashboard = () => {
       <div>
         <button
           onClick={() => setShowPostProject(!showPostProject)}
-          style={{
-            padding: "10px",
-            marginBottom: "20px",
-            backgroundColor: "#28A745",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "bold",
+          style={{padding: "10px",marginBottom: "20px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer", fontWeight: "bold",
           }}
         >
           {showPostProject ? "Hide Post Project" : "Post a Project"}
@@ -1351,14 +1221,7 @@ const ClientDashboard = () => {
             />
             <button
               type="submit"
-              style={{
-                padding: "10px",
-                backgroundColor: "#007BFF",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                fontWeight: "bold",
+              style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
               }}
             >
               Post Project
@@ -1370,15 +1233,7 @@ const ClientDashboard = () => {
       <div>
         <button
           onClick={() => setShowProjects(!showProjects)}
-          style={{
-            padding: "10px",
-            marginBottom: "20px",
-            backgroundColor: "#FFC107",
-            color: "#000000",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "bold",
+          style={{padding: "10px",marginBottom: "20px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer", fontWeight: "bold",
           }}
         >
           {showProjects ? "Hide My Projects" : "See My Projects"}
@@ -1391,12 +1246,7 @@ const ClientDashboard = () => {
                 placeholder="Search projects by title, budget, deadline, or description"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                style={{
-                  padding: "10px",
-                  width: "100%",
-                  borderRadius: "5px",
-                  border: "1px solid #ddd",
-                  boxSizing: "border-box",
+                style={{padding: "10px",width: "100%",borderRadius: "5px",border: "1px solid #ddd",boxSizing: "border-box",
                 }}
               />
             </div>
@@ -1414,15 +1264,7 @@ const ClientDashboard = () => {
                     remainingBudget > 0 ? (
                       project.claimStatus === "Claimed" ? (
                         <div
-                          style={{
-                            padding: "10px 20px", // Match button padding
-                            backgroundColor: "#28A745",
-                            color: "#FFFFFF",
-                            borderRadius: "5px",
-                            fontWeight: "bold",
-                            display: "inline-block",
-                            marginRight: "10px", // Added spacing
-                            height: "20px", // Match button height
+                          style={{ padding: "10px 20px", color: "#FFFFFF",borderRadius: "5px",fontWeight: "bold",display: "inline-block",marginRight: "10px", height: "20px", // Match button height
                           }}
                         >
                           Claimed
@@ -1455,15 +1297,7 @@ const ClientDashboard = () => {
                               alert("An error occurred while claiming the remaining budget.");
                             }
                           }}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#007BFF",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            marginTop: "10px",
-                            marginRight: "10px", // Added spacing
+                          style={{ padding: "10px", backgroundColor: "#007BFF", color: "#FFFFFF", border: "none", borderRadius: "5px",cursor: "pointer",marginTop: "10px",marginRight: "10px", // Added spacing
                           }}
                         >
                           Claim Remaining Budget (${remainingBudget})
@@ -1477,16 +1311,7 @@ const ClientDashboard = () => {
                       <div>
                         <button
                           onClick={() => handleViewCompletion(project.completedpercentage, project.title)}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#007BFF",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            marginTop: "10px",
-                            marginRight: "10px", // Added spacing
+                          style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",marginTop: "10px",marginRight: "10px", // Added spacing
                           }}
                         >
                           View Completion Percentage
@@ -1526,15 +1351,7 @@ const ClientDashboard = () => {
                               alert("An error occurred while claiming the remaining budget.");
                             }
                           }}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#007BFF",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            marginTop: "10px",
-                            marginRight: "10px", // Added spacing
+                          style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",marginTop: "10px",marginRight: "10px", // Added spacing
                           }}
                         >
                           Claim Remaining Budget (${remainingBudget})
@@ -1544,11 +1361,7 @@ const ClientDashboard = () => {
                     actionContent = (
                       <div>
                         <p
-                          style={{
-                            marginTop: "10px",
-                            marginBottom: "10px",
-                            color: "#007BFF",
-                            fontWeight: "bold",
+                          style={{ marginTop: "10px", marginBottom: "10px",color: "#007BFF", fontWeight: "bold",
                           }}
                         >
                           Project URL:{" "}
@@ -1562,15 +1375,7 @@ const ClientDashboard = () => {
                           </a>
                         </p>
                         <div
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#28A745",
-                            color: "#FFFFFF",
-                            borderRadius: "5px",
-                            fontWeight: "bold",
-                            display: "inline-block",
-                            marginTop: "10px",
-                            marginRight: "10px", // Added spacing
+                          style={{ padding: "10px", backgroundColor: "#28A745", color: "#FFFFFF",borderRadius: "5px",fontWeight: "bold",display: "inline-block",marginTop: "10px",marginRight: "10px", // Added spacing
                           }}
                         >
                           Approved
@@ -1582,12 +1387,7 @@ const ClientDashboard = () => {
                           ).map((review) => (
                             <div
                               key={review._id}
-                              style={{
-                                padding: "10px",
-                                backgroundColor: "#f5f5f5",
-                                borderRadius: "5px",
-                                marginBottom: "5px",
-                                color: "#000000",
+                              style={{padding: "10px",backgroundColor: "#f5f5f5",borderRadius: "5px",marginBottom: "5px",color: "#000000",
                               }}
                             >
                               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -1605,27 +1405,14 @@ const ClientDashboard = () => {
                               setSelectedProjectForReview(project);
                               setShowReviewModal(true);
                             }}
-                            style={{
-                              padding: "10px",
-                              backgroundColor: "#FFC107",
-                              color: "#000000",
-                              border: "none",
-                              borderRadius: "5px",
-                              cursor: "pointer",
-                              marginTop: "10px",
+                            style={{padding: "10px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer",marginTop: "10px",
                             }}
                           >
                             Review Freelancer
                           </button>
                         ) : (
                           <span
-                            style={{
-                              display: "inline-block",
-                              padding: "10px",
-                              backgroundColor: "#E6E6E6",
-                              color: "#666666",
-                              borderRadius: "5px",
-                              marginTop: "10px",
+                            style={{display: "inline-block",padding: "10px",backgroundColor: "#E6E6E6",color: "#666666",borderRadius: "5px",marginTop: "10px",
                             }}
                           >
                             Review Submitted
@@ -1637,11 +1424,7 @@ const ClientDashboard = () => {
                     actionContent = (
                       <div>
                         <p
-                          style={{
-                            marginTop: "10px",
-                            marginBottom: "10px",
-                            color: "#007BFF",
-                            fontWeight: "bold",
+                          style={{marginTop: "10px", marginBottom: "10px", color: "#007BFF",fontWeight: "bold",
                           }}
                         >
                           Project URL:{" "}
@@ -1656,15 +1439,7 @@ const ClientDashboard = () => {
                         </p>
                         <button
                           onClick={() => handleApproveProject(project._id)}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#28A745",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            marginRight: "10px", // Added spacing
+                          style={{  padding: "10px", backgroundColor: "#28A745",color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold", marginRight: "10px", // Added spacing
                           }}
                         >
                           Approve Project
@@ -1676,15 +1451,7 @@ const ClientDashboard = () => {
                               handleRejectApproval(project._id, comments);
                             }
                           }}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#DC3545",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            marginRight: "10px", // Added spacing
+                          style={{padding: "10px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",marginRight: "10px", // Added spacing
                           }}
                         >
                           Reject Approval
@@ -1697,15 +1464,7 @@ const ClientDashboard = () => {
                       <div>
                         <button
                           onClick={() => handleApproveProject(project._id)}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#28A745",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            marginRight: "10px", // Added spacing
+                          style={{padding: "10px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",marginRight: "10px", // Added spacing
                           }}
                         >
                           Approve Project
@@ -1717,15 +1476,7 @@ const ClientDashboard = () => {
                               handleRejectApproval(project._id, comments);
                             }
                           }}
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#DC3545",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            marginRight: "10px", // Added spacing
+                          style={{padding: "10px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold", marginRight: "10px", // Added spacing
                           }}
                         >
                           Reject Approval
@@ -1746,15 +1497,7 @@ const ClientDashboard = () => {
                             deadline: project.deadline.split("T")[0],
                           })
                         }
-                        style={{
-                          padding: "5px 10px",
-                          backgroundColor: "#FFC107",
-                          color: "#000000",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginRight: "10px", // Added spacing
+                        style={{padding: "5px 10px",backgroundColor: "#FFC107",color: "#000000",border: "none", borderRadius: "5px",cursor: "pointer",fontWeight: "bold",marginRight: "10px", // Added spacing
                         }}
                       >
                         Edit Project
@@ -1763,30 +1506,14 @@ const ClientDashboard = () => {
                         onClick={async () => {
                           handleDeleteProject(project._id);
                         }}
-                        style={{
-                          padding: "5px 10px",
-                          backgroundColor: "#DC3545",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginRight: "10px", // Added spacing
-                        }}
+                        style={{padding: "5px 10px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointe",frontWeight: "bold", marginRight: "10px", // Added spacing
+}}
                       >
                         Delete Project
                       </button>
                       <button
                         onClick={() => fetchBidsForProject(project._id, project.title)}
-                        style={{
-                          padding: "5px 10px",
-                          backgroundColor: "#007BFF",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          marginRight: "10px", // Added spacing
+                        style={{ padding: "5px 10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",marginRight: "10px", // Added spacing
                         }}
                       >
                         View Bids
@@ -1794,14 +1521,7 @@ const ClientDashboard = () => {
                       {project.escrowStatus === "Not Funded" ? (
                         <button
                           onClick={() => handleFundEscrow(project._id, project.budget)}
-                          style={{
-                            padding: "5px 10px",
-                            backgroundColor: "#E82FFF",
-                            color: "#FFFFFF",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
+                          style={{padding: "5px 10px", backgroundColor: "#E82FFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
                           }}
                         >
                           Fund Escrow
@@ -1809,14 +1529,7 @@ const ClientDashboard = () => {
                       ) : project.escrowStatus === "Funded" && project.status === "pending" ? (
                         <button
                           onClick={() => handleRefundEscrow(project._id)}
-                          style={{
-                            padding: "5px 10px",
-                            backgroundColor: "#FFC107",
-                            color: "#000000",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
+                          style={{ padding: "5px 10px",backgroundColor: "#FFC107", color: "#000000", border: "none", borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
                           }}
                         >
                           Refund Escrow
@@ -1829,13 +1542,7 @@ const ClientDashboard = () => {
                 return (
                   <div
                     key={project._id}
-                    style={{
-                      border: "1px solid #ddd",
-                      padding: "10px",
-                      margin: "10px",
-                      backgroundColor: "#FFFFFF",
-                      color: "#000000",
-                      position: "relative",
+                    style={{ border: "1px solid #ddd",padding: "10px",margin: "10px",backgroundColor: "#FFFFFF",color: "#000000",position: "relative",
                     }}
                   >
                     <div>
@@ -1858,17 +1565,7 @@ const ClientDashboard = () => {
 
       {editProject.id && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "400px",
+          style={{position: "fixed",top: "50%",left: "50%",transform: "translate(-50%, -50%)",backgroundColor: "#FFFFFF",padding: "20px",borderRadius: "10px",boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",zIndex: 1000,width: "400px",
           }}
         >
           <h3 style={{ marginBottom: "20px", textAlign: "center" }}>Edit Project</h3>
@@ -1887,11 +1584,7 @@ const ClientDashboard = () => {
                   setEditProject((prev) => ({ ...prev, budget: e.target.value }))
                 }
                 placeholder="Budget"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  border: "1px solid #ddd",
+                style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ddd",
                 }}
               />
             </div>
@@ -1904,25 +1597,14 @@ const ClientDashboard = () => {
                   setEditProject((prev) => ({ ...prev, deadline: e.target.value }))
                 }
                 placeholder="Deadline"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  border: "1px solid #ddd",
+                style={{width: "100%",padding: "10px",borderRadius: "5px",border: "1px solid #ddd",
                 }}
               />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <button
                 type="submit"
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#007BFF",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
+                style={{padding: "10px 20px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
                 }}
               >
                 Save Changes
@@ -1930,14 +1612,7 @@ const ClientDashboard = () => {
               <button
                 type="button"
                 onClick={() => setEditProject({ id: null, budget: "", deadline: "" })}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#DC3545",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
+                style={{ padding: "10px 20px", backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold",
                 }}
               >
                 Cancel
@@ -1956,12 +1631,7 @@ const ClientDashboard = () => {
             placeholder="Search freelancers by name, email, skills, experience, or rating"
             value={freelancerSearchQuery}
             onChange={(e) => handleFreelancerSearch(e.target.value)}
-            style={{
-              padding: "10px",
-              width: "100%",
-              borderRadius: "5px",
-              border: "1px solid #ddd",
-              boxSizing: "border-box",
+            style={{ padding: "10px", width: "100%", borderRadius: "5px", border: "1px solid #ddd", boxSizing: "border-box",
             }}
           />
         </div>
@@ -1972,11 +1642,7 @@ const ClientDashboard = () => {
           filteredFreelancers.map((freelancer) => (
             <div
               key={freelancer._id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "10px",
-                margin: "10px",
-                backgroundColor: "#f9f9f9",
+              style={{border: "1px solid #ddd",padding: "10px",margin: "10px",backgroundColor: "#f9f9f9",
               }}
             >
               <h3 style={{ color: "#000000" }}>{freelancer.name || "Not Given"}</h3>
@@ -2021,28 +1687,14 @@ const ClientDashboard = () => {
               }}>
                 <button
                   onClick={() => handleDirectHireClick(freelancer._id)}
-                  style={{
-                    padding: "10px 15px",
-                    backgroundColor: "#28A745",
-                    color: "#FFFFFF",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
+                  style={{padding: "10px 15px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",
                   }}
                 >
                   Direct Hire
                 </button>
                 <button
                   onClick={() => fetchFreelancerReviews(freelancer._id, freelancer.name || "Freelancer")}
-                  style={{
-                    padding: "10px 15px",
-                    backgroundColor: "#007BFF",
-                    color: "#FFFFFF",
-                    border: "none", 
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
+                  style={{ padding: "10px 15px", backgroundColor: "#007BFF", color: "#FFFFFF", border: "none",  borderRadius: "5px", cursor: "pointer",fontWeight: "bold",
                   }}
                 >
                   View Reviews {freelancer.reviewCount > 0 ? `(${freelancer.reviewCount})` : ""}
@@ -2057,33 +1709,14 @@ const ClientDashboard = () => {
 
       {showDirectHireModal && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "400px",
-            color: "#000000",
+          style={{position: "fixed",top: "50%",left: "50%",transform: "translate(-50%, -50%)",backgroundColor: "#FFFFFF",padding: "20px",borderRadius: "10px",  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",  zIndex: 1000, width: "400px",color: "#000000",
           }}
         >
           <h3>Select a Project to Hire</h3>
           <div style={{ marginBottom: "20px", position: "relative" }}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              style={{
-                padding: "10px",
-                backgroundColor: "#007BFF",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                width: "100%",
-                textAlign: "left",
+              style={{padding: "10px",backgroundColor: "#007BFF",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",width: "100%",textAlign: "left",
               }}
             >
               {selectedProjectId
@@ -2092,20 +1725,7 @@ const ClientDashboard = () => {
             </button>
             {isDropdownOpen && (
               <ul
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: "0",
-                  width: "100%",
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #ddd",
-                  borderRadius: "5px",
-                  listStyleType: "none",
-                  padding: "10px",
-                  margin: "0",
-                  zIndex: 1000,
-                  maxHeight: "200px",
-                  overflowY: "auto",
+                style={{ position: "absolute", top: "100%", left: "0",width: "100%", backgroundColor: "#FFFFFF",border: "1px solid #ddd",borderRadius: "5px",listStyleType: "none",padding: "10px",margin: "0",zIndex: 1000,maxHeight: "200px",overflowY: "auto",
                 }}
               >
                 {projects.map((project) => (
@@ -2115,13 +1735,7 @@ const ClientDashboard = () => {
                       setSelectedProjectId(project._id);
                       setIsDropdownOpen(false);
                     }}
-                    style={{
-                      padding: "10px",
-                      cursor: "pointer",
-                      backgroundColor:
-                        selectedProjectId === project._id ? "#007BFF" : "#FFFFFF",
-                      color: selectedProjectId === project._id ? "#FFFFFF" : "#000000",
-                      borderRadius: "5px",
+                    style={{padding: "10px",cursor: "pointer",backgroundColor:selectedProjectId === project._id ? "#007BFF" : "#FFFFFF",color: selectedProjectId === project._id ? "#FFFFFF" : "#000000",borderRadius: "5px",
                     }}
                     onMouseEnter={(e) =>
                       (e.target.style.backgroundColor = "#007BFF")
@@ -2145,30 +1759,14 @@ const ClientDashboard = () => {
                 alert("Please select a project before confirming.");
               }
             }}
-            style={{
-              marginTop: "10px",
-              padding: "10px",
-              backgroundColor: "#28A745",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              width: "100%",
+            style={{marginTop: "10px", padding: "10px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer", width: "100%",
             }}
           >
             Confirm
           </button>
           <button
             onClick={() => setShowDirectHireModal(false)}
-            style={{
-              marginTop: "10px",
-              padding: "10px",
-              backgroundColor: "#DC3545",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              width: "100%",
+            style={{ marginTop: "10px",  padding: "10px", backgroundColor: "#DC3545", color: "#FFFFFF",border: "none", borderRadius: "5px",cursor: "pointer",width: "100%",
             }}
           >
             Cancel
@@ -2178,20 +1776,7 @@ const ClientDashboard = () => {
 
       {showBidsModal && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "600px",
-            maxHeight: "80vh",
-            overflowY: "auto",
-            color: "#000000",
+          style={{position: "fixed", top: "50%", left: "50%",  transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF",padding: "20px", borderRadius: "10px",boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "600px", maxHeight: "80vh", overflowY: "auto",color: "#000000",
           }}
         >
           <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
@@ -2218,14 +1803,7 @@ const ClientDashboard = () => {
                 </p>
                 <button
                   onClick={() => handleSelectBid(bid._id)}
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#28A745",
-                    color: "#FFFFFF",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    marginTop: "10px",
+                  style={{ padding: "10px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none", borderRadius: "5px",cursor: "pointer", marginTop: "10px",
                   }}
                 >
                   Select Bid
@@ -2239,15 +1817,7 @@ const ClientDashboard = () => {
           )}
           <button
             onClick={closeBidsModal}
-            style={{
-              marginTop: "20px",
-              padding: "10px",
-              backgroundColor: "#DC3545",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              width: "100%",
+            style={{marginTop: "20px",padding: "10px", backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer",width: "100%",
             }}
           >
             Close
@@ -2258,33 +1828,12 @@ const ClientDashboard = () => {
       <div style={{ marginTop: "20px", textAlign: "center" }}></div>
       {showActivityHistory && (
         <div
-          style={{
-            position: "absolute",
-            top: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "20px",
-            backgroundColor: "#444444",
-            borderRadius: "10px",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "80%",
+          style={{position: "absolute", top: "100px",left: "50%", transform: "translateX(-50%)",padding: "20px",backgroundColor: "#444444", borderRadius: "10px",color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",zIndex: 1000, width: "80%",
           }}
         >
           <button
             onClick={() => setShowActivityHistory(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#FF0000",
-              borderRadius: "50%",
-              border: "none",
-              color: "#FFFFFF",
-              fontSize: "20px",
-              fontWeight: "bold",
-              cursor: "pointer",
+            style={{position: "absolute",top: "10px", right: "10px",backgroundColor: "#FF0000", borderRadius: "50%", border: "none", color: "#FFFFFF", fontSize: "20px", fontWeight: "bold",cursor: "pointer",
             }}
           >
             ✖
@@ -2295,11 +1844,7 @@ const ClientDashboard = () => {
             activityLogs.map((log, index) => (
               <div
                 key={index}
-                style={{
-                  marginBottom: "10px",
-                  padding: "10px",
-                  backgroundColor: "#333333",
-                  borderRadius: "5px",
+                style={{ marginBottom: "10px", padding: "10px",backgroundColor: "#333333", borderRadius: "5px",
                 }}
               >
                 <p>{log.action}</p>
@@ -2316,33 +1861,12 @@ const ClientDashboard = () => {
 
       {showMyReviews && (
         <div
-          style={{
-            position: "absolute",
-            top: "100px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "20px",
-            backgroundColor: "#444444",
-            borderRadius: "10px",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "80%",
+          style={{ position: "absolute", top: "100px",left: "50%",transform: "translateX(-50%)",padding: "20px",backgroundColor: "#444444",borderRadius: "10px",color: "#FFFFFF", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "80%",
           }}
         >
           <button
             onClick={() => setShowMyReviews(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#FF0000",
-              borderRadius: "50%",
-              border: "none",
-              color: "#FFFFFF",
-              fontSize: "20px",
-              fontWeight: "bold",
-              cursor: "pointer",
+            style={{position: "absolute", top: "10px", right: "10px", backgroundColor: "#FF0000", borderRadius: "50%", border: "none",color: "#FFFFFF", fontSize: "20px", fontWeight: "bold",cursor: "pointer",
             }}
           >
             ✖
@@ -2353,12 +1877,7 @@ const ClientDashboard = () => {
             myReviews.map((review) => (
               <div
                 key={review._id}
-                style={{
-                  marginBottom: "20px",
-                  padding: "15px",
-                  backgroundColor: "#333333",
-                  borderRadius: "10px",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                style={{marginBottom: "20px",padding: "15px",backgroundColor: "#333333", borderRadius: "10px",boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
@@ -2389,35 +1908,12 @@ const ClientDashboard = () => {
 
       {showFreelancerReviews && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            padding: "20px",
-            backgroundColor: "#444444",
-            borderRadius: "10px",
-            color: "#FFFFFF",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "80%",
-            maxHeight: "80vh",
-            overflowY: "auto",
+          style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", padding: "20px", backgroundColor: "#444444", borderRadius: "10px",color: "#FFFFFF",  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",zIndex: 1000,width: "80%", maxHeight: "80vh", overflowY: "auto",
           }}
         >
           <button
             onClick={() => setShowFreelancerReviews(false)}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#FF0000",
-              borderRadius: "50%",
-              border: "none",
-              color: "#FFFFFF",
-              fontSize: "20px",
-              fontWeight: "bold",
-              cursor: "pointer",
+            style={{position: "absolute", top: "10px", right: "10px", backgroundColor: "#FF0000",borderRadius: "50%",border: "none",color: "#FFFFFF",fontSize: "20px",fontWeight: "bold", cursor: "pointer",
             }}
           >
             ✖
@@ -2427,12 +1923,7 @@ const ClientDashboard = () => {
           
           {selectedFreelancerReviews.length > 0 ? (
             <>
-              <div style={{ 
-                textAlign: "center", 
-                marginBottom: "20px", 
-                backgroundColor: "#333", 
-                padding: "15px", 
-                borderRadius: "8px"
+              <div style={{  textAlign: "center",  marginBottom: "20px",   backgroundColor: "#333",  padding: "15px", borderRadius: "8px"
               }}>
                 <h3 style={{ color: "#FFD700", marginBottom: "5px" }}>Average Rating</h3>
                 <div>
@@ -2452,12 +1943,7 @@ const ClientDashboard = () => {
               {selectedFreelancerReviews.map((review) => (
                 <div
                   key={review._id}
-                  style={{
-                    marginBottom: "20px",
-                    padding: "15px",
-                    backgroundColor: "#333333",
-                    borderRadius: "10px",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#333333", borderRadius: "10px",boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
@@ -2489,32 +1975,14 @@ const ClientDashboard = () => {
 
       {showCompletionModal && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            textAlign: "center",
+          style={{position: "fixed", top: "50%", left: "50%",transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF", padding: "20px",borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, textAlign: "center",
           }}
         >
           <h3 style={{ color: "#000000", marginBottom: "10px" }}>{selectedProjectTitle}</h3>
           <p style={{ color: "#000000" }}>{`Project Completion: ${completionPercentage}%`}</p>
           <button
             onClick={() => setShowCompletionModal(false)}
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#007BFF",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              marginTop: "10px",
+            style={{ padding: "10px 20px",backgroundColor: "#007BFF",color: "#FFFFFF", border: "none",borderRadius: "5px", cursor: "pointer",fontWeight: "bold", marginTop: "10px",
             }}
           >
             OK
@@ -2524,17 +1992,7 @@ const ClientDashboard = () => {
 
       {showPaymentForm && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            color: "#000000",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
+          style={{ position: "fixed",top: "50%",left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF", color: "#000000", padding: "20px",borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",zIndex: 1000,
           }}
         >
           <h3>Complete Payment</h3>
@@ -2542,13 +2000,7 @@ const ClientDashboard = () => {
             <p>Amount: ${amount}</p>
             <button
               type="submit"
-              style={{
-                padding: "10px",
-                backgroundColor: "#007BFF",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
+              style={{padding: "10px",backgroundColor: "#007BFF", color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",
               }}
             >
               Pay Now
@@ -2556,14 +2008,7 @@ const ClientDashboard = () => {
           </form>
           <button
             onClick={() => setShowPaymentForm(false)}
-            style={{
-              marginTop: "10px",
-              padding: "10px",
-              backgroundColor: "#DC3545",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
+            style={{ marginTop: "10px", padding: "10px", backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer",
             }}
           >
             Cancel
@@ -2573,19 +2018,7 @@ const ClientDashboard = () => {
 
       {showReviewModal && selectedProjectForReview && (
         <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#FFFFFF",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            zIndex: 1000,
-            width: "500px",
-            color: "#000000",
-          }}
+          style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#FFFFFF",padding: "20px", borderRadius: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", zIndex: 1000, width: "500px",color: "#000000", }}
         >
           <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
             Review Freelancer for "{selectedProjectForReview.title}"
@@ -2598,12 +2031,7 @@ const ClientDashboard = () => {
               <select
                 value={reviewData.rating}
                 onChange={(e) => setReviewData({ ...reviewData, rating: e.target.value })}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  border: "1px solid #ddd",
-                }}
+                style={{width: "100%", padding: "10px",  borderRadius: "5px", border: "1px solid #ddd",}}
                 required
               >
                 <option value="5">5 - Excellent</option>
@@ -2621,29 +2049,14 @@ const ClientDashboard = () => {
                 value={reviewData.comment}
                 onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
                 placeholder="Share your experience working with this freelancer..."
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  border: "1px solid #ddd",
-                  minHeight: "100px",
-                  resize: "vertical",
-                }}
+                style={{ width: "100%",padding: "10px",borderRadius: "5px",border: "1px solid #ddd",minHeight: "100px",resize: "vertical", }}
                 required
               />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <button
                 type="submit"
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#28A745",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
+                style={{padding: "10px 20px",backgroundColor: "#28A745",color: "#FFFFFF", border: "none", borderRadius: "5px",cursor: "pointer",fontWeight: "bold",}}
               >
                 Submit Review
               </button>
@@ -2653,15 +2066,7 @@ const ClientDashboard = () => {
                   setShowReviewModal(false);
                   setSelectedProjectForReview(null);
                 }}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#DC3545",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
+                style={{padding: "10px 20px",backgroundColor: "#DC3545",color: "#FFFFFF",border: "none",borderRadius: "5px",cursor: "pointer",fontWeight: "bold",}}
               >
                 Cancel
               </button>
