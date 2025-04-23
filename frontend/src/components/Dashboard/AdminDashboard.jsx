@@ -258,7 +258,7 @@ const AdminDashboard = () => {
       {/* Add New Learning Materials Button */}
       <button
         onClick={() => setShowAddMaterialForm(!showAddMaterialForm)}
-        style={{padding: "15px 30px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px"marginBottom: "20px",
+        style={{padding: "15px 30px",backgroundColor: "#FFC107",color: "#000000",border: "none",borderRadius: "5px",cursor: "pointer",fontSize: "18px", marginBottom: "20px",
 
         }}
       >
