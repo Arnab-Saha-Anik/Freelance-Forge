@@ -128,4 +128,25 @@ router.delete("/delete", verifyToken, async (req, res) => {
 });
 
 
+router.get("/stats/:userId", verifyToken, async (req, res) => {
+  try {
+    const freelancerInfo = await FreelancerInformation.findOne({ userId: req.params.userId });
+    
+    if (!freelancerInfo) {
+      return res.status(404).json({ error: "Freelancer profile not found" });
+    }
+    
+    // Return just the stats needed for the dashboard
+    res.json({
+      earnings: freelancerInfo.earnings,
+      projectsCompleted: freelancerInfo.projectsCompleted,
+      reviews: freelancerInfo.reviews
+    });
+  } catch (err) {
+    console.error("Error fetching freelancer stats:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 module.exports = router;

@@ -4,6 +4,7 @@ const Payment = require("../models/paymentModel");
 const Project = require("../models/projectModel");
 const User = require("../models/userModel"); // Assuming you have a User model
 const Activity = require("../models/activityModel"); // Assuming you have an Activity model
+const FreelancerInformation = require("../models/freelancerInformationModel"); // Assuming you have a FreelancerInformation model
 const { verifyToken } = require("../middleware/authMiddleware"); // Middleware to verify user token
 
 const router = express.Router();
@@ -137,10 +138,17 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
             project.escrowStatus = "Released";
             await project.save();
             
+            // Update freelancer earnings
+            const freelancerInfo = await FreelancerInformation.findOne({ userId: project.acceptedFreelancer });
+            if (freelancerInfo) {
+              freelancerInfo.earnings += project.acceptedmoney;
+              await freelancerInfo.save();
+            }
+            
             // Log activity
             await Activity.create({
               userId: project.acceptedFreelancer,
-              action: `Freelancer has claimed money for project "${project.title}".`,
+              action: `You have claimed $${project.acceptedmoney} for project "${project.title}".`,
             });
           }
           break;

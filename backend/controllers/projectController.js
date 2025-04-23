@@ -7,6 +7,7 @@ const cron = require("node-cron");
 const DirectHire = require("../models/directHireModel");
 const Bid = require("../models/bidModel"); // Adjust the path if necessary
 const Activity = require("../models/activityModel"); // Import the Activity model
+const FreelancerInformation = require("../models/freelancerInformationModel"); // Import the FreelancerInformation model
 const router = express.Router();
 
 // Schedule a task to run every day at midnight
@@ -320,6 +321,12 @@ router.delete("/client/delete/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to delete this project" });
     }
 
+    if (project.status !== "pending") {
+      return res.status(400).json({
+        error: "This project cannot be deleted because its status is not 'pending'.",
+      });
+    }
+
     // Check if the escrow is refunded
     if (project.escrowStatus !== "Not Funded") {
       return res.status(400).json({
@@ -465,6 +472,25 @@ router.put("/approve-completion/:projectId", verifyToken, async (req, res) => {
 
     project.approvalStatus = "Approved";
     await project.save();
+
+    // Update freelancer's completed projects count
+    const freelancerInfo = await FreelancerInformation.findOne({ userId: project.acceptedFreelancer });
+    if (freelancerInfo) {
+      freelancerInfo.projectsCompleted += 1;
+      await freelancerInfo.save();
+    }
+
+    // Add notification for the freelancer
+    await Notification.create({
+      user: project.acceptedFreelancer,
+      message: `Your work on project "${project.title}" has been approved! You can now claim payment.`,
+    });
+
+    // Log activity for client
+    await Activity.create({
+      userId: req.user.id,
+      action: `You approved the completion of project "${project.title}".`,
+    });
 
     res.status(200).json({ message: "Project approved successfully.", project });
   } catch (error) {

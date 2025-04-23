@@ -91,37 +91,7 @@ const FreelancerDashboard = () => {
       }
     };
 
-    const fetchFreelancerData = async () => {
-      try {
-        const userId = JSON.parse(atob(token.split(".")[1])).id; 
-        const freelancerResponse = await fetch(`http://localhost:5000/freelancers/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!freelancerResponse.ok) {
-          throw new Error("Failed to fetch freelancer stats");
-        }
-
-        const freelancerStats = await freelancerResponse.json();
-        setFreelancerData({
-          earnings: freelancerStats.earnings || 0,
-          reviews: freelancerStats.reviews || 0,
-          projectsCompleted: freelancerStats.projectsCompleted || 0,
-        });
-      } catch (err) {
-        console.error("Error fetching freelancer data:", err);
-        setFreelancerData({
-          earnings: 0,
-          reviews: 0,
-          projectsCompleted: 0,
-        });
-      }
-    };
-
     fetchUserInfo(); 
-    fetchFreelancerData();
   }, [navigate, userId, token]);
 
   useEffect(() => {
@@ -152,6 +122,45 @@ const FreelancerDashboard = () => {
 
     fetchProfileExistence();
   }, [token]);
+
+  const fetchFreelancerStats = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/freelancers/stats/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFreelancerData({
+          earnings: data.earnings || 0,
+          reviews: data.reviews || 0,
+          projectsCompleted: data.projectsCompleted || 0,
+        });
+      } else {
+        console.error("Failed to fetch freelancer stats");
+        setFreelancerData({
+          earnings: 0,
+          reviews: 0,
+          projectsCompleted: 0,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching freelancer stats:", err);
+      setFreelancerData({
+        earnings: 0,
+        reviews: 0,
+        projectsCompleted: 0,
+      });
+    }
+  }, [userId, token]); // Include dependencies: userId and token
+
+  useEffect(() => {
+    if (profileExists && userId) {
+      fetchFreelancerStats();
+    }
+  }, [profileExists, userId, fetchFreelancerStats]); // Include fetchFreelancerStats here
 
   const fetchNotifications = useCallback(async () => {
     try {
