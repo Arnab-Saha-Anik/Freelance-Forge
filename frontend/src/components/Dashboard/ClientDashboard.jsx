@@ -63,6 +63,10 @@ const ClientDashboard = () => {
   const [projectReviews, setProjectReviews] = useState({});
   const [showMyReviews, setShowMyReviews] = useState(false);
   const [myReviews, setMyReviews] = useState([]);
+  const [showFreelancerReviews, setShowFreelancerReviews] = useState(false);
+  const [selectedFreelancerReviews, setSelectedFreelancerReviews] = useState([]);
+  const [selectedFreelancerName, setSelectedFreelancerName] = useState("");
+  const [selectedFreelancerAvgRating, setSelectedFreelancerAvgRating] = useState(0);
 
   const token = localStorage.getItem("clientToken");
   const loggedInClientId = token ? JSON.parse(atob(token.split(".")[1])).id : null;
@@ -236,6 +240,37 @@ const ClientDashboard = () => {
       console.error("Error fetching reviews:", error);
     }
   }, [loggedInClientId, token]);
+
+  const fetchFreelancerReviews = useCallback(async (freelancerId, freelancerName) => {
+    try {
+      const response = await fetch(`http://localhost:5000/reviews/received/${freelancerId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedFreelancerReviews(data);
+        setSelectedFreelancerName(freelancerName);
+        
+        // Calculate average rating
+        if (data.length > 0) {
+          const totalRating = data.reduce((sum, review) => sum + review.rating, 0);
+          const avgRating = totalRating / data.length;
+          setSelectedFreelancerAvgRating(parseFloat(avgRating.toFixed(1)));
+        } else {
+          setSelectedFreelancerAvgRating(0);
+        }
+        
+        setShowFreelancerReviews(true);
+      } else {
+        console.error("Failed to fetch freelancer reviews");
+      }
+    } catch (error) {
+      console.error("Error fetching freelancer reviews:", error);
+    }
+  }, [token]);
 
   const markNotificationsAsRead = async () => {
     try {
@@ -1923,20 +1958,41 @@ const ClientDashboard = () => {
               <p style={{ color: "#000000" }}>
                 Experience: {freelancer.profile?.[0]?.experience || "Not Provided"}
               </p>
-              <button
-                onClick={() => handleDirectHireClick(freelancer._id)}
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#28A745",
-                  color: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                Direct Hire
-              </button>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "center",
+                gap: "15px",
+                marginTop: "15px" 
+              }}>
+                <button
+                  onClick={() => handleDirectHireClick(freelancer._id)}
+                  style={{
+                    padding: "10px 15px",
+                    backgroundColor: "#28A745",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Direct Hire
+                </button>
+                <button
+                  onClick={() => fetchFreelancerReviews(freelancer._id, freelancer.name || "Freelancer")}
+                  style={{
+                    padding: "10px 15px",
+                    backgroundColor: "#007BFF",
+                    color: "#FFFFFF",
+                    border: "none", 
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  View Reviews {freelancer.profile?.[0]?.reviews ? `(${freelancer.profile[0].reviews}/5)` : ""}
+                </button>
+              </div>
             </div>
           ))
         ) : (
@@ -2271,6 +2327,106 @@ const ClientDashboard = () => {
           ) : (
             <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px" }}>
               You don't have any reviews yet.
+            </p>
+          )}
+        </div>
+      )}
+
+      {showFreelancerReviews && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            padding: "20px",
+            backgroundColor: "#444444",
+            borderRadius: "10px",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            zIndex: 1000,
+            width: "80%",
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
+        >
+          <button
+            onClick={() => setShowFreelancerReviews(false)}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              backgroundColor: "#FF0000",
+              borderRadius: "50%",
+              border: "none",
+              color: "#FFFFFF",
+              fontSize: "20px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            ✖
+          </button>
+
+          <h2 style={{ textAlign: "center", marginBottom: "10px" }}>Reviews for {selectedFreelancerName}</h2>
+          
+          {selectedFreelancerReviews.length > 0 ? (
+            <>
+              <div style={{ 
+                textAlign: "center", 
+                marginBottom: "20px", 
+                backgroundColor: "#333", 
+                padding: "15px", 
+                borderRadius: "8px"
+              }}>
+                <h3 style={{ color: "#FFD700", marginBottom: "5px" }}>Average Rating</h3>
+                <div>
+                  <span style={{ fontSize: "28px", color: "#FFD700" }}>
+                    {"★".repeat(Math.round(selectedFreelancerAvgRating))}
+                    {"☆".repeat(5 - Math.round(selectedFreelancerAvgRating))}
+                  </span>
+                  <span style={{ marginLeft: "10px", color: "#FFD700", fontSize: "24px" }}>
+                    {selectedFreelancerAvgRating}/5
+                  </span>
+                  <p style={{ marginTop: "5px" }}>
+                    Based on {selectedFreelancerReviews.length} review{selectedFreelancerReviews.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              
+              {selectedFreelancerReviews.map((review) => (
+                <div
+                  key={review._id}
+                  style={{
+                    marginBottom: "20px",
+                    padding: "15px",
+                    backgroundColor: "#333333",
+                    borderRadius: "10px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <h3 style={{ color: "#FFD700" }}>
+                      Project: {review.projectId?.title || "Unknown Project"}
+                    </h3>
+                    <div>
+                      <span style={{ fontSize: "20px", color: "#FFD700" }}>
+                        {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                      </span>
+                      <span style={{ marginLeft: "5px", color: "#FFD700" }}>{review.rating}/5</span>
+                    </div>
+                  </div>
+                  <p style={{ marginBottom: "10px", fontSize: "16px" }}>"{review.comment}"</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "#AAAAAA", fontSize: "14px" }}>
+                    <p>From: {review.reviewerId?.name || review.reviewerId?.email || "Unknown"}</p>
+                    <p>{new Date(review.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px", marginTop: "30px" }}>
+              No reviews available for this freelancer.
             </p>
           )}
         </div>
