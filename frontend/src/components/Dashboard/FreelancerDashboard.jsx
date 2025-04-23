@@ -634,7 +634,20 @@ const FreelancerDashboard = () => {
   
       if (response.ok) {
         alert("Project completion percentage updated successfully.");
-        fetchProjects(); // Refresh the projects list
+        
+        // Update both the projects and filteredProjects arrays
+        const updatedProjects = projects.map(project => 
+          project._id === projectId ? { ...project, completedpercentage: parseInt(percentage) } : project
+        );
+        setProjects(updatedProjects);
+        
+        if (projectSearchQuery) {
+          const updatedFilteredProjects = filteredProjects.map(project => 
+            project._id === projectId ? { ...project, completedpercentage: parseInt(percentage) } : project
+          );
+          setFilteredProjects(updatedFilteredProjects);
+        }
+        
       } else {
         const data = await response.json();
         alert(data.error || "Failed to update project completion percentage.");
@@ -644,7 +657,7 @@ const FreelancerDashboard = () => {
       alert("An error occurred while updating the project completion percentage.");
     }
   };
-
+  
   const handleSubmitCompletionUrl = async (projectId, url) => {
     try {
       const response = await fetch(`http://localhost:5000/projects/submit-completion/${projectId}`, {
@@ -658,7 +671,20 @@ const FreelancerDashboard = () => {
   
       if (response.ok) {
         alert("Project completion URL submitted successfully!");
-        fetchProjects(); // Refresh the project list
+        
+        // Update both the projects and filteredProjects arrays
+        const updatedProjects = projects.map(project => 
+          project._id === projectId ? { ...project, completionUrl: url } : project
+        );
+        setProjects(updatedProjects);
+        
+        if (projectSearchQuery) {
+          const updatedFilteredProjects = filteredProjects.map(project => 
+            project._id === projectId ? { ...project, completionUrl: url } : project
+          );
+          setFilteredProjects(updatedFilteredProjects);
+        }
+        
       } else {
         const data = await response.json();
         alert(data.error || "Failed to submit project completion URL.");
