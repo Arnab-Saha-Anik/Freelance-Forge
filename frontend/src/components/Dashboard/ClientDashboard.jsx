@@ -767,8 +767,6 @@ const ClientDashboard = () => {
           (freelancer.email && freelancer.email.toLowerCase().includes(queryLower)) ||
           (freelancer.profile?.[0]?.skills &&
             freelancer.profile[0].skills.join(", ").toLowerCase().includes(queryLower)) ||
-          (freelancer.profile?.[0]?.portfolio &&
-            freelancer.profile[0].portfolio.toLowerCase().includes(queryLower)) ||
           (freelancer.profile?.[0]?.experience &&
             freelancer.profile[0].experience.toLowerCase().includes(queryLower)) ||
           ratingString.includes(queryLower) // Search in rating as string
@@ -1955,7 +1953,7 @@ const ClientDashboard = () => {
         <div style={{ marginBottom: "20px" }}>
           <input
             type="text"
-            placeholder="Search freelancers by name, email, skills, portfolio, experience, or rating"
+            placeholder="Search freelancers by name, email, skills, experience, or rating"
             value={freelancerSearchQuery}
             onChange={(e) => handleFreelancerSearch(e.target.value)}
             style={{
