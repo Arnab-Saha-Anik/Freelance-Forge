@@ -60,6 +60,13 @@ const FreelancerDashboard = () => {
   const [projectReviews, setProjectReviews] = useState({});
   const [showMyReviews, setShowMyReviews] = useState(false);
   const [myReviews, setMyReviews] = useState([]);
+  const [clientReviews, setClientReviews] = useState({});
+  const [clientAvgRatings, setClientAvgRatings] = useState({});
+  const [clientReviewCounts, setClientReviewCounts] = useState({});
+  const [showClientReviews, setShowClientReviews] = useState(false);
+  const [selectedClientReviews, setSelectedClientReviews] = useState([]);
+  const [selectedClientName, setSelectedClientName] = useState("");
+  const [selectedClientAvgRating, setSelectedClientAvgRating] = useState(0);
   const navigate = useNavigate(); 
  
   const token = localStorage.getItem("freelancerToken");
@@ -538,10 +545,81 @@ const FreelancerDashboard = () => {
     }
   }, [token, userId]); // Add token and userId as dependencies
 
-  // Ensure fetchProjects is called in useEffect
+  const fetchMyReviews = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/reviews/received/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMyReviews(data);
+      } else {
+        console.error("Failed to fetch reviews");
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
+  }, [userId, token]);
+
+  const fetchClientReviewData = useCallback(async (clientId) => {
+    if (!clientId) return null;
+    
+    try {
+      // Get reviews for this client
+      const reviewsResponse = await fetch(`http://localhost:5000/reviews/received/${clientId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json();
+        
+        // Calculate average rating
+        let avgRating = 0;
+        if (reviewsData.length > 0) {
+          const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
+          avgRating = (totalRating / reviewsData.length).toFixed(1);
+        }
+        
+        // Store the data
+        setClientReviews(prev => ({ ...prev, [clientId]: reviewsData }));
+        setClientAvgRatings(prev => ({ ...prev, [clientId]: avgRating }));
+        setClientReviewCounts(prev => ({ ...prev, [clientId]: reviewsData.length }));
+        
+        return {
+          reviews: reviewsData,
+          avgRating,
+          count: reviewsData.length
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching client review data:", error);
+    }
+    
+    return null;
+  }, [token]);
+
+  // Modify the projects useEffect to fetch client reviews
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]); // Add fetchProjects to the dependency array
+    const fetchAllData = async () => {
+      await fetchProjects();
+      
+      // After projects are loaded, fetch client review data
+      if (projects.length > 0) {
+        for (const project of projects) {
+          if (project.client && typeof project.client === 'object' && project.client._id) {
+            await fetchClientReviewData(project.client._id);
+          }
+        }
+      }
+    };
+    
+    fetchAllData();
+  }, [fetchProjects, fetchClientReviewData, projects]);
 
   const updateCompletionPercentage = async (projectId, percentage) => {
     try {
@@ -733,24 +811,15 @@ const FreelancerDashboard = () => {
     }
   };
 
-  const fetchMyReviews = useCallback(async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/reviews/received/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMyReviews(data);
-      } else {
-        console.error("Failed to fetch reviews");
-      }
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-    }
-  }, [userId, token]);
+  const handleViewClientReviews = (clientId, clientName) => {
+    if (!clientId) return;
+    
+    const clientReviewsData = clientReviews[clientId] || [];
+    setSelectedClientReviews(clientReviewsData);
+    setSelectedClientName(clientName || "Client");
+    setSelectedClientAvgRating(clientAvgRatings[clientId] || 0);
+    setShowClientReviews(true);
+  };
 
   return (
     <div style={styles.container}>
@@ -1013,7 +1082,41 @@ const FreelancerDashboard = () => {
       <p style={{ marginBottom: "10px" }}>
         Client Email: {project.client?.email || "N/A"}
       </p>
+      {/* Add client rating display */}
+      <p style={{ marginBottom: "10px" }}>
+        Average Rating: {
+          project.client && clientAvgRatings[project.client._id] > 0 ? (
+            <span>
+              <span style={{ color: "#FFD700" }}>{"★".repeat(Math.round(clientAvgRatings[project.client._id]))}</span>
+              <span style={{ color: "#C0C0C0" }}>{"☆".repeat(5 - Math.round(clientAvgRatings[project.client._id]))}</span>
+              <span style={{ marginLeft: "5px" }}>{clientAvgRatings[project.client._id]}/5</span>
+            </span>
+          ) : "No ratings yet"
+        }
+      </p>
 
+      {/* Add View Reviews button */}
+      <button
+        onClick={() => handleViewClientReviews(
+          project.client?._id, 
+          project.client?.name || project.client?.email || "Client"
+        )}
+        style={{
+          padding: "10px 15px",
+          backgroundColor: "#007BFF",
+          color: "#FFFFFF",
+          border: "none", 
+          borderRadius: "5px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          marginBottom: "10px",
+          display: "block",
+          margin: "0 auto 10px"
+        }}
+      >
+        View Reviews {project.client && clientReviewCounts[project.client._id] > 0 ? 
+          `(${clientReviewCounts[project.client._id]})` : ""}
+      </button>
       {project.approvalStatus === "Rejected" ? (
   <div>
     <p style={{ color: "#DC3545", fontWeight: "bold" }}>Approval Rejected</p>
@@ -1717,6 +1820,106 @@ const FreelancerDashboard = () => {
     ) : (
       <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px" }}>
         You don't have any reviews yet.
+      </p>
+    )}
+  </div>
+)}
+{/* Client Reviews Modal */}
+{showClientReviews && (
+  <div
+    style={{
+      position: "fixed",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      padding: "20px",
+      backgroundColor: "#444444",
+      borderRadius: "10px",
+      color: "#FFFFFF",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+      zIndex: 1000,
+      width: "80%",
+      maxHeight: "80vh",
+      overflowY: "auto",
+    }}
+  >
+    <button
+      onClick={() => setShowClientReviews(false)}
+      style={{
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        backgroundColor: "#FF0000",
+        borderRadius: "50%",
+        border: "none",
+        color: "#FFFFFF",
+        fontSize: "20px",
+        fontWeight: "bold",
+        cursor: "pointer",
+      }}
+    >
+      ✖
+    </button>
+
+    <h2 style={{ textAlign: "center", marginBottom: "10px" }}>Reviews for {selectedClientName}</h2>
+    
+    {selectedClientReviews.length > 0 ? (
+      <>
+        <div style={{ 
+          textAlign: "center", 
+          marginBottom: "20px", 
+          backgroundColor: "#333", 
+          padding: "15px", 
+          borderRadius: "8px"
+        }}>
+          <h3 style={{ color: "#FFD700", marginBottom: "5px" }}>Average Rating</h3>
+          <div>
+            <span style={{ fontSize: "28px", color: "#FFD700" }}>
+              {"★".repeat(Math.round(selectedClientAvgRating))}
+              {"☆".repeat(5 - Math.round(selectedClientAvgRating))}
+            </span>
+            <span style={{ marginLeft: "10px", color: "#FFD700", fontSize: "24px" }}>
+              {selectedClientAvgRating}/5
+            </span>
+            <p style={{ marginTop: "5px" }}>
+              Based on {selectedClientReviews.length} review{selectedClientReviews.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+        
+        {selectedClientReviews.map((review) => (
+          <div
+            key={review._id}
+            style={{
+              marginBottom: "20px",
+              padding: "15px",
+              backgroundColor: "#333333",
+              borderRadius: "10px",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+              <h3 style={{ color: "#FFD700" }}>
+                Project: {review.projectId?.title || "Unknown Project"}
+              </h3>
+              <div>
+                <span style={{ fontSize: "20px", color: "#FFD700" }}>
+                  {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                </span>
+                <span style={{ marginLeft: "5px", color: "#FFD700" }}>{review.rating}/5</span>
+              </div>
+            </div>
+            <p style={{ marginBottom: "10px", fontSize: "16px" }}>"{review.comment}"</p>
+            <div style={{ display: "flex", justifyContent: "space-between", color: "#AAAAAA", fontSize: "14px" }}>
+              <p>From: {review.reviewerId?.name || review.reviewerId?.email || "Unknown"}</p>
+              <p>{new Date(review.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        ))}
+      </>
+    ) : (
+      <p style={{ textAlign: "center", color: "#FFD700", fontSize: "18px", marginTop: "30px" }}>
+        No reviews available for this client.
       </p>
     )}
   </div>
