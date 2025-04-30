@@ -7,6 +7,8 @@ const Project = require("../models/projectModel");
 const User = require("../models/userModel");
 const Activity = require("../models/activityModel"); // Import the Activity model
 const DirectHire = require("../models/directHireModel"); // Import the DirectHire model
+const Review = require("../models/reviewModel"); // Import the Review model
+const FreelancerInformation = require("../models/freelancerInformationModel"); // Import the FreelancerInformation model
 
 // Route to fetch accepted bids
 router.get("/accepted", verifyToken, async (req, res) => {
@@ -70,17 +72,45 @@ router.get("/selected", verifyToken, async (req, res) => {
 // Route to fetch bids for a specific project
 router.get("/:projectId", verifyToken, async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const bids = await Bid.find({ projectId: req.params.projectId })
+      .populate({
+        path: "freelancerId",
+        select: "name email",
+      });
 
-    // Validate projectId as a valid ObjectId
-    if (!projectId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ error: "Invalid project ID" });
-    }
+    // For each bid, add avgRating and freelancer profile info
+    const enhancedBids = await Promise.all(
+      bids.map(async (bid) => {
+        // Calculate average rating
+        let avgRating = 0;
+        const reviews = await Review.find({ receiverId: bid.freelancerId._id });
+        if (reviews.length > 0) {
+          avgRating =
+            reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        }
 
-    const bids = await Bid.find({ projectId }).populate("freelancerId", "name email");
-    res.status(200).json(bids);
+        // Fetch freelancer information
+        const freelancerInfo = await FreelancerInformation.findOne({ userId: bid.freelancerId._id });
+
+        return {
+          ...bid.toObject(),
+          freelancerId: {
+            ...bid.freelancerId.toObject(),
+            avgRating: avgRating ? avgRating.toFixed(1) : "0",
+            profile: freelancerInfo
+              ? [{
+                  skills: freelancerInfo.skills || [],
+                  portfolio: freelancerInfo.portfolio || "",
+                  experience: freelancerInfo.experience || "",
+                }]
+              : [],
+          },
+        };
+      })
+    );
+
+    res.status(200).json(enhancedBids);
   } catch (error) {
-    console.error("Error fetching bids:", error);
     res.status(500).json({ error: "Failed to fetch bids" });
   }
 });

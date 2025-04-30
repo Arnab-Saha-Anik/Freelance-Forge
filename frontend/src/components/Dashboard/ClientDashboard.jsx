@@ -1799,11 +1799,59 @@ const ClientDashboard = () => {
                   <strong>Email:</strong> {bid.freelancerId.email || "N/A"}
                 </p>
                 <p>
+                  <strong>Average Rating:</strong>{" "}
+                  {bid.freelancerId.avgRating > 0
+                    ? (
+                        <>
+                          <span style={{ color: "#FFD700" }}>
+                            {"★".repeat(Math.round(bid.freelancerId.avgRating))}
+                          </span>
+                          <span style={{ color: "#C0C0C0" }}>
+                            {"☆".repeat(5 - Math.round(bid.freelancerId.avgRating))}
+                          </span>
+                          <span style={{ marginLeft: "5px" }}>
+                            {bid.freelancerId.avgRating}/5
+                          </span>
+                        </>
+                      )
+                    : "No ratings yet"}
+                </p>
+                <p>
+                  <strong>Skills:</strong>{" "}
+                  {bid.freelancerId.profile?.[0]?.skills?.join(", ") || "Not Provided"}
+                </p>
+                <p>
+                  <strong>Portfolio:</strong>{" "}
+                  {bid.freelancerId.profile?.[0]?.portfolio ? (
+                    <a
+                      href={bid.freelancerId.profile[0].portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#007BFF" }}
+                    >
+                      View Portfolio
+                    </a>
+                  ) : (
+                    "Not Provided"
+                  )}
+                </p>
+                <p>
+                  <strong>Experience:</strong>{" "}
+                  {bid.freelancerId.profile?.[0]?.experience || "Not Provided"}
+                </p>
+                <p>
                   <strong>Bid Amount:</strong> ${bid.amount}
                 </p>
                 <button
                   onClick={() => handleSelectBid(bid._id)}
-                  style={{ padding: "10px",backgroundColor: "#28A745",color: "#FFFFFF",border: "none", borderRadius: "5px",cursor: "pointer", marginTop: "10px",
+                  style={{
+                    padding: "10px",
+                    backgroundColor: "#28A745",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    marginTop: "10px",
                   }}
                 >
                   Select Bid
@@ -1814,7 +1862,7 @@ const ClientDashboard = () => {
             <p style={{ textAlign: "center", color: "#555" }}>
               No bids available for this project.
             </p>
-          )}
+        )}
           <button
             onClick={closeBidsModal}
             style={{marginTop: "20px",padding: "10px", backgroundColor: "#DC3545", color: "#FFFFFF", border: "none", borderRadius: "5px", cursor: "pointer",width: "100%",
