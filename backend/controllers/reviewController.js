@@ -5,6 +5,7 @@ const Project = require("../models/projectModel");
 const User = require("../models/userModel");
 const FreelancerInformation = require("../models/freelancerInformationModel");
 const Activity = require("../models/activityModel");
+const Notification = require("../models/notificationModel");
 const { verifyToken } = require("../middleware/authMiddleware");
 
 // Create a new review
@@ -31,11 +32,6 @@ router.post("/", verifyToken, async (req, res) => {
     const projectClientStr = project.client.toString();
     const projectFreelancerStr = project.acceptedFreelancer.toString();
     const receiverIdStr = receiverId.toString();
-
-    console.log("Reviewer ID:", reviewerIdStr);
-    console.log("Project Client ID:", projectClientStr);
-    console.log("Project Freelancer ID:", projectFreelancerStr);
-    console.log("Receiver ID:", receiverIdStr);
 
     if (projectClientStr === reviewerIdStr) {
       // Client is reviewing freelancer
@@ -80,6 +76,21 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     await review.save();
+
+    // Send notification to the receiver
+    const receiver = await User.findById(receiverId);
+    if (receiver) {
+      let message;
+      if (reviewerType === "client") {
+        message = `You received a review from your client for project "${project.title}".`;
+      } else {
+        message = `You received a review from your freelancer for project "${project.title}".`;
+      }
+      await Notification.create({
+        user: receiverId,
+        message,
+      });
+    }
 
     // Update average ratings
     if (reviewerType === "client") {

@@ -449,6 +449,11 @@ router.put("/submit-completion/:projectId", verifyToken, async (req, res) => {
     await project.save();
 
     res.status(200).json({ message: "Project completion URL submitted successfully.", project });
+    // Add activity log
+    await Activity.create({
+      userId: req.user.id,
+      action: `You submitted a completion URL for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error submitting project completion URL:", error);
     res.status(500).json({ error: "Failed to submit project completion URL." });
@@ -518,14 +523,17 @@ router.put("/reject-approval/:projectId", async (req, res) => {
 
     if (!project) {
       console.error("Project not found:", projectId);
-      return res.status(404).json({ error: "Project not found." });
+      return res.status(404).json({ message: "Project not found" });
     }
 
-    res.json({ message: "Approval rejected successfully", project });
+    // Make sure client is defined
+    const client = project.client;
+
     await Activity.create({
-      userId: client,
-      action: `You have rejected the project approval of title: "${title}".`,
+      userId: client._id,
+      action: `You have rejected the project approval of title: "${project.title}".`,
     });
+    return res.status(200).json({ message: "Project approval rejected" });
   } catch (error) {
     console.error("Error rejecting approval:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -564,6 +572,11 @@ router.put("/escrow/fund/:projectId", verifyToken, async (req, res) => {
     await project.save();
 
     res.status(200).json({ message: "Escrow funded successfully.", project });
+    // Add activity log
+    await Activity.create({
+      userId: req.user.id,
+      action: `You funded the escrow for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error funding escrow:", error);
     res.status(500).json({ error: "Failed to fund escrow." });
@@ -596,6 +609,11 @@ router.post("/escrow/release/:projectId", verifyToken, async (req, res) => {
     await project.save();
 
     res.status(200).json({ message: "Escrow released successfully.", project });
+    // Add activity log
+    await Activity.create({
+      userId: req.user.id,
+      action: `You released the escrow for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error releasing escrow:", error);
     res.status(500).json({ error: "Failed to release escrow." });
@@ -624,8 +642,12 @@ router.post("/escrow/refund/:projectId", verifyToken, async (req, res) => {
     // Simulate refund to the client
     project.escrowStatus = "Refunded";
     await project.save();
-
     res.status(200).json({ message: "Escrow refunded successfully.", project });
+    // Add activity log
+    await Activity.create({
+      userId: req.user.id,
+      action: `You refunded the escrow for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error refunding escrow:", error);
     res.status(500).json({ error: "Failed to refund escrow." });

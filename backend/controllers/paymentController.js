@@ -33,7 +33,7 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Payment for Project ID: ${projectId}`,
+              name: `Payment for Project Name: ${project.title}`,
             },
             unit_amount: amount * 100, // Convert to cents
           },
@@ -57,6 +57,11 @@ router.post("/create-payment-intent", verifyToken, async (req, res) => {
 
     // Return session ID for client-side payment processing
     res.status(200).json({ sessionId: session.id });
+    // Add activity log
+    await Activity.create({
+      userId: client._id,
+      action: `You initiated a payment of $${amount} for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error creating Stripe session:", error);
     res.status(500).json({ error: error.message || "Failed to create Stripe session." });
@@ -112,7 +117,7 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
             // Log activity
             await Activity.create({
               userId: client._id,
-              action: `Payment of $${amount} for project ID: ${projectId} has been funded in the Escrow System.`,
+              action: `Payment of $${amount} for project title: ${project.title} has been funded in the Escrow System.`,
             });
           }
           break;
@@ -262,6 +267,11 @@ router.post("/claim-money/:projectId", verifyToken, async (req, res) => {
     });
 
     res.status(200).json({ url: session.url });
+    // Add activity log
+    await Activity.create({
+      userId: project.acceptedFreelancer,
+      action: `You initiated a claim for $${project.acceptedmoney} on project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error claiming money:", error);
     res.status(500).json({ error: "Failed to claim money." });
@@ -321,6 +331,11 @@ router.post("/claim-remaining/:projectId", verifyToken, async (req, res) => {
     });
 
     res.status(200).json({ url: session.url });
+    // Add activity log
+    await Activity.create({
+      userId: project.client,
+      action: `You initiated a claim for the remaining budget ($${remainingBudget}) on project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error claiming remaining budget:", error);
     res.status(500).json({ error: "Failed to claim the remaining budget." });
@@ -375,6 +390,11 @@ router.post("/refund-escrow/:projectId", verifyToken, async (req, res) => {
     });
     
     res.status(200).json({ url: session.url });
+    // Add activity log
+    await Activity.create({
+      userId: project.client,
+      action: `You initiated an escrow refund for project "${project.title}".`,
+    });
   } catch (error) {
     console.error("Error processing refund escrow:", error);
     res.status(500).json({ error: "Failed to process refund escrow." });
